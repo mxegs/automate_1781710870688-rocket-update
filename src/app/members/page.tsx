@@ -85,7 +85,7 @@ export default function MembersPage() {
     <AppShell access="staff">
       <PageHeader
         title="Members"
-        subtitle="Manage members, review invite requests, filter for groups & messaging"
+        subtitle="Manage members, review invite requests, and approve applications"
         actions={
           <button
             onClick={() => openSendInvite()}

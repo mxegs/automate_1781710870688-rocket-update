@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
-import { fetchProfileByPhone, getSession } from '@/lib/auth/session';
+import { fetchProfileForSession, getSession } from '@/lib/auth/session';
 import {
   createMediaItem,
   deleteMediaItem,
@@ -86,7 +86,7 @@ export default function AdminSermonsPage() {
   useEffect(() => {
     const session = getSession();
     if (!session) return;
-    fetchProfileByPhone(session.phone).then((profile) => {
+    fetchProfileForSession(session).then((profile) => {
       if (profile?.campusId) {
         setAdminCampus(profile.campusId as CampusId);
         setForm(emptyForm(profile.campusId as CampusId));

@@ -22,6 +22,8 @@ export default function GroupsAdminPage() {
   const [memberOptions, setMemberOptions] = useState<{ phone: string; name: string }[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<ChurchGroup | null>(null);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [memberCampusFilter, setMemberCampusFilter] = useState<CampusId | 'all'>('all');
   const [form, setForm] = useState({
     name: '',
     category: 'community' as GroupCategory,
@@ -100,6 +102,24 @@ export default function GroupsAdminPage() {
         ? f.memberPhones.filter((p) => p !== phone)
         : [...f.memberPhones, phone],
     }));
+  };
+
+  const filteredMembers = memberOptions.filter((m) => {
+    if (m.phone === form.leaderPhone) return false;
+    const matchSearch = !memberSearch || m.name.toLowerCase().includes(memberSearch.toLowerCase());
+    return matchSearch;
+  });
+
+  const selectAllFiltered = () => {
+    const phones = filteredMembers.map((m) => m.phone);
+    setForm((f) => ({
+      ...f,
+      memberPhones: [...new Set([...f.memberPhones, ...phones])],
+    }));
+  };
+
+  const clearAllMembers = () => {
+    setForm((f) => ({ ...f, memberPhones: [] }));
   };
 
   return (
@@ -206,9 +226,21 @@ export default function GroupsAdminPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-xs font-semibold text-cloud/50">Assign members</label>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-cloud/50">Assign members</label>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={selectAllFiltered} className="text-[10px] text-ckc-gold font-semibold">Select all</button>
+                    <button type="button" onClick={clearAllMembers} className="text-[10px] text-cloud/40">Clear</button>
+                  </div>
+                </div>
+                <input
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  placeholder="Search members…"
+                  className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-cloud"
+                />
                 <div className="max-h-32 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2">
-                  {memberOptions.filter((m) => m.phone !== form.leaderPhone).map((m) => (
+                  {filteredMembers.map((m) => (
                     <label key={m.phone} className="flex cursor-pointer items-center gap-2 text-xs text-cloud/70">
                       <input
                         type="checkbox"

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { formatPhoneDisplay, normalizePhone } from '@/lib/auth/session';
 import { createInvite, getInviteUrl } from '@/lib/invites/service';
-import { buildInviteSmsMessage, sendSms } from '@/lib/sms/service';
 
 import { updateInviteRequestStatus } from '@/lib/invites/request-service';
 
@@ -29,7 +28,11 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
   const [username, setUsername] = useState(prefill?.username ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [sent, setSent] = useState<{ inviteUrl: string; smsDemo: boolean } | null>(null);
+  const [sent, setSent] = useState<{
+    inviteUrl: string;
+    smsDemo: boolean;
+    smsError?: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,14 +57,18 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
         campusId: prefill?.campusId,
         inviteRequestId: prefill?.requestId,
       });
-      const inviteUrl = getInviteUrl(invite.token);
-      const message = buildInviteSmsMessage(officialName.trim(), inviteUrl);
-      const smsResult = await sendSms(normalized, message);
 
       if (prefill?.requestId) {
         await updateInviteRequestStatus(prefill.requestId, 'approved');
       }
-      setSent({ inviteUrl, smsDemo: smsResult.demo ?? true });
+
+      const inviteUrl = invite.inviteUrl ?? getInviteUrl(invite.token);
+
+      setSent({
+        inviteUrl,
+        smsDemo: invite.sms?.demo ?? false,
+        smsError: invite.sms?.success === false ? invite.sms.error : undefined,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send invite.');
     } finally {
@@ -93,10 +100,19 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
         {sent ? (
           <div className="space-y-4">
             <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-              <p className="text-sm font-semibold text-emerald-400">Invite sent to {formatPhoneDisplay(phone)}</p>
+              <p className="text-sm font-semibold text-emerald-400">
+                {sent.smsDemo
+                  ? `Invite link ready for ${formatPhoneDisplay(phone)}`
+                  : `Invite SMS sent to ${formatPhoneDisplay(phone)}`}
+              </p>
               {sent.smsDemo && (
                 <p className="mt-1 text-xs text-cloud/50">
-                  Demo mode — SMS logged to console. Wire Supabase + SMS provider for production.
+                  Demo mode — SMS logged to console. Set SMS_PROVIDER=bulksms in .env for real SMS.
+                </p>
+              )}
+              {sent.smsError && (
+                <p className="mt-1 text-xs text-amber-400">
+                  SMS failed: {sent.smsError}. Copy the link below and send it manually.
                 </p>
               )}
             </div>

@@ -38,20 +38,4 @@ create policy "media_items_select_authenticated"
   to authenticated
   using (true);
 
--- Seed sample messages (only if table is empty)
-do $$
-begin
-  if not exists (select 1 from public.media_items limit 1) then
-    insert into public.media_items (
-      campus_id, visibility, media_type, title, preacher, preached_at, category, series, description, duration, youtube_id
-    ) values
-      ('midrand', 'campus_only', 'sermon', 'Walking in Purpose', 'Pastor James Mokoena', '2025-06-15', 'Sunday Service', 'Purpose Series', 'Discovering God''s purpose for your life.', '52 min', 'dQw4w9WgXcQ'),
-      ('midrand', 'campus_only', 'sermon', 'Faith Over Fear', 'Pastor James Mokoena', '2025-06-08', 'Sunday Service', 'Purpose Series', 'Overcoming fear through faith.', '48 min', 'L_jWHffIx5E'),
-      ('midrand', 'campus_only', 'audio', 'The Power of Prayer', 'Pastor James Mokoena', '2025-06-01', 'Prayer Meeting', null, 'The transformative power of prayer.', '38 min', 'OPf0YbXqDm0'),
-      ('verulam', 'campus_only', 'sermon', 'Knowing God Deeply', 'Pastor Sarah Ndlovu', '2025-05-25', 'Sunday Service', null, 'Intimacy with God through Word and Spirit.', '44 min', 'hT_nvWreIhg'),
-      ('verulam', 'campus_only', 'audio', 'The Fruit of the Spirit', 'Elder Ruth Khumalo', '2025-04-06', 'Midweek Service', null, 'Growing in the fruits of the Spirit.', '41 min', 'PT2_F-1esPk'),
-      ('midrand', 'church_wide', 'special_message', 'Easter Sunday — He Is Risen!', 'Pastor James Mokoena', '2025-04-20', 'Easter', 'Easter 2025', 'Celebrating the resurrection — all CKC campuses.', '58 min', 'YQHsXMglC9A'),
-      ('midrand', 'church_wide', 'special_message', 'Rise Up — Youth Conference 2025', 'Evangelist Thabo Sithole', '2025-04-05', 'Youth Conference', 'Youth Conference 2025', 'A message for the next generation.', '55 min', 'fJ9rUzIMcZQ'),
-      ('midrand', 'members_only', 'book', 'Discipleship: The Call to Follow', 'Pastor James Mokoena', '2025-05-04', 'Bible Study', null, 'Study companion — members only.', '35 min', 'RgKAFK5djSk');
-  end if;
-end $$;
+-- Admins add sermons via /sermons — no seed data

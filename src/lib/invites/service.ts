@@ -10,6 +10,12 @@ export interface PendingInvite {
   username?: string;
   sentAt: string;
   status: 'pending' | 'accepted';
+  inviteUrl?: string;
+  sms?: {
+    success: boolean;
+    demo?: boolean;
+    error?: string;
+  };
 }
 
 const INVITES_KEY = 'ckc_pending_invites';

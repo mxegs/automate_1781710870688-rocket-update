@@ -1,7 +1,44 @@
 import { NextResponse } from 'next/server';
+import { getAppUrl } from '@/lib/app-url';
+import { getCampusLabel } from '@/lib/church/constants';
+import type { CampusId } from '@/lib/church/constants';
+import { formatPhoneDisplay, normalizePhone } from '@/lib/auth/session';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapInviteRequest } from '@/lib/supabase/mappers';
-import { normalizePhone } from '@/lib/auth/session';
+import { buildInviteRequestNotifyMessage, sendBulkSms } from '@/lib/sms/service';
+import { isInternalPlaceholderPhone } from '@/lib/auth/super-admin';
+
+async function notifyCampusAdmins(
+  campusId: CampusId,
+  fullName: string,
+  phone: string,
+  request: Request,
+): Promise<void> {
+  const db = getSupabaseAdmin();
+  if (!db) return;
+
+  const { data: staff } = await db
+    .from('profiles')
+    .select('phone, email, role, campus_id')
+    .in('role', ['super_admin', 'admin', 'pastor']);
+
+  const phones = (staff ?? [])
+    .filter((row) => row.role !== 'super_admin' && row.campus_id === campusId)
+    .map((row) => row.phone)
+    .filter((phone): phone is string => Boolean(phone) && !isInternalPlaceholderPhone(phone));
+
+  if (phones.length === 0) return;
+
+  const membersUrl = `${getAppUrl(request)}/members`;
+  const message = buildInviteRequestNotifyMessage(
+    fullName,
+    formatPhoneDisplay(phone),
+    getCampusLabel(campusId),
+    membersUrl,
+  );
+
+  await sendBulkSms(phones, message);
+}
 
 export async function GET(request: Request) {
   const db = getSupabaseAdmin();
@@ -60,5 +97,8 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  void notifyCampusAdmins(body.campus as CampusId, body.fullName.trim(), phone, request);
+
   return NextResponse.json(mapInviteRequest(data));
 }

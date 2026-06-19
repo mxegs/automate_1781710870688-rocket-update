@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { getAppUrl } from '@/lib/app-url';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { generateToken, mapInvite } from '@/lib/supabase/mappers';
 import { normalizePhone } from '@/lib/auth/session';
+import { buildInviteSmsMessage, sendSms } from '@/lib/sms/service';
 
 export async function POST(request: Request) {
   const db = getSupabaseAdmin();
@@ -32,5 +34,18 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(mapInvite(data));
+
+  const inviteUrl = `${getAppUrl(request)}/invite/${token}`;
+  const message = buildInviteSmsMessage(body.officialName.trim(), inviteUrl);
+  const smsResult = await sendSms(phone, message);
+
+  return NextResponse.json({
+    ...mapInvite(data),
+    inviteUrl,
+    sms: {
+      success: smsResult.success,
+      demo: smsResult.demo ?? false,
+      error: smsResult.error,
+    },
+  });
 }

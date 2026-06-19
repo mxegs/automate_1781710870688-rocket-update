@@ -7,7 +7,11 @@ export type ViewMode = 'staff' | 'member';
 
 export interface AuthSession {
   phone: string;
+  email?: string;
   role: UserRole;
+  campusId?: string;
+  isSuperAdmin?: boolean;
+  dbRole?: string;
   /** Legal/full name from membership form */
   officialName?: string;
   /** Custom app username — how we greet them day-to-day */
@@ -65,6 +69,69 @@ export async function isRegisteredMemberPhone(phone: string): Promise<boolean> {
   return isPhoneInvited(normalized);
 }
 
+export async function fetchProfileByEmail(email: string): Promise<{
+  email: string;
+  phone: string;
+  role: UserRole;
+  dbRole?: string;
+  isSuperAdmin?: boolean;
+  officialName?: string;
+  username?: string;
+  displayName?: string;
+  campusId?: string;
+} | null> {
+  if (!useBackend()) return null;
+  return apiFetch<{
+    email: string;
+    phone: string;
+    role: UserRole;
+    dbRole?: string;
+    isSuperAdmin?: boolean;
+    officialName?: string;
+    username?: string;
+    displayName?: string;
+    campusId?: string;
+  } | null>(`/api/profiles/lookup-email?email=${encodeURIComponent(email)}`).catch(() => null);
+}
+
+export async function resolveSessionFromEmailAsync(email: string): Promise<AuthSession> {
+  const normalized = normalizeEmailValue(email);
+  const profile = await fetchProfileByEmail(normalized);
+  if (!profile) {
+    throw new Error('Profile not found');
+  }
+
+  const session: AuthSession = {
+    phone: profile.phone,
+    email: normalized,
+    role: profile.role,
+    campusId: profile.campusId,
+    isSuperAdmin: profile.isSuperAdmin,
+    dbRole: profile.dbRole,
+    officialName: profile.officialName,
+    username: profile.username,
+    displayName: profile.displayName,
+    viewMode: 'staff',
+  };
+  return session;
+}
+
+function normalizeEmailValue(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+export async function fetchProfileForSession(session: AuthSession): Promise<Awaited<
+  ReturnType<typeof fetchProfileByPhone>
+> | null> {
+  if (session.email) {
+    return fetchProfileByEmail(session.email);
+  }
+  if (session.phone) {
+    return fetchProfileByPhone(session.phone);
+  }
+  return null;
+}
+
 export async function fetchProfileByPhone(phone: string): Promise<{
   phone: string;
   role: UserRole;
@@ -79,9 +146,12 @@ export async function fetchProfileByPhone(phone: string): Promise<{
   return apiFetch<{
     phone: string;
     role: UserRole;
+    dbRole?: string;
+    isSuperAdmin?: boolean;
     officialName?: string;
     username?: string;
     displayName?: string;
+    campusId?: string;
   } | null>(`/api/profiles/lookup?phone=${encodeURIComponent(normalizePhone(phone))}`).catch(
     () => null,
   );
@@ -107,6 +177,9 @@ export async function resolveSessionFromPhoneAsync(
     const session: AuthSession = {
       phone: normalized,
       role: profile.role,
+      campusId: profile.campusId,
+      isSuperAdmin: profile.isSuperAdmin,
+      dbRole: profile.dbRole,
       officialName: profile.officialName,
       username: profile.username,
       displayName: profile.displayName,
@@ -141,6 +214,7 @@ export function resolveSessionFromPhone(
     const session: AuthSession = {
       phone: normalized,
       role: demo.role,
+      campusId: demo.campusId,
       officialName: demo.officialName,
       username: demo.username,
       displayName: demo.displayName,
@@ -200,6 +274,7 @@ export function clearSession(): void {
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem('church_role');
   sessionStorage.removeItem('church_user');
+  void import('@/lib/auth/device-trust').then((m) => m.clearDeviceTrust());
 }
 
 export interface InviteSession {

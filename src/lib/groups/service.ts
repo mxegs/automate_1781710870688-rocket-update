@@ -13,9 +13,9 @@ const SEED_GROUPS: ChurchGroup[] = [
     category: 'ministry',
     campus: 'midrand',
     description: 'Band and vocalists for Sunday services',
-    leaderPhone: '735502016',
-    leaderName: 'David Khumalo',
-    memberPhones: ['821112222', '821113333'],
+    leaderPhone: 'staff000003',
+    leaderName: 'Ministry Leader',
+    memberPhones: [],
     enableSongLibrary: true,
     createdAt: new Date().toISOString(),
   },
@@ -25,9 +25,9 @@ const SEED_GROUPS: ChurchGroup[] = [
     category: 'ministry',
     campus: 'midrand',
     description: "Children's ministry team",
-    leaderPhone: '821113333',
-    leaderName: 'Nomsa Dlamini-Zulu',
-    memberPhones: ['821112222'],
+    leaderPhone: 'staff000004',
+    leaderName: 'Kids Church Leader',
+    memberPhones: [],
     enableSongLibrary: false,
     createdAt: new Date().toISOString(),
   },
@@ -37,8 +37,8 @@ const SEED_GROUPS: ChurchGroup[] = [
     category: 'community',
     campus: 'verulam',
     description: 'Women fellowship and prayer',
-    leaderPhone: '735502015',
-    leaderName: 'Pastor Sarah Ndlovu',
+    leaderPhone: 'staff000002',
+    leaderName: 'Campus Pastor',
     memberPhones: [],
     enableSongLibrary: false,
     createdAt: new Date().toISOString(),
@@ -285,13 +285,7 @@ export async function sendSongToBand(song: GroupSong, group: ChurchGroup): Promi
   return { sent, demo: true };
 }
 
-export const DEMO_MEMBER_OPTIONS = [
-  { phone: '735502016', name: 'David Khumalo' },
-  { phone: '735502015', name: 'Pastor Sarah Ndlovu' },
-  { phone: '735502014', name: 'James Mokoena' },
-  { phone: '821112222', name: 'Thabo Mokoena' },
-  { phone: '821113333', name: 'Nomsa Dlamini-Zulu' },
-];
+export const DEMO_MEMBER_OPTIONS: { phone: string; name: string }[] = [];
 
 export async function getMemberOptions(): Promise<{ phone: string; name: string }[]> {
   if (useBackend()) {

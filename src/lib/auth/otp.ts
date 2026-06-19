@@ -1,3 +1,4 @@
+import { apiFetch, useBackend } from '@/lib/api/client';
 import { buildOtpSmsMessage, sendSms } from '@/lib/sms/service';
 
 const OTP_STORE_KEY = 'ckc_otp_store';
@@ -6,6 +7,12 @@ interface OtpEntry {
   phone: string;
   code: string;
   expiresAt: number;
+}
+
+export interface SendOtpResult {
+  demo: boolean;
+  /** Present only in local demo mode */
+  code?: string;
 }
 
 function getStore(): Record<string, OtpEntry> {
@@ -22,8 +29,7 @@ function saveStore(store: Record<string, OtpEntry>): void {
   localStorage.setItem(OTP_STORE_KEY, JSON.stringify(store));
 }
 
-/** Demo OTP — delegates to SMS service (demo logs to console until provider is wired) */
-export function sendOtp(phone: string): string {
+function sendOtpLocal(phone: string): SendOtpResult {
   const normalized = phone.replace(/\D/g, '');
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const store = getStore();
@@ -34,17 +40,39 @@ export function sendOtp(phone: string): string {
   };
   saveStore(store);
   void sendSms(normalized, buildOtpSmsMessage(code));
-  return code;
+  return { demo: true, code };
 }
 
-export function verifyOtp(phone: string, code: string): boolean {
+/** Send OTP via BulkSMS (server) or local demo store */
+export async function sendOtp(phone: string): Promise<SendOtpResult> {
+  if (useBackend()) {
+    const res = await apiFetch<{ ok: boolean; demo?: boolean }>('/api/auth/otp/send', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+    return { demo: res.demo ?? false };
+  }
+  return sendOtpLocal(phone);
+}
+
+export async function verifyOtp(phone: string, code: string): Promise<boolean> {
+  if (useBackend()) {
+    try {
+      await apiFetch('/api/auth/otp/verify', {
+        method: 'POST',
+        body: JSON.stringify({ phone, code }),
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   const normalized = phone.replace(/\D/g, '');
   const store = getStore();
   const entry = store[normalized];
 
-  // Demo fallback: accept any 6 digits when no OTP was sent
   if (!entry && /^\d{6}$/.test(code)) return true;
-
   if (!entry) return false;
   if (Date.now() > entry.expiresAt) return false;
   return entry.code === code;

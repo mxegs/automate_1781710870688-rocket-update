@@ -30,7 +30,6 @@ const lessons: BibleStudyLesson[] = [
     keyPoints: ['God is Spirit — He is not limited by physical form', 'God is eternal — He has no beginning or end', 'God is love — His nature is defined by love (1 John 4:8)', 'We can know God personally through Jesus Christ'],
     date: '2 Jul 2025',
     leader: 'Pastor James Mokoena',
-    youtubeId: 'dQw4w9WgXcQ',
     completed: false,
   },
   {

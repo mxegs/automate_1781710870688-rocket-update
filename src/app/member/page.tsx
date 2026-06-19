@@ -5,6 +5,13 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import Link from 'next/link';
 import { getDisplayName, getSession } from '@/lib/auth/session';
+import { getMemberEventsFeed } from '@/lib/events/service';
+import { getMemberMediaFeed } from '@/lib/sermons/service';
+import { resolveMemberCampus } from '@/lib/member/campus';
+import SocialFeed from '@/components/member/SocialFeed';
+import { getThumbnailUrl } from '@/lib/sermons/utils';
+import type { ChurchEvent } from '@/lib/events/types';
+import type { MediaItem } from '@/lib/sermons/types';
 
 const dailyVerses = [
   { verse: 'For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.', ref: 'Jeremiah 29:11' },
@@ -15,24 +22,6 @@ const dailyVerses = [
   { verse: 'And we know that in all things God works for the good of those who love him.', ref: 'Romans 8:28' },
   { verse: 'Cast all your anxiety on him because he cares for you.', ref: '1 Peter 5:7' },
 ];
-
-const upcomingEvents = [
-  { id: 1, name: 'Sunday Morning Service', date: 'Sun 22 Jun', time: '09:00', type: 'Sunday Service', location: 'Main Auditorium', image: 'https://images.unsplash.com/photo-1438232992991-995b671e4668?w=400&q=80', alt: 'Congregation gathered for Sunday morning worship service in a modern church auditorium' },
-  { id: 2, name: 'Youth Night', date: 'Fri 20 Jun', time: '18:30', type: 'Youth Event', location: 'Youth Hall', image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&q=80', alt: 'Young people gathered for youth night worship and fellowship event' },
-  { id: 3, name: "Women\'s Prayer Morning", date: 'Sat 21 Jun', time: '08:00', type: 'Prayer Meeting', location: 'Prayer Room', image: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400&q=80', alt: 'Women gathered in prayer circle during morning prayer meeting' },
-  { id: 4, name: "Men\'s Breakfast", date: 'Sat 28 Jun', time: '07:30', type: "Men\'s Ministry", location: 'Fellowship Hall', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400&q=80', alt: 'Men gathered around tables for church breakfast fellowship event' },
-];
-
-const latestSermon = {
-  id: 1,
-  title: 'Walking in Purpose',
-  preacher: 'Pastor James Mokoena',
-  date: '15 Jun 2025',
-  youtubeId: 'dQw4w9WgXcQ',
-  duration: '52 min',
-  series: 'Purpose Series',
-  description: 'Discovering God\'s purpose for your life and walking boldly in it.',
-};
 
 const notifications = [
   { id: 1, type: 'birthday', message: 'Today is your birthday! 🎂 The church family celebrates you!', time: 'Today', read: false },
@@ -63,7 +52,8 @@ export default function MemberHomePage() {
   const [greeting, setGreeting] = useState('Good morning');
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifList, setNotifList] = useState(notifications);
-  const [rsvpedEvents, setRsvpedEvents] = useState<number[]>([2]);
+  const [upcomingEvents, setUpcomingEvents] = useState<ChurchEvent[]>([]);
+  const [latestSermon, setLatestSermon] = useState<MediaItem | null>(null);
   const [givingForm, setGivingForm] = useState<GivingForm>({ name: '', amount: '', reference: '', type: 'Tithe' });
   const [givingSubmitted, setGivingSubmitted] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -79,6 +69,15 @@ export default function MemberHomePage() {
     const displayName = getDisplayName(session);
     setUserName(displayName);
     setGivingForm((f) => ({ ...f, name: displayName }));
+
+    (async () => {
+      const campus = await resolveMemberCampus();
+      const isVisitor = session?.role === 'visitor';
+      const events = await getMemberEventsFeed({ memberCampus: campus, isVisitor });
+      setUpcomingEvents(events.slice(0, 4));
+      const sermons = await getMemberMediaFeed({ memberCampus: campus, isVisitor });
+      setLatestSermon(sermons[0] ?? null);
+    })();
   }, []);
 
   useEffect(() => {
@@ -90,10 +89,6 @@ export default function MemberHomePage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleRsvp = (id: number) => {
-    setRsvpedEvents((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  };
 
   const handleGivingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,14 +193,22 @@ export default function MemberHomePage() {
         {/* Main Grid: Latest Sermon + Daily Verse */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Latest Sermon */}
+          {latestSermon ? (
           <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-sky/20 transition-all group">
             <div className="relative aspect-video bg-black/40">
-              <img
-                src={`https://img.youtube.com/vi/${latestSermon.youtubeId}/hqdefault.jpg`}
-                alt={`Sermon thumbnail for "${latestSermon.title}" by ${latestSermon.preacher}`}
-                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-              />
+              {latestSermon.youtubeId ? (
+                <img
+                  src={getThumbnailUrl(latestSermon) ?? ''}
+                  alt={`Sermon thumbnail for "${latestSermon.title}"`}
+                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Icon name="PlayCircleIcon" size={48} variant="outline" className="text-cloud/20" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              {latestSermon.youtubeId && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <a
                   href={`https://www.youtube.com/watch?v=${latestSermon.youtubeId}`}
@@ -217,23 +220,31 @@ export default function MemberHomePage() {
                   <Icon name="PlayIcon" size={22} variant="solid" className="text-white ml-1" />
                 </a>
               </div>
+              )}
               <div className="absolute top-3 left-3">
                 <span className="bg-sky/90 text-white text-xs font-semibold px-2.5 py-1 rounded-full">Latest Sermon</span>
               </div>
+              {latestSermon.duration && (
               <div className="absolute bottom-3 right-3">
                 <span className="bg-black/60 text-white/80 text-xs px-2 py-0.5 rounded-full">{latestSermon.duration}</span>
               </div>
+              )}
             </div>
             <div className="p-4">
-              <p className="text-xs text-sky font-medium mb-1">{latestSermon.series}</p>
+              {latestSermon.series && <p className="text-xs text-sky font-medium mb-1">{latestSermon.series}</p>}
               <h3 className="text-cloud font-bold text-base leading-snug">{latestSermon.title}</h3>
               <p className="text-cloud/50 text-xs mt-1">{latestSermon.preacher} · {latestSermon.date}</p>
-              <p className="text-cloud/40 text-xs mt-2 leading-relaxed line-clamp-2">{latestSermon.description}</p>
+              {latestSermon.description && <p className="text-cloud/40 text-xs mt-2 leading-relaxed line-clamp-2">{latestSermon.description}</p>}
               <Link href="/member/sermons" className="inline-flex items-center gap-1 text-xs text-sky hover:text-sky/80 mt-3 transition-colors">
                 View all sermons <Icon name="ArrowRightIcon" size={11} variant="outline" />
               </Link>
             </div>
           </div>
+          ) : (
+          <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-8 flex items-center justify-center">
+            <p className="text-cloud/40 text-sm text-center">No sermons yet — your campus will add messages soon.</p>
+          </div>
+          )}
 
           {/* Daily Verse */}
           <div className="bg-gradient-to-br from-amber-500/10 via-white/5 to-transparent border border-amber-400/20 rounded-2xl p-5 flex flex-col justify-between">
@@ -264,83 +275,39 @@ export default function MemberHomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {upcomingEvents.map((ev) => {
-              const isRsvped = rsvpedEvents.includes(ev.id);
-              const typeColor = typeColors[ev.type] || 'bg-white/5 text-cloud/40 border-white/10';
+              const typeColor = typeColors[ev.category] || 'bg-white/5 text-cloud/40 border-white/10';
               return (
-                <div key={ev.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-sky/20 transition-all group">
-                  <div className="relative aspect-video bg-black/40">
-                    <img
-                      src={ev.image}
-                      alt={ev.alt}
-                      className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-2 left-2">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${typeColor}`}>{ev.type}</span>
+                <Link key={ev.id} href={`/member/events/${ev.id}`} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-sky/20 transition-all group">
+                  {ev.imageUrl ? (
+                    <div className="relative aspect-video bg-black/40">
+                      <img src={ev.imageUrl} alt={ev.title} className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                      <div className="absolute bottom-2 left-2">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${typeColor}`}>{ev.category}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="aspect-video bg-white/5 flex items-center justify-center">
+                      <Icon name="CalendarDaysIcon" size={24} variant="outline" className="text-cloud/20" />
+                    </div>
+                  )}
                   <div className="p-3">
-                    <p className="text-cloud text-xs font-semibold leading-snug line-clamp-2">{ev.name}</p>
+                    <p className="text-cloud text-xs font-semibold leading-snug line-clamp-2">{ev.title}</p>
                     <p className="text-cloud/40 text-[10px] mt-1">{ev.date} · {ev.time}</p>
-                    <button
-                      onClick={() => handleRsvp(ev.id)}
-                      className={`mt-2 w-full text-[10px] py-1.5 rounded-lg border font-medium transition-all ${
-                        isRsvped
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20' :'bg-white/5 text-cloud/50 border-white/10 hover:border-sky/30 hover:text-sky'
-                      }`}
-                    >
-                      {isRsvped ? '✓ RSVP\'d' : 'RSVP'}
-                    </button>
+                    <p className="mt-2 text-[10px] text-ckc-gold font-semibold">RSVP →</p>
                   </div>
-                </div>
+                </Link>
               );
             })}
+            {upcomingEvents.length === 0 && (
+              <p className="text-cloud/40 text-xs col-span-full py-4 text-center">No upcoming events — check back soon.</p>
+            )}
           </div>
         </div>
 
         {/* Social Media Feed Placeholder + Give CTA */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Social Media Feed */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-cloud flex items-center gap-2">
-                <Icon name="PhotoIcon" size={15} variant="outline" className="text-pink-400" />
-                Social Feed
-              </h2>
-              <div className="flex items-center gap-2">
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-cloud/40 hover:text-blue-400 transition-colors" aria-label="Facebook">
-                  <Icon name="GlobeAltIcon" size={14} variant="outline" />
-                </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-cloud/40 hover:text-pink-400 transition-colors" aria-label="Instagram">
-                  <Icon name="CameraIcon" size={14} variant="outline" />
-                </a>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 mb-3">
-              {[
-                { img: 'https://images.unsplash.com/photo-1438232992991-995b671e4668?w=200&q=80', alt: 'Church worship service with congregation raising hands' },
-                { img: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&q=80', alt: 'Youth group gathering and fellowship at church event' },
-                { img: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=200&q=80', alt: 'Women in prayer and worship at church gathering' },
-                { img: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=200&q=80', alt: 'Church community breakfast and fellowship event' },
-                { img: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=200&q=80', alt: 'Outdoor church community outreach and service event' },
-                { img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80', alt: 'Church pastor delivering sermon on stage' },
-              ].map((item, i) => (
-                <div key={i} className="aspect-square rounded-lg overflow-hidden bg-white/5">
-                  <img src={item.img} alt={item.alt} className="w-full h-full object-cover opacity-70 hover:opacity-100 transition-opacity" />
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-3">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-400/20 text-xs text-pink-400 hover:from-pink-500/20 hover:to-purple-500/20 transition-all">
-                <Icon name="CameraIcon" size={12} variant="outline" />
-                Follow on Instagram
-              </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-500/10 border border-blue-400/20 text-xs text-blue-400 hover:bg-blue-500/20 transition-all">
-                <Icon name="GlobeAltIcon" size={12} variant="outline" />
-                Follow on Facebook
-              </a>
-            </div>
-          </div>
+          <SocialFeed />
 
           {/* Give CTA */}
           <div className="bg-gradient-to-br from-amber-500/10 via-white/5 to-transparent border border-amber-400/20 rounded-2xl p-5 flex flex-col justify-between">

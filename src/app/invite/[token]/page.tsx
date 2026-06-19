@@ -6,7 +6,12 @@ import { useParams, useRouter } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
 import OtpInput from '@/components/auth/OtpInput';
 import { CkcButton, CkcCard, CkcField, CkcInput } from '@/components/ui/CkcForm';
-import { sendOtp, verifyOtp, getStoredOtpForDemo } from '@/lib/auth/otp';
+import { sendOtp, verifyOtp } from '@/lib/auth/otp';
+import {
+  getStoredDeviceTrust,
+  registerDeviceTrustAfterOtp,
+  tryTrustedDeviceLogin,
+} from '@/lib/auth/device-trust';
 import { formatPhoneDisplay, normalizePhone, setInviteSession } from '@/lib/auth/session';
 import { findInviteByToken } from '@/lib/invites/service';
 import { BRAND } from '@/lib/assets';
@@ -29,7 +34,7 @@ export default function InvitePage() {
     findInviteByToken(token).then(setInviteMeta);
   }, [token]);
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (normalizePhone(phone).length < 9) {
       setError('Please enter a valid cell number.');
@@ -37,27 +42,43 @@ export default function InvitePage() {
     }
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      const code = sendOtp(phone);
-      setDemoCode(code);
+    try {
+      const normalized = normalizePhone(phone);
+      const stored = getStoredDeviceTrust();
+      if (stored?.phone === normalized && (await tryTrustedDeviceLogin())) {
+        setInviteSession({
+          phone: normalized,
+          token,
+          officialName: inviteMeta?.officialName,
+          username: inviteMeta?.username,
+        });
+        router.push('/signup/complete');
+        return;
+      }
+
+      const result = await sendOtp(phone);
+      setDemoCode(result.demo ? result.code ?? null : null);
       setStep('otp');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send code. Try again.');
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) {
       setError('Enter the 6-digit code.');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      if (!verifyOtp(phone, otp)) {
+    try {
+      if (!(await verifyOtp(phone, otp))) {
         setError('Invalid or expired code.');
-        setLoading(false);
         return;
       }
+      await registerDeviceTrustAfterOtp({ phone: normalizePhone(phone) });
       setInviteSession({
         phone: normalizePhone(phone),
         token,
@@ -65,7 +86,9 @@ export default function InvitePage() {
         username: inviteMeta?.username,
       });
       router.push('/signup/complete');
-    }, 600);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,7 +112,7 @@ export default function InvitePage() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="073 550 2014"
+                placeholder="082 000 0000"
               />
             </CkcField>
 

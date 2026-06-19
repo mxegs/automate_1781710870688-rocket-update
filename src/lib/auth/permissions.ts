@@ -11,6 +11,7 @@ const ADMIN_ROUTES = [
   '/prayer-requests',
   '/ministries',
   '/groups',
+  '/broadcast',
   '/small-groups',
   '/pastoral-care',
   '/announcements',
@@ -30,7 +31,7 @@ const VISITOR_ALLOWED = [
   '/member/bible-study',
 ];
 
-const LEADER_RESTRICTED = ['/reports', '/members', '/visitors', '/follow-ups', '/announcements'];
+const LEADER_RESTRICTED = ['/reports', '/members', '/visitors', '/follow-ups', '/announcements', '/broadcast'];
 
 export function isAdminRoute(pathname: string): boolean {
   return ADMIN_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
@@ -54,6 +55,7 @@ export function canAccessRoute(
     pathname.startsWith('/request-invite') ||
     pathname.startsWith('/invite') ||
     pathname.startsWith('/signup') ||
+    pathname.startsWith('/rsvp') ||
     pathname.startsWith('/visitor/login')
   ) {
     return true;

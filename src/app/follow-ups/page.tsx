@@ -1,27 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import { CAMPUSES, FOLLOWUP_STAGES, getCampusLabel, type CampusId, type FollowUpStageId } from '@/lib/church/constants';
-
-interface FollowUpContact {
-  id: number;
-  name: string;
-  phone: string;
-  campus: CampusId;
-  stage: FollowUpStageId;
-  source: string;
-  lastContact: string;
-  assignedTo: string;
-}
-
-const mockFollowUps: FollowUpContact[] = [
-  { id: 1, name: 'Sibusiso Naidoo', phone: '082 333 1100', campus: 'verulam', stage: 'engaging', source: 'Street outreach', lastContact: '14 Jun', assignedTo: 'Pastor Sarah' },
-  { id: 2, name: 'Amanda Pillay', phone: '073 222 9900', campus: 'midrand', stage: 'cold', source: 'Friend referral', lastContact: '10 Jun', assignedTo: 'David K' },
-  { id: 3, name: 'Tshepo Mabena', phone: '061 888 7766', campus: 'midrand', stage: 'committed', source: 'Home visit', lastContact: '16 Jun', assignedTo: 'Pastor James' },
-];
+import { getFollowUps, sendFollowUpMessage, updateFollowUpStage } from '@/lib/followups/service';
+import type { FollowUpContact } from '@/lib/followups/service';
+import { useBackend } from '@/lib/api/client';
 
 const stageColors: Record<FollowUpStageId, string> = {
   cold: 'bg-white/5 text-cloud/50 border-white/10',
@@ -30,33 +16,77 @@ const stageColors: Record<FollowUpStageId, string> = {
 };
 
 export default function FollowUpsPage() {
+  const [contacts, setContacts] = useState<FollowUpContact[]>([]);
   const [stageFilter, setStageFilter] = useState<string>('All');
   const [campusFilter, setCampusFilter] = useState<string>('All');
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState('');
+  const [channel, setChannel] = useState<'sms' | 'whatsapp' | 'newsletter'>('sms');
+  const [sending, setSending] = useState(false);
+  const [sentResult, setSentResult] = useState('');
+  const backend = useBackend();
 
-  const filtered = mockFollowUps.filter((f) => {
-    const matchStage = stageFilter === 'All' || f.stage === stageFilter;
-    const matchCampus = campusFilter === 'All' || f.campus === campusFilter;
-    return matchStage && matchCampus;
-  });
+  const load = async () => {
+    const list = await getFollowUps({
+      campusId: campusFilter !== 'All' ? (campusFilter as CampusId) : undefined,
+      stage: stageFilter !== 'All' ? (stageFilter as FollowUpStageId) : undefined,
+    });
+    setContacts(list);
+  };
+
+  useEffect(() => {
+    load();
+  }, [stageFilter, campusFilter]);
+
+  const filtered = contacts;
+
+  const handleSend = async () => {
+    if (!message.trim() || filtered.length === 0) return;
+    setSending(true);
+    try {
+      const result = await sendFollowUpMessage({
+        contactIds: filtered.map((c) => c.id),
+        channel,
+        message: message.trim(),
+      });
+      setSentResult(`Sent to ${result.sent} contact(s) via ${channel}`);
+      setShowMessage(false);
+      setMessage('');
+      load();
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleStageChange = async (id: string, stage: FollowUpStageId) => {
+    await updateFollowUpStage(id, stage);
+    load();
+  };
 
   return (
     <AppShell access="staff">
       <PageHeader
         title="Follow-Ups"
-        subtitle="Evangelism contacts — not members or event visitors"
+        subtitle="Filter by stage tags — send SMS, WhatsApp, or newsletter"
         actions={
-          <div className="flex flex-wrap gap-2">
-            <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-cloud/70 hover:border-ckc-gold/30">
-              <Icon name="ArrowUpTrayIcon" size={16} variant="outline" />
-              Import CSV
-            </button>
-            <button className="flex items-center gap-2 rounded-xl bg-ckc-gold px-4 py-2.5 text-sm font-bold text-ckc-black hover:bg-ckc-gold-light">
-              <Icon name="PlusIcon" size={16} variant="outline" />
-              Add Contact
-            </button>
-          </div>
+          <button
+            onClick={() => setShowMessage(true)}
+            disabled={filtered.length === 0}
+            className="flex items-center gap-2 rounded-xl bg-ckc-gold px-4 py-2.5 text-sm font-bold text-ckc-black disabled:opacity-40"
+          >
+            <Icon name="ChatBubbleLeftRightIcon" size={16} variant="outline" />
+            Message filtered ({filtered.length})
+          </button>
         }
       />
+
+      {!backend && (
+        <p className="text-sm text-amber-400 mb-4">Connect Supabase — demo follow-up contacts are seeded in migration.</p>
+      )}
+
+      {sentResult && (
+        <p className="mb-4 text-sm text-emerald-400">{sentResult}</p>
+      )}
 
       <ContentCard>
         <div className="mb-4 flex flex-wrap gap-2">
@@ -96,19 +126,62 @@ export default function FollowUpsPage() {
                 <p className="text-xs text-cloud/40">
                   {f.phone} · {getCampusLabel(f.campus)} · {f.source}
                 </p>
-                <p className="text-xs text-cloud/30 mt-0.5">Assigned: {f.assignedTo} · Last contact: {f.lastContact}</p>
+                <p className="text-xs text-cloud/30 mt-0.5">Last contact: {f.lastContact}</p>
               </div>
-              <span className={`self-start rounded-full border px-2.5 py-0.5 text-xs font-medium ${stageColors[f.stage]}`}>
-                {FOLLOWUP_STAGES.find((s) => s.id === f.stage)?.label}
-              </span>
+              <div className="flex items-center gap-2">
+                <select
+                  value={f.stage}
+                  onChange={(e) => handleStageChange(f.id, e.target.value as FollowUpStageId)}
+                  className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${stageColors[f.stage]}`}
+                >
+                  {FOLLOWUP_STAGES.map((s) => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           ))}
+          {filtered.length === 0 && (
+            <p className="text-center text-cloud/40 py-8">No contacts match these filters.</p>
+          )}
         </div>
       </ContentCard>
 
-      <p className="text-xs text-cloud/30 text-center">
-        CSV import coming with Supabase — columns: name, phone, campus, stage, source, assigned_to
-      </p>
+      {showMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+            <h2 className="text-lg font-bold text-cloud mb-4">
+              Message {filtered.length} contact(s)
+            </h2>
+            <div className="flex gap-2 mb-4">
+              {(['sms', 'whatsapp', 'newsletter'] as const).map((ch) => (
+                <button
+                  key={ch}
+                  onClick={() => setChannel(ch)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold capitalize ${
+                    channel === ch ? 'border-ckc-gold/30 bg-ckc-gold/10 text-ckc-gold' : 'border-white/10 text-cloud/50'
+                  }`}
+                >
+                  {ch}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={4}
+              placeholder="Your message…"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cloud"
+            />
+            <div className="mt-4 flex gap-3">
+              <button onClick={() => setShowMessage(false)} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm text-cloud/60">Cancel</button>
+              <button onClick={handleSend} disabled={sending} className="flex-1 rounded-lg bg-ckc-gold py-2.5 text-sm font-bold text-ckc-black">
+                {sending ? 'Sending…' : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

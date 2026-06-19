@@ -1,23 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard, StatCard } from '@/components/portal/PageHeader';
+import { getAdminEvents } from '@/lib/events/service';
+import type { ChurchEvent } from '@/lib/events/types';
 
 const recentVisitors = [
   { name: 'Thabo Mokoena', date: 'Sun 15 Jun', status: 'New Visitor', source: 'Friend' },
   { name: 'Lerato Dlamini', date: 'Sun 15 Jun', status: 'Contacted', source: 'Social Media' },
   { name: 'Sipho Nkosi', date: 'Sun 8 Jun', status: 'Follow-Up Scheduled', source: 'Walk-in' },
   { name: 'Nomsa Zulu', date: 'Sun 8 Jun', status: 'Attending Regularly', source: 'Family' },
-];
-
-const upcomingEvents = [
-  { name: 'Sunday Service', date: 'Sun 22 Jun', time: '09:00', type: 'Sunday Service', rsvp: 180 },
-  { name: 'Youth Night', date: 'Fri 20 Jun', time: '18:30', type: 'Youth Event', rsvp: 45 },
-  { name: "Women's Prayer", date: 'Sat 21 Jun', time: '08:00', type: 'Prayer Meeting', rsvp: 32 },
-  { name: "Men's Breakfast", date: 'Sat 28 Jun', time: '07:30', type: "Men's Ministry", rsvp: 28 },
 ];
 
 const prayerRequests = [
@@ -39,6 +34,12 @@ const statusColors: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const [upcomingEvents, setUpcomingEvents] = useState<ChurchEvent[]>([]);
+
+  useEffect(() => {
+    getAdminEvents({ allCampuses: true }).then((e) => setUpcomingEvents(e.slice(0, 4)));
+  }, []);
+
   return (
     <AppShell access="staff">
       <PageHeader
@@ -130,22 +131,25 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {upcomingEvents.map((ev) => (
             <div
-              key={ev.name}
+              key={ev.id}
               className="rounded-xl border border-white/10 bg-white/5 p-3 transition-colors hover:border-ckc-gold/30"
             >
               <div className="mb-2 flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-ckc-gold/10">
                   <Icon name="CalendarDaysIcon" size={14} variant="outline" className="text-ckc-gold" />
                 </div>
-                <span className="text-xs font-medium text-cloud/40">{ev.type}</span>
+                <span className="text-xs font-medium text-cloud/40">{ev.category}</span>
               </div>
-              <p className="mb-1 text-sm font-semibold text-cloud">{ev.name}</p>
+              <p className="mb-1 text-sm font-semibold text-cloud">{ev.title}</p>
               <p className="text-xs text-cloud/50">
                 {ev.date} at {ev.time}
               </p>
-              <p className="mt-1.5 text-xs font-medium text-emerald-400">{ev.rsvp} attending</p>
+              <p className="mt-1.5 text-xs font-medium text-emerald-400">{ev.rsvpCount} attending</p>
             </div>
           ))}
+          {upcomingEvents.length === 0 && (
+            <p className="text-xs text-cloud/40 col-span-full">No events yet — create one in Events.</p>
+          )}
         </div>
       </ContentCard>
 

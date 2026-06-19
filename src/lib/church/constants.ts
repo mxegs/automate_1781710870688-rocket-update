@@ -11,6 +11,27 @@ export function getCampusLabel(id: CampusId | string): string {
   return CAMPUSES.find((c) => c.id === id)?.label ?? id;
 }
 
+/** Per-campus social links — update with your real handles */
+export const CAMPUS_SOCIAL: Record<
+  CampusId,
+  { instagram: string; facebook: string; instagramLabel: string }
+> = {
+  midrand: {
+    instagram: 'https://www.instagram.com/',
+    facebook: 'https://www.facebook.com/',
+    instagramLabel: '@ckc_midrand',
+  },
+  verulam: {
+    instagram: 'https://www.instagram.com/',
+    facebook: 'https://www.facebook.com/',
+    instagramLabel: '@ckc_verulam',
+  },
+};
+
+export function getCampusSocial(campusId: CampusId) {
+  return CAMPUS_SOCIAL[campusId] ?? CAMPUS_SOCIAL.midrand;
+}
+
 /** Filter members for messaging, rostering, group assignment */
 export const AGE_CATEGORIES = [
   { id: 'child', label: 'Child' },
