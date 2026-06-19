@@ -103,7 +103,7 @@ export default function SermonsPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell access="shared">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">

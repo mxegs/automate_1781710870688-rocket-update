@@ -8,12 +8,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Church Connect — Church Management System',
-  description: 'Church management system for members, visitors, events, prayer requests, ministries and pastoral care.',
+  title: 'Christ Kingdom Citizens — CKC App',
+  description: 'Christ Kingdom Citizens church app for members, visitors, events, sermons, and membership registration.',
   icons: {
-    icon: [
-      { url: '/assets/images/app_logo.png', type: 'image/x-icon' }
-    ],
+    icon: [{ url: '/assets/images/app_logo.png', type: 'image/x-icon' }],
   },
 };
 

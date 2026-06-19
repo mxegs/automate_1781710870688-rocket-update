@@ -1,0 +1,182 @@
+import { findDemoUser } from './demo-users';
+import { isPhoneInvited } from '@/lib/invites/service';
+
+export type UserRole = 'member' | 'visitor' | 'admin' | 'pastor' | 'leader';
+export type ViewMode = 'staff' | 'member';
+
+export interface AuthSession {
+  phone: string;
+  role: UserRole;
+  /** Legal/full name from membership form */
+  officialName?: string;
+  /** Custom app username — how we greet them day-to-day */
+  username?: string;
+  /** Preferred short display name (defaults to username) */
+  displayName?: string;
+  inviteVerified?: boolean;
+  /** Staff may browse the member portal without losing their role */
+  viewMode?: ViewMode;
+}
+
+const SESSION_KEY = 'ckc_session';
+const INVITE_KEY = 'ckc_invite_session';
+
+export function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+export function formatPhoneDisplay(phone: string): string {
+  const digits = normalizePhone(phone);
+  if (digits.startsWith('27') && digits.length === 11) {
+    return `+27 ${digits.slice(2, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  }
+  if (digits.length === 10 && digits.startsWith('0')) {
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  }
+  return phone;
+}
+
+export function getDisplayName(session: AuthSession | null): string {
+  if (!session) return 'Friend';
+  return session.displayName || session.username || session.officialName || 'Friend';
+}
+
+export function isStaffRole(role: UserRole): boolean {
+  return role === 'admin' || role === 'pastor' || role === 'leader';
+}
+
+/** Whether this phone may sign in as a member (demo users + pending invites). */
+export function isRegisteredMemberPhone(phone: string): boolean {
+  const normalized = normalizePhone(phone);
+  if (findDemoUser(normalized)) return true;
+  return isPhoneInvited(normalized);
+}
+
+export function resolveSessionFromPhone(
+  phone: string,
+  options?: { asVisitor?: boolean },
+): AuthSession {
+  const normalized = normalizePhone(phone);
+
+  if (options?.asVisitor) {
+    return {
+      phone: normalized,
+      role: 'visitor',
+      displayName: 'Guest',
+      username: 'guest',
+    };
+  }
+
+  const demo = findDemoUser(normalized);
+
+  if (demo) {
+    const session: AuthSession = {
+      phone: normalized,
+      role: demo.role,
+      officialName: demo.officialName,
+      username: demo.username,
+      displayName: demo.displayName,
+    };
+    if (isStaffRole(demo.role)) {
+      session.viewMode = 'staff';
+    }
+    return session;
+  }
+
+  return {
+    phone: normalized,
+    role: 'member',
+    displayName: 'Member',
+  };
+}
+
+export function setSession(session: AuthSession): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  const legacyRole =
+    session.role === 'member' || session.role === 'visitor'
+      ? session.role
+      : session.role === 'admin'
+        ? 'super_admin'
+        : session.role === 'pastor'
+          ? 'pastor'
+          : 'ministry_leader';
+  sessionStorage.setItem('church_role', legacyRole);
+  sessionStorage.setItem('church_user', getDisplayName(session));
+}
+
+export function getSession(): AuthSession | null {
+  if (typeof window === 'undefined') return null;
+  const raw = sessionStorage.getItem(SESSION_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthSession;
+  } catch {
+    return null;
+  }
+}
+
+export function setViewMode(mode: ViewMode): void {
+  const session = getSession();
+  if (!session || !isStaffRole(session.role)) return;
+  setSession({ ...session, viewMode: mode });
+}
+
+export function getViewMode(session: AuthSession | null): ViewMode {
+  if (!session || !isStaffRole(session.role)) return 'staff';
+  return session.viewMode ?? 'staff';
+}
+
+export function clearSession(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem('church_role');
+  sessionStorage.removeItem('church_user');
+}
+
+export interface InviteSession {
+  phone: string;
+  token: string;
+  officialName?: string;
+  username?: string;
+}
+
+export function setInviteSession(data: InviteSession): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(INVITE_KEY, JSON.stringify({ ...data, verifiedAt: Date.now() }));
+}
+
+export function getInviteSession(): InviteSession | null {
+  if (typeof window === 'undefined') return null;
+  const raw = sessionStorage.getItem(INVITE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      phone: parsed.phone,
+      token: parsed.token,
+      officialName: parsed.officialName,
+      username: parsed.username,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function clearInviteSession(): void {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(INVITE_KEY);
+}
+
+export function getPostLoginRoute(role: UserRole, viewMode?: ViewMode): string {
+  if (role === 'visitor') return '/visitor';
+  if (viewMode === 'member') return '/member';
+  if (role === 'member') return '/member';
+  if (role === 'leader') return '/my-groups';
+  return '/dashboard';
+}
+
+/** @deprecated use resolveSessionFromPhone */
+export function resolveRoleFromPhone(phone: string): UserRole {
+  return resolveSessionFromPhone(phone).role;
+}

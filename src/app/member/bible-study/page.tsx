@@ -99,7 +99,7 @@ export default function BibleStudyPage() {
   const todayDevotional = devotionals[Math.max(0, today - 1) % devotionals.length];
 
   return (
-    <AppShell>
+    <AppShell access="shared">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div>

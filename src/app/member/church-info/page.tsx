@@ -110,7 +110,7 @@ export default function ChurchInfoPage() {
   ];
 
   return (
-    <AppShell>
+    <AppShell access="shared">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Hero */}
         <div className="relative bg-gradient-to-br from-sky/10 via-white/5 to-purple-500/5 border border-white/10 rounded-2xl p-8 overflow-hidden">

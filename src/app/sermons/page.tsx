@@ -105,7 +105,7 @@ export default function AdminSermonsPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell access="staff">
       {/* Toast */}
       {notification && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 text-sm px-4 py-3 rounded-xl shadow-xl backdrop-blur-sm max-w-sm">

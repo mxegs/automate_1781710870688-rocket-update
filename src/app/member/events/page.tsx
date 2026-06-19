@@ -130,7 +130,7 @@ export default function MemberEventsPage() {
   const myRsvps = mockEvents.filter((e) => rsvpedEvents.includes(e.id));
 
   return (
-    <AppShell>
+    <AppShell access="shared">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Notification toast */}
         {notification && (

@@ -48,7 +48,7 @@ export default function MinistriesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   return (
-    <AppShell>
+    <AppShell access="staff">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-cloud tracking-tight">Ministries</h1>

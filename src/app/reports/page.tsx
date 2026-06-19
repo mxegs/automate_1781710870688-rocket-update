@@ -84,7 +84,7 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'visitors' | 'events'>('overview');
 
   return (
-    <AppShell>
+    <AppShell access="staff">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

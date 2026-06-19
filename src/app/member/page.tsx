@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import Link from 'next/link';
+import { getDisplayName, getSession } from '@/lib/auth/session';
 
 const dailyVerses = [
   { verse: 'For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.', ref: 'Jeremiah 29:11' },
@@ -74,13 +75,10 @@ export default function MemberHomePage() {
     setVerse(dailyVerses[dayIndex % dailyVerses.length]);
     const hour = new Date().getHours();
     setGreeting(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening');
-    if (typeof window !== 'undefined') {
-      const email = sessionStorage.getItem('church_user') || '';
-      const name = email.split('@')[0] || 'Member';
-      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
-      setUserName(displayName);
-      setGivingForm((f) => ({ ...f, name: displayName }));
-    }
+    const session = getSession();
+    const displayName = getDisplayName(session);
+    setUserName(displayName);
+    setGivingForm((f) => ({ ...f, name: displayName }));
   }, []);
 
   useEffect(() => {
@@ -115,7 +113,7 @@ export default function MemberHomePage() {
 
   return (
     <AppShell>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="space-y-6">
 
         {/* Top bar: Welcome + Notification Bell */}
         <div className="flex items-center justify-between">
