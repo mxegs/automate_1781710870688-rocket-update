@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
-import SendInvitePanel from '@/components/admin/SendInvitePanel';
 import { getCampusLabel } from '@/lib/church/constants';
 import {
   getInviteRequests,
@@ -17,17 +16,29 @@ interface InviteRequestsPanelProps {
 
 export default function InviteRequestsPanel({ onSendInvite }: InviteRequestsPanelProps) {
   const [requests, setRequests] = useState<InviteRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setRequests(getInviteRequests('pending'));
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      setRequests(await getInviteRequests('pending'));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const refresh = () => setRequests(getInviteRequests('pending'));
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
-  const handleDecline = (id: string) => {
-    updateInviteRequestStatus(id, 'declined');
+  const handleDecline = async (id: string) => {
+    await updateInviteRequestStatus(id, 'declined');
     refresh();
   };
+
+  if (loading) {
+    return <p className="text-sm text-cloud/40">Loading requests…</p>;
+  }
 
   if (requests.length === 0) {
     return (

@@ -1,5 +1,6 @@
 import { findDemoUser } from './demo-users';
 import { isPhoneInvited } from '@/lib/invites/service';
+import { apiFetch, useBackend } from '@/lib/api/client';
 
 export type UserRole = 'member' | 'visitor' | 'admin' | 'pastor' | 'leader';
 export type ViewMode = 'staff' | 'member';
@@ -46,10 +47,77 @@ export function isStaffRole(role: UserRole): boolean {
 }
 
 /** Whether this phone may sign in as a member (demo users + pending invites). */
-export function isRegisteredMemberPhone(phone: string): boolean {
+export async function isRegisteredMemberPhone(phone: string): Promise<boolean> {
   const normalized = normalizePhone(phone);
   if (findDemoUser(normalized)) return true;
+
+  if (useBackend()) {
+    try {
+      const res = await apiFetch<{ registered: boolean }>(
+        `/api/auth/check-phone?phone=${encodeURIComponent(normalized)}`,
+      );
+      return res.registered;
+    } catch {
+      return false;
+    }
+  }
+
   return isPhoneInvited(normalized);
+}
+
+export async function fetchProfileByPhone(phone: string): Promise<{
+  phone: string;
+  role: UserRole;
+  dbRole?: string;
+  isSuperAdmin?: boolean;
+  officialName?: string;
+  username?: string;
+  displayName?: string;
+  campusId?: string;
+} | null> {
+  if (!useBackend()) return Promise.resolve(null);
+  return apiFetch<{
+    phone: string;
+    role: UserRole;
+    officialName?: string;
+    username?: string;
+    displayName?: string;
+  } | null>(`/api/profiles/lookup?phone=${encodeURIComponent(normalizePhone(phone))}`).catch(
+    () => null,
+  );
+}
+
+export async function resolveSessionFromPhoneAsync(
+  phone: string,
+  options?: { asVisitor?: boolean },
+): Promise<AuthSession> {
+  const normalized = normalizePhone(phone);
+
+  if (options?.asVisitor) {
+    return {
+      phone: normalized,
+      role: 'visitor',
+      displayName: 'Guest',
+      username: 'guest',
+    };
+  }
+
+  const profile = await fetchProfileByPhone(normalized);
+  if (profile) {
+    const session: AuthSession = {
+      phone: normalized,
+      role: profile.role,
+      officialName: profile.officialName,
+      username: profile.username,
+      displayName: profile.displayName,
+    };
+    if (isStaffRole(profile.role)) {
+      session.viewMode = 'staff';
+    }
+    return session;
+  }
+
+  return resolveSessionFromPhone(phone, options);
 }
 
 export function resolveSessionFromPhone(

@@ -46,11 +46,11 @@ export default function GroupLeaderPage() {
     notes: '',
   });
 
-  const refresh = () => {
-    const g = getGroupById(groupId);
+  const refresh = async () => {
+    const g = await getGroupById(groupId);
     setGroup(g);
-    setBroadcasts(getBroadcasts(groupId));
-    setSongs(getSongs(groupId));
+    setBroadcasts(await getBroadcasts(groupId));
+    setSongs(await getSongs(groupId));
   };
 
   useEffect(() => {
@@ -59,26 +59,28 @@ export default function GroupLeaderPage() {
       router.replace('/login');
       return;
     }
-    const g = getGroupById(groupId);
-    if (!g) {
-      router.replace('/my-groups');
-      return;
-    }
-    const led = getGroupsLedBy(session.phone);
-    const isAdmin = session.role === 'admin' || session.role === 'pastor';
-    const isLeader = led.some((x) => x.id === groupId);
-    if (!isLeader && !isAdmin) {
-      router.replace('/my-groups');
-      return;
-    }
-    refresh();
+    (async () => {
+      const g = await getGroupById(groupId);
+      if (!g) {
+        router.replace('/my-groups');
+        return;
+      }
+      const led = await getGroupsLedBy(session.phone);
+      const isAdmin = session.role === 'admin' || session.role === 'pastor';
+      const isLeader = led.some((x) => x.id === groupId);
+      if (!isLeader && !isAdmin) {
+        router.replace('/my-groups');
+        return;
+      }
+      refresh();
+    })();
   }, [groupId, router]);
 
-  const handleSendBroadcast = (e: React.FormEvent) => {
+  const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     const session = getSession();
     if (!broadcastMsg.trim() || !broadcastWhen || !session) return;
-    createBroadcast({
+    await createBroadcast({
       groupId,
       message: broadcastMsg.trim(),
       scheduledAt: new Date(broadcastWhen).toISOString(),
@@ -98,7 +100,7 @@ export default function GroupLeaderPage() {
   const handleSaveSong = async (andSend: boolean) => {
     if (!songForm.title.trim() || !songForm.verse1.trim() || !songForm.chorus.trim() || !group) return;
 
-    const song = saveSong({
+    const song = await saveSong({
       groupId,
       title: songForm.title.trim(),
       key: songForm.key,

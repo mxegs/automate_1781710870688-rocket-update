@@ -18,7 +18,7 @@ export default function RequestInvitePage() {
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!surname.trim() || !fullName.trim()) {
       setError('Please enter your name and surname.');
@@ -30,11 +30,14 @@ export default function RequestInvitePage() {
     }
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      submitInviteRequest({ surname, fullName, phone, campus });
-      setLoading(false);
+    try {
+      await submitInviteRequest({ surname, fullName, phone, campus });
       setSubmitted(true);
-    }, 500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not submit request.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

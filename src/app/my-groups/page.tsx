@@ -18,7 +18,7 @@ export default function MyGroupsPage() {
     const session = getSession();
     if (!session) return;
     setDisplayName(session.displayName || session.username || 'Leader');
-    setGroups(getGroupsLedBy(session.phone));
+    getGroupsLedBy(session.phone).then(setGroups);
   }, []);
 
   return (
@@ -48,18 +48,8 @@ export default function MyGroupsPage() {
               <span className="text-[10px] font-semibold uppercase tracking-wider text-ckc-gold">
                 {g.category === 'ministry' ? 'Ministry' : 'Group'} · {getCampusLabel(g.campus)}
               </span>
-              <h3 className="mt-1 text-lg font-bold text-cloud">{g.name}</h3>
-              <p className="mt-2 text-xs text-cloud/40">{g.memberPhones.length} members in group</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-cloud/50">
-                  Broadcasts
-                </span>
-                {g.enableSongLibrary && (
-                  <span className="rounded-lg border border-ckc-gold/20 bg-ckc-gold/10 px-2 py-1 text-[10px] text-ckc-gold">
-                    Song library
-                  </span>
-                )}
-              </div>
+              <h3 className="mt-1 text-base font-bold text-cloud">{g.name}</h3>
+              <p className="mt-2 text-xs text-cloud/40">{g.memberPhones.length} members</p>
             </Link>
           ))}
         </div>

@@ -12,7 +12,7 @@ import {
   getPostLoginRoute,
   isRegisteredMemberPhone,
   normalizePhone,
-  resolveSessionFromPhone,
+  resolveSessionFromPhoneAsync,
   setSession,
 } from '@/lib/auth/session';
 import { DEMO_LOGIN_HINTS } from '@/lib/auth/demo-users';
@@ -42,7 +42,7 @@ function LoginForm() {
     setDemoCode(null);
   };
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalized = normalizePhone(phone);
     if (normalized.length < 9) {
@@ -50,7 +50,7 @@ function LoginForm() {
       return;
     }
 
-    if (loginMode === 'member' && !isRegisteredMemberPhone(phone)) {
+    if (loginMode === 'member' && !(await isRegisteredMemberPhone(phone))) {
       setError('This number is not registered. Ask your church admin for an invite, or continue as a visitor.');
       return;
     }
@@ -65,7 +65,7 @@ function LoginForm() {
     }, 600);
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) {
       setError('Enter the 6-digit code.');
@@ -73,14 +73,14 @@ function LoginForm() {
     }
     setError('');
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!verifyOtp(phone, otp)) {
         setError('Invalid or expired code. Please try again.');
         setLoading(false);
         return;
       }
 
-      const session = resolveSessionFromPhone(phone, {
+      const session = await resolveSessionFromPhoneAsync(phone, {
         asVisitor: loginMode === 'visitor',
       });
       setSession(session);

@@ -8,8 +8,8 @@ import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import {
   canManageGroups,
   createGroup,
-  DEMO_MEMBER_OPTIONS,
   getAllGroups,
+  getMemberOptions,
   updateGroup,
 } from '@/lib/groups/service';
 import { getCampusLabel, CAMPUSES, type CampusId } from '@/lib/church/constants';
@@ -19,6 +19,7 @@ import type { ChurchGroup, GroupCategory } from '@/lib/groups/types';
 export default function GroupsAdminPage() {
   const router = useRouter();
   const [groups, setGroups] = useState<ChurchGroup[]>([]);
+  const [memberOptions, setMemberOptions] = useState<{ phone: string; name: string }[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<ChurchGroup | null>(null);
   const [form, setForm] = useState({
@@ -31,7 +32,10 @@ export default function GroupsAdminPage() {
     enableSongLibrary: false,
   });
 
-  const refresh = () => setGroups(getAllGroups());
+  const refresh = async () => {
+    setGroups(await getAllGroups());
+    setMemberOptions(await getMemberOptions());
+  };
 
   useEffect(() => {
     const session = getSession();
@@ -70,17 +74,17 @@ export default function GroupsAdminPage() {
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    const leader = DEMO_MEMBER_OPTIONS.find((m) => m.phone === form.leaderPhone);
+  const handleSave = async () => {
+    const leader = memberOptions.find((m) => m.phone === form.leaderPhone);
     if (!form.name.trim() || !leader) return;
 
     if (editing) {
-      updateGroup(editing.id, {
+      await updateGroup(editing.id, {
         ...form,
         leaderName: leader.name,
       });
     } else {
-      createGroup({
+      await createGroup({
         ...form,
         leaderName: leader.name,
       });
@@ -196,7 +200,7 @@ export default function GroupsAdminPage() {
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
                 >
                   <option value="">Select leader</option>
-                  {DEMO_MEMBER_OPTIONS.map((m) => (
+                  {memberOptions.map((m) => (
                     <option key={m.phone} value={m.phone}>{m.name}</option>
                   ))}
                 </select>
@@ -204,7 +208,7 @@ export default function GroupsAdminPage() {
               <div>
                 <label className="mb-2 block text-xs font-semibold text-cloud/50">Assign members</label>
                 <div className="max-h-32 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2">
-                  {DEMO_MEMBER_OPTIONS.filter((m) => m.phone !== form.leaderPhone).map((m) => (
+                  {memberOptions.filter((m) => m.phone !== form.leaderPhone).map((m) => (
                     <label key={m.phone} className="flex cursor-pointer items-center gap-2 text-xs text-cloud/70">
                       <input
                         type="checkbox"

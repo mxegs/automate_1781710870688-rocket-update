@@ -1,5 +1,6 @@
 import type { CampusId } from '@/lib/church/constants';
 import { normalizePhone } from '@/lib/auth/session';
+import { apiFetch, useBackend } from '@/lib/api/client';
 
 export type InviteRequestStatus = 'pending' | 'approved' | 'declined';
 
@@ -30,18 +31,30 @@ function writeRequests(requests: InviteRequest[]): void {
   localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
 }
 
-export function getInviteRequests(status?: InviteRequestStatus): InviteRequest[] {
+export async function getInviteRequests(status?: InviteRequestStatus): Promise<InviteRequest[]> {
+  if (useBackend()) {
+    const qs = status ? `?status=${status}` : '';
+    return apiFetch<InviteRequest[]>(`/api/invite-requests${qs}`);
+  }
+
   const all = readRequests();
   if (!status) return all.sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
   return all.filter((r) => r.status === status).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
 }
 
-export function submitInviteRequest(input: {
+export async function submitInviteRequest(input: {
   surname: string;
   fullName: string;
   phone: string;
   campus: CampusId;
-}): InviteRequest {
+}): Promise<InviteRequest> {
+  if (useBackend()) {
+    return apiFetch<InviteRequest>('/api/invite-requests', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
   const normalized = normalizePhone(input.phone);
   const existing = readRequests().find(
     (r) => normalizePhone(r.phone) === normalized && r.status === 'pending',
@@ -63,11 +76,18 @@ export function submitInviteRequest(input: {
   return request;
 }
 
-export function updateInviteRequestStatus(
+export async function updateInviteRequestStatus(
   id: string,
   status: InviteRequestStatus,
   notes?: string,
-): InviteRequest | null {
+): Promise<InviteRequest | null> {
+  if (useBackend()) {
+    return apiFetch<InviteRequest>(`/api/invite-requests/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, notes }),
+    });
+  }
+
   const requests = readRequests();
   const idx = requests.findIndex((r) => r.id === id);
   if (idx === -1) return null;

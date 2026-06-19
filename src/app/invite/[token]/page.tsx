@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
@@ -23,8 +23,11 @@ export default function InvitePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [demoCode, setDemoCode] = useState<string | null>(null);
+  const [inviteMeta, setInviteMeta] = useState<Awaited<ReturnType<typeof findInviteByToken>>>(null);
 
-  const inviteMeta = findInviteByToken(token);
+  useEffect(() => {
+    findInviteByToken(token).then(setInviteMeta);
+  }, [token]);
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();

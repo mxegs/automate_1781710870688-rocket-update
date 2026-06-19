@@ -1,7 +1,5 @@
-/**
- * Supabase client placeholder.
- * Install @supabase/supabase-js and uncomment the createClient call when wiring the backend.
- */
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from './types';
 
 export const supabaseConfigured =
   Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
@@ -9,10 +7,28 @@ export const supabaseConfigured =
   Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) &&
   !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.includes('dummykey');
 
-/** Returns null until Supabase is configured — callers should fall back to demo/local storage. */
-export function getSupabaseClient(): null {
+let browserClient: SupabaseClient<Database> | null = null;
+
+/** Browser/client-side Supabase instance. Returns null when env keys are not set. */
+export function getSupabaseClient(): SupabaseClient<Database> | null {
   if (!supabaseConfigured) return null;
-  // import { createClient } from '@supabase/supabase-js';
-  // return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-  return null;
+
+  if (!browserClient) {
+    browserClient = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+  }
+
+  return browserClient;
+}
+
+/** Server-side client (Route Handlers, Server Actions). Pass cookies/headers when auth is wired. */
+export function createServerSupabaseClient(): SupabaseClient<Database> | null {
+  if (!supabaseConfigured) return null;
+
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
 }

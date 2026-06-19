@@ -1,5 +1,6 @@
 import { DEMO_INVITES } from '@/lib/auth/demo-users';
 import { normalizePhone } from '@/lib/auth/session';
+import { apiFetch, useBackend } from '@/lib/api/client';
 
 export interface PendingInvite {
   id: string;
@@ -31,12 +32,24 @@ function generateToken(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export function getPendingInvites(): PendingInvite[] {
+export async function getPendingInvites(): Promise<PendingInvite[]> {
   return readInvites();
 }
 
-export function isPhoneInvited(phone: string): boolean {
+export async function isPhoneInvited(phone: string): Promise<boolean> {
   const normalized = normalizePhone(phone);
+
+  if (useBackend()) {
+    try {
+      const res = await apiFetch<{ registered: boolean; source?: string }>(
+        `/api/auth/check-phone?phone=${encodeURIComponent(normalized)}`,
+      );
+      return res.registered && (res.source === 'invite' || res.source === 'profile');
+    } catch {
+      /* fall through */
+    }
+  }
+
   const demoMatch = DEMO_INVITES.some((i) => normalizePhone(i.phone) === normalized);
   if (demoMatch) return true;
   return readInvites().some(
@@ -44,8 +57,39 @@ export function isPhoneInvited(phone: string): boolean {
   );
 }
 
-export function findInviteByToken(token: string): PendingInvite | null {
+export async function findInviteByToken(token: string): Promise<PendingInvite | null> {
   const demo = DEMO_INVITES.find((i) => i.token === token);
+  if (demo && !useBackend()) {
+    return {
+      id: `demo-${token}`,
+      token: demo.token,
+      phone: demo.phone,
+      officialName: demo.officialName,
+      username: demo.username,
+      sentAt: new Date().toISOString(),
+      status: 'pending',
+    };
+  }
+
+  if (useBackend()) {
+    try {
+      return await apiFetch<PendingInvite>(`/api/invites/token/${encodeURIComponent(token)}`);
+    } catch {
+      if (demo) {
+        return {
+          id: `demo-${token}`,
+          token: demo.token,
+          phone: demo.phone,
+          officialName: demo.officialName,
+          username: demo.username,
+          sentAt: new Date().toISOString(),
+          status: 'pending',
+        };
+      }
+      return null;
+    }
+  }
+
   if (demo) {
     return {
       id: `demo-${token}`,
@@ -57,6 +101,7 @@ export function findInviteByToken(token: string): PendingInvite | null {
       status: 'pending',
     };
   }
+
   return readInvites().find((i) => i.token === token && i.status === 'pending') ?? null;
 }
 
@@ -64,9 +109,18 @@ export interface CreateInviteInput {
   phone: string;
   officialName: string;
   username?: string;
+  campusId?: string;
+  inviteRequestId?: string;
 }
 
-export function createInvite(input: CreateInviteInput): PendingInvite {
+export async function createInvite(input: CreateInviteInput): Promise<PendingInvite> {
+  if (useBackend()) {
+    return apiFetch<PendingInvite>('/api/invites', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
   const token = generateToken();
   const invite: PendingInvite = {
     id: `inv_${Date.now()}`,

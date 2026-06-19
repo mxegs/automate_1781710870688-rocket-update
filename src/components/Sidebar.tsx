@@ -76,7 +76,7 @@ export default function Sidebar() {
       setUserRole(session.role);
       setDisplayName(getDisplayName(session));
       setViewModeState(getViewMode(session));
-      setLeadsGroups(getGroupsLedBy(session.phone).length > 0);
+      getGroupsLedBy(session.phone).then((led) => setLeadsGroups(led.length > 0));
     }
   }, [pathname]);
 

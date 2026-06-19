@@ -1,38 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
-
-interface Sermon {
-  id: number;
-  title: string;
-  preacher: string;
-  date: string;
-  month: string;
-  year: number;
-  type: 'Sermon' | 'Audio' | 'Book' | 'Special Message';
-  category: string;
-  youtubeId: string;
-  duration: string;
-  description: string;
-  series?: string;
-}
-
-const mockSermons: Sermon[] = [
-  { id: 1, title: 'Walking in Purpose', preacher: 'Pastor James Mokoena', date: '15 Jun 2025', month: 'June', year: 2025, type: 'Sermon', category: 'Sunday Service', youtubeId: 'dQw4w9WgXcQ', duration: '52 min', description: 'Discovering God\'s purpose for your life and walking boldly in it.', series: 'Purpose Series' },
-  { id: 2, title: 'Faith Over Fear', preacher: 'Pastor James Mokoena', date: '8 Jun 2025', month: 'June', year: 2025, type: 'Sermon', category: 'Sunday Service', youtubeId: 'L_jWHffIx5E', duration: '48 min', description: 'How to overcome fear through unwavering faith in God.', series: 'Purpose Series' },
-  { id: 3, title: 'Women of Strength — Women\'s Day 2025', preacher: 'Pastor Sarah Dlamini', date: '9 Aug 2025', month: 'August', year: 2025, type: 'Special Message', category: "Women's Day", youtubeId: 'kJQP7kiw5Fk', duration: '61 min', description: 'A powerful message celebrating the strength and grace of women in the church.', series: "Women's Day 2025" },
-  { id: 4, title: 'Rise Up — Youth Conference 2025', preacher: 'Evangelist Thabo Sithole', date: '5 Apr 2025', month: 'April', year: 2025, type: 'Special Message', category: 'Youth Conference', youtubeId: 'fJ9rUzIMcZQ', duration: '55 min', description: 'A fire-filled message for the next generation to rise and take their place.', series: 'Youth Conference 2025' },
-  { id: 5, title: 'The Power of Prayer', preacher: 'Pastor James Mokoena', date: '1 Jun 2025', month: 'June', year: 2025, type: 'Audio', category: 'Prayer Meeting', youtubeId: 'OPf0YbXqDm0', duration: '38 min', description: 'Understanding the transformative power of a consistent prayer life.' },
-  { id: 6, title: 'Knowing God Deeply', preacher: 'Elder Ruth Khumalo', date: '25 May 2025', month: 'May', year: 2025, type: 'Sermon', category: 'Sunday Service', youtubeId: 'hT_nvWreIhg', duration: '44 min', description: 'A deep dive into intimacy with God through His Word and Spirit.' },
-  { id: 7, title: 'Foundations of Faith', preacher: 'Pastor James Mokoena', date: '18 May 2025', month: 'May', year: 2025, type: 'Sermon', category: 'Sunday Service', youtubeId: 'CevxZvSJLk8', duration: '50 min', description: 'Building your life on the unshakeable foundation of Christ.', series: 'Foundations Series' },
-  { id: 8, title: 'Transformed by Grace', preacher: 'Elder Ruth Khumalo', date: '11 May 2025', month: 'May', year: 2025, type: 'Sermon', category: 'Sunday Service', youtubeId: 'JGwWNGJdvx8', duration: '46 min', description: 'How God\'s grace transforms every area of our lives.' },
-  { id: 9, title: 'Discipleship: The Call to Follow', preacher: 'Pastor James Mokoena', date: '4 May 2025', month: 'May', year: 2025, type: 'Book', category: 'Bible Study', youtubeId: 'RgKAFK5djSk', duration: '35 min', description: 'A study guide companion for the discipleship series.' },
-  { id: 10, title: 'Easter Sunday — He Is Risen!', preacher: 'Pastor James Mokoena', date: '20 Apr 2025', month: 'April', year: 2025, type: 'Special Message', category: 'Easter', youtubeId: 'YQHsXMglC9A', duration: '58 min', description: 'Celebrating the resurrection of Jesus Christ and what it means for us today.', series: 'Easter 2025' },
-  { id: 11, title: 'Healing in His Wings', preacher: 'Pastor Sarah Dlamini', date: '13 Apr 2025', month: 'April', year: 2025, type: 'Sermon', category: 'Sunday Service', youtubeId: 'nfWlot6h_JM', duration: '49 min', description: 'God\'s promise of healing — physical, emotional, and spiritual.' },
-  { id: 12, title: 'The Fruit of the Spirit', preacher: 'Elder Ruth Khumalo', date: '6 Apr 2025', month: 'April', year: 2025, type: 'Audio', category: 'Midweek Service', youtubeId: 'PT2_F-1esPk', duration: '41 min', description: 'Growing in the nine fruits of the Spirit in everyday life.' },
-];
+import { getCampusLabel, type CampusId } from '@/lib/church/constants';
+import { fetchProfileByPhone, getSession } from '@/lib/auth/session';
+import { getMemberMediaFeed } from '@/lib/sermons/service';
+import type { MediaItem } from '@/lib/sermons/types';
+import { getThumbnailUrl, getWatchUrl } from '@/lib/sermons/utils';
 
 const typeConfig: Record<string, { color: string; icon: string }> = {
   'Sermon': { color: 'bg-sky/10 text-sky border-sky/20', icon: 'MicrophoneIcon' },
@@ -52,22 +27,41 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function SermonsPage() {
+  const [sermons, setSermons] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [feedCampus, setFeedCampus] = useState<CampusId | null>(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [preacherFilter, setPreacherFilter] = useState('All');
   const [yearFilter, setYearFilter] = useState('All');
   const [monthFilter, setMonthFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [selectedSermon, setSelectedSermon] = useState<Sermon | null>(null);
+  const [selectedSermon, setSelectedSermon] = useState<MediaItem | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const preachers = ['All', ...Array.from(new Set(mockSermons.map((s) => s.preacher)))];
-  const years = ['All', ...Array.from(new Set(mockSermons.map((s) => s.year.toString()))).sort((a, b) => Number(b) - Number(a))];
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+    const isVisitor = session.role === 'visitor';
+    fetchProfileByPhone(session.phone).then(async (profile) => {
+      const campus = (profile?.campusId as CampusId) ?? 'midrand';
+      setFeedCampus(isVisitor ? null : campus);
+      const items = await getMemberMediaFeed({
+        memberCampus: isVisitor ? undefined : campus,
+        isVisitor,
+      });
+      setSermons(items);
+      setLoading(false);
+    });
+  }, []);
+
+  const preachers = ['All', ...Array.from(new Set(sermons.map((s) => s.preacher)))];
+  const years = ['All', ...Array.from(new Set(sermons.map((s) => s.year.toString()))).sort((a, b) => Number(b) - Number(a))];
   const months = ['All', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const categories = ['All', ...Array.from(new Set(mockSermons.map((s) => s.category)))];
+  const categories = ['All', ...Array.from(new Set(sermons.map((s) => s.category)))];
 
   const filtered = useMemo(() => {
-    return mockSermons.filter((s) => {
+    return sermons.filter((s) => {
       const matchSearch = s.title.toLowerCase().includes(search.toLowerCase()) ||
         s.preacher.toLowerCase().includes(search.toLowerCase()) ||
         s.description.toLowerCase().includes(search.toLowerCase()) ||
@@ -79,11 +73,11 @@ export default function SermonsPage() {
       const matchCategory = categoryFilter === 'All' || s.category === categoryFilter;
       return matchSearch && matchType && matchPreacher && matchYear && matchMonth && matchCategory;
     });
-  }, [search, typeFilter, preacherFilter, yearFilter, monthFilter, categoryFilter]);
+  }, [sermons, search, typeFilter, preacherFilter, yearFilter, monthFilter, categoryFilter]);
 
   // Group by type for organized display
   const grouped = useMemo(() => {
-    const groups: Record<string, Sermon[]> = {};
+    const groups: Record<string, MediaItem[]> = {};
     filtered.forEach((s) => {
       if (!groups[s.type]) groups[s.type] = [];
       groups[s.type].push(s);
@@ -109,7 +103,13 @@ export default function SermonsPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-xl font-bold text-cloud">Messages & Sermons</h1>
-            <p className="text-cloud/40 text-sm mt-0.5">Sermons, audio messages, books, and special events</p>
+            <p className="text-cloud/40 text-sm mt-0.5">
+              {loading
+                ? 'Loading…'
+                : feedCampus
+                  ? `${getCampusLabel(feedCampus)} + all-church messages`
+                  : 'Church-wide messages for visitors'}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -183,13 +183,15 @@ export default function SermonsPage() {
                     t === 'Book'? 'bg-amber-500/20 text-amber-400 border-amber-400/30' : 'bg-purple-500/20 text-purple-400 border-purple-400/30' :'bg-white/5 text-cloud/40 border-white/10 hover:border-white/20 hover:text-cloud/60'
               }`}
             >
-              {t === 'All' ? `All (${mockSermons.length})` : `${t} (${mockSermons.filter((s) => s.type === t).length})`}
+              {t === 'All' ? `All (${sermons.length})` : `${t} (${sermons.filter((s) => s.type === t).length})`}
             </button>
           ))}
         </div>
 
         {/* Results */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16 text-cloud/40 text-sm">Loading messages…</div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <Icon name="MagnifyingGlassIcon" size={32} variant="outline" className="text-cloud/20 mx-auto mb-3" />
             <p className="text-cloud/40 text-sm">No messages found matching your filters.</p>
@@ -232,14 +234,20 @@ export default function SermonsPage() {
           <div className="bg-[#0F172A] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* YouTube Thumbnail */}
             <div className="relative aspect-video bg-black">
-              <img
-                src={`https://img.youtube.com/vi/${selectedSermon.youtubeId}/maxresdefault.jpg`}
-                alt={`Thumbnail for ${selectedSermon.title}`}
-                className="w-full h-full object-cover"
-              />
+              {getThumbnailUrl(selectedSermon) ? (
+                <img
+                  src={getThumbnailUrl(selectedSermon)!}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-white/5">
+                  <Icon name="MusicalNoteIcon" size={48} variant="outline" className="text-cloud/20" />
+                </div>
+              )}
               <div className="absolute inset-0 flex items-center justify-center">
                 <a
-                  href={`https://www.youtube.com/watch?v=${selectedSermon.youtubeId}`}
+                  href={getWatchUrl(selectedSermon) ?? '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-16 h-16 rounded-full bg-red-600/90 hover:bg-red-600 flex items-center justify-center transition-all hover:scale-110 shadow-2xl"
@@ -269,13 +277,13 @@ export default function SermonsPage() {
                 <span className={`px-2 py-0.5 rounded-full ${categoryColors[selectedSermon.category] || 'bg-white/5 text-cloud/40'}`}>{selectedSermon.category}</span>
               </div>
               <a
-                href={`https://www.youtube.com/watch?v=${selectedSermon.youtubeId}`}
+                href={getWatchUrl(selectedSermon) ?? '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 w-full flex items-center justify-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 font-semibold text-sm py-2.5 rounded-xl transition-all"
               >
                 <Icon name="PlayCircleIcon" size={16} variant="outline" />
-                Watch on YouTube
+                {selectedSermon.youtubeId ? 'Watch on YouTube' : 'Open link'}
               </a>
             </div>
           </div>
@@ -285,15 +293,22 @@ export default function SermonsPage() {
   );
 }
 
-function SermonCard({ sermon, viewMode, onClick }: { sermon: Sermon; viewMode: 'grid' | 'list'; onClick: () => void }) {
+function SermonCard({ sermon, viewMode, onClick }: { sermon: MediaItem; viewMode: 'grid' | 'list'; onClick: () => void }) {
   const cfg = typeConfig[sermon.type];
   const catColor = categoryColors[sermon.category] || 'bg-white/5 text-cloud/40';
+  const thumb = getThumbnailUrl(sermon);
 
   if (viewMode === 'list') {
     return (
       <button onClick={onClick} className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/8 border border-white/10 hover:border-sky/20 rounded-xl p-3 transition-all text-left group">
         <div className="relative w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black">
-          <img src={`https://img.youtube.com/vi/${sermon.youtubeId}/mqdefault.jpg`} alt={`Thumbnail for ${sermon.title}`} className="w-full h-full object-cover" />
+          {thumb ? (
+            <img src={thumb} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-white/5">
+              <Icon name="MusicalNoteIcon" size={20} variant="outline" className="text-cloud/30" />
+            </div>
+          )}
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
             <Icon name="PlayCircleIcon" size={20} variant="solid" className="text-white/80" />
           </div>
@@ -313,7 +328,13 @@ function SermonCard({ sermon, viewMode, onClick }: { sermon: Sermon; viewMode: '
   return (
     <button onClick={onClick} className="w-full bg-white/5 hover:bg-white/8 border border-white/10 hover:border-sky/20 rounded-xl overflow-hidden transition-all text-left group hover:scale-[1.01]">
       <div className="relative aspect-video bg-black">
-        <img src={`https://img.youtube.com/vi/${sermon.youtubeId}/mqdefault.jpg`} alt={`Thumbnail for ${sermon.title}`} className="w-full h-full object-cover" />
+        {thumb ? (
+          <img src={thumb} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-white/5">
+            <Icon name="MusicalNoteIcon" size={32} variant="outline" className="text-cloud/20" />
+          </div>
+        )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
           <div className="w-10 h-10 rounded-full bg-red-600/80 group-hover:bg-red-600 flex items-center justify-center transition-all group-hover:scale-110">
             <Icon name="PlayIcon" size={16} variant="solid" className="text-white ml-0.5" />

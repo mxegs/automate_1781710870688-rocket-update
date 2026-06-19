@@ -13,6 +13,7 @@ interface SendInvitePrefill {
   phone?: string;
   username?: string;
   requestId?: string;
+  campusId?: string;
 }
 
 interface SendInvitePanelProps {
@@ -45,20 +46,27 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
     setError('');
     setLoading(true);
 
-    const invite = createInvite({
-      phone: normalized,
-      officialName: officialName.trim(),
-      username: username.trim() || undefined,
-    });
-    const inviteUrl = getInviteUrl(invite.token);
-    const message = buildInviteSmsMessage(officialName.trim(), inviteUrl);
-    const smsResult = await sendSms(normalized, message);
+    try {
+      const invite = await createInvite({
+        phone: normalized,
+        officialName: officialName.trim(),
+        username: username.trim() || undefined,
+        campusId: prefill?.campusId,
+        inviteRequestId: prefill?.requestId,
+      });
+      const inviteUrl = getInviteUrl(invite.token);
+      const message = buildInviteSmsMessage(officialName.trim(), inviteUrl);
+      const smsResult = await sendSms(normalized, message);
 
-    setLoading(false);
-    if (prefill?.requestId) {
-      updateInviteRequestStatus(prefill.requestId, 'approved');
+      if (prefill?.requestId) {
+        await updateInviteRequestStatus(prefill.requestId, 'approved');
+      }
+      setSent({ inviteUrl, smsDemo: smsResult.demo ?? true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send invite.');
+    } finally {
+      setLoading(false);
     }
-    setSent({ inviteUrl, smsDemo: smsResult.demo ?? true });
   };
 
   const copyLink = () => {

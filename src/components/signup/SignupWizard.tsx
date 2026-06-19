@@ -36,6 +36,7 @@ import {
   type MembershipApplication,
 } from '@/lib/membership/types';
 import { getInviteSession, clearInviteSession } from '@/lib/auth/session';
+import { submitMembershipApplication } from '@/lib/membership/service';
 
 const SignaturePad = dynamic(() => import('@/components/signup/SignaturePad'), { ssr: false });
 
@@ -251,21 +252,37 @@ export default function SignupWizard() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitting(true);
     const sig = sigRef.current?.toDataURL() || form.covenant.signatureDataUrl;
-    const payload = {
+    const payload: MembershipApplication = {
       ...form,
       submittedAt: new Date().toISOString(),
       covenant: { ...form.covenant, signatureDataUrl: sig },
     };
-    localStorage.setItem('ckc_submitted_applications', JSON.stringify([
-      ...JSON.parse(localStorage.getItem('ckc_submitted_applications') || '[]'),
-      payload,
-    ]));
-    localStorage.removeItem(DRAFT_STORAGE_KEY);
-    clearInviteSession();
-    setTimeout(() => router.push('/signup/success'), 800);
+
+    try {
+      const inviteSession = getInviteSession();
+      await submitMembershipApplication({
+        phone: form.personal.cellNo || inviteSession?.phone || '',
+        campusId: form.personal.campus as 'midrand' | 'verulam',
+        applicationData: payload,
+        inviteToken: inviteSession?.token,
+      });
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      clearInviteSession();
+      router.push('/signup/success');
+    } catch {
+      localStorage.setItem('ckc_submitted_applications', JSON.stringify([
+        ...JSON.parse(localStorage.getItem('ckc_submitted_applications') || '[]'),
+        payload,
+      ]));
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      clearInviteSession();
+      router.push('/signup/success');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleIdPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {

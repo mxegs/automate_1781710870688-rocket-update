@@ -6,6 +6,7 @@ import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import SendInvitePanel, { type SendInvitePrefill } from '@/components/admin/SendInvitePanel';
 import InviteRequestsPanel from '@/components/admin/InviteRequestsPanel';
+import PendingApplicationsPanel from '@/components/admin/PendingApplicationsPanel';
 import { AGE_CATEGORIES, CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import type { InviteRequest } from '@/lib/invites/request-service';
 
@@ -40,7 +41,7 @@ const statusColors: Record<string, string> = {
   New: 'bg-sky/10 text-sky border-sky/20',
 };
 
-type Tab = 'members' | 'requests';
+type Tab = 'members' | 'requests' | 'applications';
 
 export default function MembersPage() {
   const [tab, setTab] = useState<Tab>('requests');
@@ -76,6 +77,7 @@ export default function MembersPage() {
       officialName: `${req.fullName} ${req.surname}`,
       phone: req.phone,
       requestId: req.id,
+      campusId: req.campus,
     });
   };
 
@@ -98,6 +100,7 @@ export default function MembersPage() {
       <div className="flex gap-2 border-b border-white/10 pb-1">
         {[
           { id: 'requests' as Tab, label: 'Invite Requests' },
+          { id: 'applications' as Tab, label: 'Pending Applications' },
           { id: 'members' as Tab, label: 'All Members' },
         ].map((t) => (
           <button
@@ -123,6 +126,13 @@ export default function MembersPage() {
           </p>
           <p className="mt-1 text-xs text-cloud/30">
             After approval, the person receives an SMS link to complete the full 6-step membership form.
+          </p>
+        </ContentCard>
+      ) : tab === 'applications' ? (
+        <ContentCard title="Pending applications" icon="DocumentCheckIcon">
+          <PendingApplicationsPanel />
+          <p className="mt-4 text-xs text-cloud/30">
+            Approve to create a member record. They can then sign in with their cell number.
           </p>
         </ContentCard>
       ) : (
