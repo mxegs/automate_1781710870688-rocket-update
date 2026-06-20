@@ -4,15 +4,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import AuthShell from '@/components/auth/AuthShell';
 import { CkcButton, CkcCard, CkcField, CkcInput } from '@/components/ui/CkcForm';
-import { CAMPUSES, type CampusId } from '@/lib/church/constants';
+import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import { submitInviteRequest } from '@/lib/invites/request-service';
-import { formatPhoneDisplay, normalizePhone } from '@/lib/auth/session';
 import { BRAND } from '@/lib/assets';
 
 export default function RequestInvitePage() {
   const [surname, setSurname] = useState('');
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [campus, setCampus] = useState<CampusId>('midrand');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,14 +23,14 @@ export default function RequestInvitePage() {
       setError('Please enter your name and surname.');
       return;
     }
-    if (normalizePhone(phone).length < 9) {
-      setError('Please enter a valid cell number.');
+    if (!email.trim().includes('@')) {
+      setError('Please enter a valid email address.');
       return;
     }
     setError('');
     setLoading(true);
     try {
-      await submitInviteRequest({ surname, fullName, phone, campus });
+      await submitInviteRequest({ surname, fullName, email: email.trim(), campus });
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not submit request.');
@@ -50,8 +49,8 @@ export default function RequestInvitePage() {
             </div>
             <h2 className="text-base font-semibold text-ckc-white">Request received</h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
-              Thank you, {fullName}. Your campus admin will review your request and contact you at{' '}
-              {formatPhoneDisplay(phone)} if needed before sending your membership invite.
+              Thank you, {fullName}. Your {getCampusLabel(campus)} admin will review your request and email
+              you an invite link to <strong className="text-ckc-white">{email.trim().toLowerCase()}</strong>.
             </p>
             <Link href="/login" className="block text-sm text-ckc-gold hover:underline">
               Back to sign in
@@ -62,19 +61,20 @@ export default function RequestInvitePage() {
             <span className="ckc-label-pill">Step 1 of membership</span>
             <h2 className="text-base font-semibold text-ckc-white">Request an invite</h2>
             <p className="text-xs text-ckc-muted">
-              Tell us who you are and which campus you attend. An admin will verify and send you a link to complete the full membership form.
+              Your name, email, and campus — no phone needed here. An admin at your campus will email
+              you a link to complete the full membership form.
             </p>
 
             <CkcField label="Surname" required>
-              <CkcInput value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Mthembu" />
+              <CkcInput value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="Surname" />
             </CkcField>
 
             <CkcField label="First name(s)" required>
-              <CkcInput value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Lerato" />
+              <CkcInput value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="First name" />
             </CkcField>
 
-            <CkcField label="Cell number" required>
-              <CkcInput type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="082 111 4444" />
+            <CkcField label="Email address" required>
+              <CkcInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
             </CkcField>
 
             <CkcField label="Campus" required>

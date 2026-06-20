@@ -27,8 +27,9 @@ export function mapInviteRequest(row: {
   id: string;
   surname: string;
   full_name: string;
-  phone: string;
-  campus_id: string;
+  phone?: string | null;
+  email?: string | null;
+  campus_id?: string | null;
   status: 'pending' | 'approved' | 'declined';
   notes: string | null;
   requested_at: string;
@@ -37,8 +38,9 @@ export function mapInviteRequest(row: {
     id: row.id,
     surname: row.surname,
     fullName: row.full_name,
-    phone: row.phone,
-    campus: row.campus_id as CampusId,
+    phone: row.phone ?? undefined,
+    email: row.email ?? '',
+    campus: (row.campus_id as CampusId) || 'midrand',
     status: row.status,
     notes: row.notes ?? undefined,
     requestedAt: row.requested_at,
@@ -49,6 +51,7 @@ export function mapInvite(row: {
   id: string;
   token: string;
   phone: string;
+  email?: string | null;
   official_name: string;
   username: string | null;
   sent_at: string;
@@ -58,6 +61,7 @@ export function mapInvite(row: {
     id: row.id,
     token: row.token,
     phone: row.phone,
+    email: row.email ?? undefined,
     officialName: row.official_name,
     username: row.username ?? undefined,
     sentAt: row.sent_at,

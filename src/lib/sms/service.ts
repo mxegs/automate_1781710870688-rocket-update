@@ -168,13 +168,9 @@ export function buildInviteSmsMessage(name: string, inviteUrl: string): string {
 
 export function buildInviteRequestNotifyMessage(
   fullName: string,
-  phone: string,
+  email: string,
   campusLabel: string,
   membersUrl: string,
 ): string {
-  return `CKC: ${fullName} (${phone}) requested a membership invite at ${campusLabel}. Review pending requests: ${membersUrl}`;
-}
-
-export function buildOtpSmsMessage(code: string): string {
-  return `Your CKC sign-in code is ${code}. Valid for 10 minutes. Do not share this code.`;
+  return `CKC: ${fullName} (${email}) requested membership at ${campusLabel}. Review: ${membersUrl}`;
 }

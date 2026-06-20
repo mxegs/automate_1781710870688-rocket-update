@@ -9,8 +9,7 @@ export async function GET() {
 
   const { data, error } = await db
     .from('members')
-    .select('id, full_name, phone, campus_id, gender, status, member_since')
-    .eq('status', 'active')
+    .select('id, full_name, surname, phone, email, campus_id, gender, age, status, member_since')
     .order('full_name');
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

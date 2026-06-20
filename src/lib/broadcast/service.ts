@@ -30,7 +30,7 @@ export async function sendBroadcast(
     message: string;
     subject?: string;
   },
-): Promise<{ channel: string; total: number; sent: number; failed?: number; demo?: boolean; campaignId?: string }> {
+): Promise<{ channel: string; total: number; sent: number; failed?: number; demo?: boolean; campaignId?: string; warnings?: string[] }> {
   return apiFetch('/api/broadcast/send', {
     method: 'POST',
     body: JSON.stringify(filters),
@@ -41,6 +41,8 @@ export async function testMailchimp(): Promise<{
   ok: boolean;
   listName?: string;
   fromEmail?: string;
+  doubleOptIn?: boolean;
+  warning?: string;
   error?: string;
 }> {
   return apiFetch('/api/broadcast/mailchimp/test');

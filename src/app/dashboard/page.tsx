@@ -8,19 +8,9 @@ import PageHeader, { ContentCard, StatCard } from '@/components/portal/PageHeade
 import { getAdminEvents } from '@/lib/events/service';
 import type { ChurchEvent } from '@/lib/events/types';
 
-const recentVisitors = [
-  { name: 'Thabo Mokoena', date: 'Sun 15 Jun', status: 'New Visitor', source: 'Friend' },
-  { name: 'Lerato Dlamini', date: 'Sun 15 Jun', status: 'Contacted', source: 'Social Media' },
-  { name: 'Sipho Nkosi', date: 'Sun 8 Jun', status: 'Follow-Up Scheduled', source: 'Walk-in' },
-  { name: 'Nomsa Zulu', date: 'Sun 8 Jun', status: 'Attending Regularly', source: 'Family' },
-];
+const recentVisitors: { name: string; date: string; status: string; source: string }[] = [];
 
-const prayerRequests = [
-  { name: 'Anonymous', category: 'Health', status: 'In Prayer', date: '14 Jun' },
-  { name: 'John Sithole', category: 'Employment', status: 'New', date: '15 Jun' },
-  { name: 'Mary Khumalo', category: 'Family', status: 'Assigned', date: '13 Jun' },
-  { name: 'David Nkosi', category: 'Spiritual Growth', status: 'Answered', date: '10 Jun' },
-];
+const prayerRequests: { name: string; category: string; status: string; date: string }[] = [];
 
 const statusColors: Record<string, string> = {
   'New Visitor': 'bg-sky/10 text-sky border-sky/20',

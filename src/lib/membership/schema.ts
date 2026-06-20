@@ -21,7 +21,7 @@ export const personalStepSchema = z
     dateOfBirth: z.string().min(1, 'Date of birth is required'),
     age: z.union([z.number().min(0).max(120), z.literal('')]).optional(),
     permanentAddress: z.string().min(1, 'Address is required'),
-    email: z.string().optional(),
+    email: z.string().email('Valid email required'),
     cellNo: z.string().regex(phoneRegex, 'Valid cell number required'),
     telNo: z.string().optional(),
     gender: z.enum(['Male', 'Female'], { message: 'Gender is required' }),

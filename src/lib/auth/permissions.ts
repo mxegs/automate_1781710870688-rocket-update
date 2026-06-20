@@ -31,7 +31,9 @@ const VISITOR_ALLOWED = [
   '/member/bible-study',
 ];
 
-const LEADER_RESTRICTED = ['/reports', '/members', '/visitors', '/follow-ups', '/announcements', '/broadcast'];
+const LEADER_RESTRICTED = ['/reports', '/members', '/visitors', '/follow-ups', '/announcements', '/broadcast', '/team'];
+
+const SUPER_ADMIN_ROUTES = ['/team'];
 
 export function isAdminRoute(pathname: string): boolean {
   return ADMIN_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
@@ -49,7 +51,14 @@ export function canAccessRoute(
   role: UserRole,
   pathname: string,
   viewMode: ViewMode = 'staff',
+  isSuperAdmin?: boolean,
 ): boolean {
+  if (
+    SUPER_ADMIN_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))
+  ) {
+    return isSuperAdmin === true;
+  }
+
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/request-invite') ||
@@ -106,16 +115,27 @@ export function getRoleLabel(role: UserRole): string {
 export function filterAdminNavForRole(
   items: { href: string; label: string; icon: string }[],
   role: UserRole,
+  isSuperAdmin?: boolean,
 ) {
+  let filtered = items;
+  if (!isSuperAdmin) {
+    filtered = filtered.filter((item) => item.href !== '/team');
+  }
   if (role === 'leader') {
-    return items.filter(
+    return filtered.filter(
       (item) =>
         !LEADER_RESTRICTED.includes(item.href) &&
         item.href !== '/dashboard' &&
         item.href !== '/groups',
     );
   }
-  return items;
+  if (role === 'admin' || role === 'pastor') {
+    return filtered.filter(
+      (item) =>
+        !['/reports', '/broadcast'].includes(item.href),
+    );
+  }
+  return filtered;
 }
 
 export function getLeaderNavItems(): { href: string; label: string; icon: string }[] {

@@ -1,6 +1,5 @@
 import type { CampusId } from '@/lib/church/constants';
-import { normalizePhone } from '@/lib/auth/session';
-import { apiFetch, useBackend } from '@/lib/api/client';
+import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
 
 export type InviteRequestStatus = 'pending' | 'approved' | 'declined';
 
@@ -8,7 +7,8 @@ export interface InviteRequest {
   id: string;
   surname: string;
   fullName: string;
-  phone: string;
+  phone?: string;
+  email: string;
   campus: CampusId;
   requestedAt: string;
   status: InviteRequestStatus;
@@ -34,7 +34,7 @@ function writeRequests(requests: InviteRequest[]): void {
 export async function getInviteRequests(status?: InviteRequestStatus): Promise<InviteRequest[]> {
   if (useBackend()) {
     const qs = status ? `?status=${status}` : '';
-    return apiFetch<InviteRequest[]>(`/api/invite-requests${qs}`);
+    return apiFetch<InviteRequest[]>(`/api/invite-requests${qs}`, { headers: staffHeaders() });
   }
 
   const all = readRequests();
@@ -45,7 +45,7 @@ export async function getInviteRequests(status?: InviteRequestStatus): Promise<I
 export async function submitInviteRequest(input: {
   surname: string;
   fullName: string;
-  phone: string;
+  email: string;
   campus: CampusId;
 }): Promise<InviteRequest> {
   if (useBackend()) {
@@ -55,9 +55,9 @@ export async function submitInviteRequest(input: {
     });
   }
 
-  const normalized = normalizePhone(input.phone);
+  const normalizedEmail = input.email.trim().toLowerCase();
   const existing = readRequests().find(
-    (r) => normalizePhone(r.phone) === normalized && r.status === 'pending',
+    (r) => r.email?.toLowerCase() === normalizedEmail && r.status === 'pending',
   );
   if (existing) return existing;
 
@@ -65,7 +65,7 @@ export async function submitInviteRequest(input: {
     id: `req_${Date.now()}`,
     surname: input.surname.trim(),
     fullName: input.fullName.trim(),
-    phone: normalized,
+    email: normalizedEmail,
     campus: input.campus,
     requestedAt: new Date().toISOString(),
     status: 'pending',

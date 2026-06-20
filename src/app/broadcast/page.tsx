@@ -37,8 +37,10 @@ export default function BroadcastPage() {
     });
     testMailchimp().then((res) => {
       if (res.ok) {
-        const from = 'fromEmail' in res && res.fromEmail ? ` · from ${res.fromEmail}` : '';
-        setMailchimpStatus(`Mailchimp connected — audience: ${res.listName}${from}`);
+        const from = res.fromEmail ? ` · from ${res.fromEmail}` : '';
+        const optIn = res.doubleOptIn ? ' · double opt-in ON' : '';
+        setMailchimpStatus(`Mailchimp connected — audience: ${res.listName}${from}${optIn}`);
+        if (res.warning) setMailchimpStatus((prev) => `${prev} — ${res.warning}`);
       } else {
         setMailchimpStatus(res.error ?? 'Mailchimp not configured');
       }
@@ -90,10 +92,11 @@ export default function BroadcastPage() {
         subject: subject.trim() || 'Message from CKC',
       });
       const demoNote = res.demo ? ' (demo mode)' : '';
+      const warnNote = 'warnings' in res && res.warnings?.length ? ` Note: ${res.warnings.join(' ')}` : '';
       setResult(
         channel === 'sms'
           ? `SMS sent to ${res.sent} of ${res.total}${res.failed ? `, ${res.failed} failed` : ''}${demoNote}`
-          : `Email sent to ${res.sent} of ${res.total} via Mailchimp${demoNote}`,
+          : `Email sent to ${res.sent} of ${res.total} via Mailchimp${demoNote}${warnNote}`,
       );
       if (res.sent > 0) setMessage('');
     } catch (err) {

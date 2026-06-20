@@ -4,142 +4,79 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
-import OtpInput from '@/components/auth/OtpInput';
-import { CkcButton, CkcCard, CkcField, CkcInput } from '@/components/ui/CkcForm';
-import { sendOtp, verifyOtp } from '@/lib/auth/otp';
-import {
-  getStoredDeviceTrust,
-  registerDeviceTrustAfterOtp,
-  tryTrustedDeviceLogin,
-} from '@/lib/auth/device-trust';
-import { formatPhoneDisplay, normalizePhone, setInviteSession } from '@/lib/auth/session';
+import { CkcButton, CkcCard } from '@/components/ui/CkcForm';
+import { normalizeEmailValue, setInviteSession } from '@/lib/auth/session';
 import { findInviteByToken } from '@/lib/invites/service';
 import { BRAND } from '@/lib/assets';
-
-type Step = 'welcome' | 'otp';
 
 export default function InvitePage() {
   const router = useRouter();
   const params = useParams();
   const token = (params?.token as string) || '';
-  const [step, setStep] = useState<Step>('welcome');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [demoCode, setDemoCode] = useState<string | null>(null);
   const [inviteMeta, setInviteMeta] = useState<Awaited<ReturnType<typeof findInviteByToken>>>(null);
 
+  const inviteEmail = inviteMeta?.email ? normalizeEmailValue(inviteMeta.email) : '';
+
   useEffect(() => {
-    findInviteByToken(token).then(setInviteMeta);
+    findInviteByToken(token)
+      .then((invite) => {
+        if (!invite) {
+          setError('This invite link is invalid or has already been used.');
+          return;
+        }
+        if (!invite.email) {
+          setError('This invite has no email on file. Ask your admin to resend it.');
+          return;
+        }
+        setInviteMeta(invite);
+      })
+      .finally(() => setLoading(false));
   }, [token]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (normalizePhone(phone).length < 9) {
-      setError('Please enter a valid cell number.');
-      return;
-    }
-    setError('');
-    setLoading(true);
-    try {
-      const normalized = normalizePhone(phone);
-      const stored = getStoredDeviceTrust();
-      if (stored?.phone === normalized && (await tryTrustedDeviceLogin())) {
-        setInviteSession({
-          phone: normalized,
-          token,
-          officialName: inviteMeta?.officialName,
-          username: inviteMeta?.username,
-        });
-        router.push('/signup/complete');
-        return;
-      }
-
-      const result = await sendOtp(phone);
-      setDemoCode(result.demo ? result.code ?? null : null);
-      setStep('otp');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not send code. Try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length !== 6) {
-      setError('Enter the 6-digit code.');
-      return;
-    }
-    setLoading(true);
-    try {
-      if (!(await verifyOtp(phone, otp))) {
-        setError('Invalid or expired code.');
-        return;
-      }
-      await registerDeviceTrustAfterOtp({ phone: normalizePhone(phone) });
-      setInviteSession({
-        phone: normalizePhone(phone),
-        token,
-        officialName: inviteMeta?.officialName,
-        username: inviteMeta?.username,
-      });
-      router.push('/signup/complete');
-    } finally {
-      setLoading(false);
-    }
+  const handleContinue = () => {
+    if (!inviteMeta || !inviteEmail) return;
+    setInviteSession({
+      phone: inviteMeta.phone ?? '',
+      email: inviteEmail,
+      token,
+      officialName: inviteMeta.officialName,
+      username: inviteMeta.username,
+    });
+    router.push('/signup/complete');
   };
 
   return (
     <AuthShell subtitle="Membership registration invite">
       <CkcCard>
-        {step === 'welcome' ? (
-          <form onSubmit={handleSendOtp} className="space-y-4">
+        {loading ? (
+          <p className="text-center text-sm text-ckc-muted">Loading invite…</p>
+        ) : error ? (
+          <div className="space-y-4 text-center">
+            <p className="text-sm text-red-400">{error}</p>
+            <Link href="/login" className="text-sm text-ckc-gold hover:underline">
+              Back to sign in
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
             <span className="ckc-label-pill">Invite received</span>
             <h2 className="text-base font-semibold text-ckc-white">
-              {inviteMeta ? `Welcome, ${inviteMeta.officialName.split(' ')[0]}` : 'Complete your membership'}
+              Welcome, {inviteMeta?.officialName.split(' ')[0]}
             </h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
-              You&apos;ve been invited to join {BRAND.name}. Confirm your cell number to begin registration.
+              You&apos;ve been invited to join {BRAND.name}. Tap below to open the membership form.
+              You&apos;ll add your cell number there so the church can send SMS updates.
               {inviteMeta?.username && (
                 <span className="mt-1 block text-ckc-dim">Suggested username: {inviteMeta.username}</span>
               )}
             </p>
 
-            <CkcField label="Cell number" required>
-              <CkcInput
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="082 000 0000"
-              />
-            </CkcField>
-
-            {error && <p className="text-xs text-red-400">{error}</p>}
-
-            <CkcButton type="submit" disabled={loading}>
-              {loading ? 'Sending…' : 'Send OTP'}
+            <CkcButton type="button" onClick={handleContinue}>
+              Start membership form
             </CkcButton>
-          </form>
-        ) : (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <h2 className="text-base font-semibold text-ckc-white">Verify your number</h2>
-            <p className="text-xs text-ckc-muted">Code sent to {formatPhoneDisplay(phone)}</p>
-
-            {demoCode && (
-              <p className="rounded-lg border border-ckc-gold/20 bg-ckc-gold/5 px-3 py-2 text-xs text-ckc-gold">
-                Demo mode — your code is: <strong>{demoCode}</strong>
-              </p>
-            )}
-
-            <OtpInput value={otp} onChange={setOtp} />
-            {error && <p className="text-center text-xs text-red-400">{error}</p>}
-
-            <CkcButton type="submit" disabled={loading || otp.length !== 6}>
-              {loading ? 'Verifying…' : 'Continue to Form'}
-            </CkcButton>
-          </form>
+          </div>
         )}
       </CkcCard>
 

@@ -1,5 +1,4 @@
 import { findDemoUser } from './demo-users';
-import { isPhoneInvited } from '@/lib/invites/service';
 import { apiFetch, useBackend } from '@/lib/api/client';
 
 export type UserRole = 'member' | 'visitor' | 'admin' | 'pastor' | 'leader';
@@ -51,14 +50,14 @@ export function isStaffRole(role: UserRole): boolean {
 }
 
 /** Whether this phone may sign in as a member (demo users + pending invites). */
-export async function isRegisteredMemberPhone(phone: string): Promise<boolean> {
-  const normalized = normalizePhone(phone);
-  if (findDemoUser(normalized)) return true;
+export async function isRegisteredMemberEmail(email: string): Promise<boolean> {
+  const normalized = normalizeEmailValue(email);
+  if (!normalized.includes('@')) return false;
 
   if (useBackend()) {
     try {
       const res = await apiFetch<{ registered: boolean }>(
-        `/api/auth/check-phone?phone=${encodeURIComponent(normalized)}`,
+        `/api/auth/check-email?email=${encodeURIComponent(normalized)}`,
       );
       return res.registered;
     } catch {
@@ -66,7 +65,7 @@ export async function isRegisteredMemberPhone(phone: string): Promise<boolean> {
     }
   }
 
-  return isPhoneInvited(normalized);
+  return false;
 }
 
 export async function fetchProfileByEmail(email: string): Promise<{
@@ -94,8 +93,22 @@ export async function fetchProfileByEmail(email: string): Promise<{
   } | null>(`/api/profiles/lookup-email?email=${encodeURIComponent(email)}`).catch(() => null);
 }
 
-export async function resolveSessionFromEmailAsync(email: string): Promise<AuthSession> {
+export async function resolveSessionFromEmailAsync(
+  email: string,
+  options?: { asVisitor?: boolean },
+): Promise<AuthSession> {
   const normalized = normalizeEmailValue(email);
+
+  if (options?.asVisitor) {
+    return {
+      phone: '',
+      email: normalized,
+      role: 'visitor',
+      displayName: normalized.split('@')[0] || 'Guest',
+      username: 'guest',
+    };
+  }
+
   const profile = await fetchProfileByEmail(normalized);
   if (!profile) {
     throw new Error('Profile not found');
@@ -111,14 +124,18 @@ export async function resolveSessionFromEmailAsync(email: string): Promise<AuthS
     officialName: profile.officialName,
     username: profile.username,
     displayName: profile.displayName,
-    viewMode: 'staff',
   };
+  if (isStaffRole(profile.role)) {
+    session.viewMode = 'staff';
+  }
   return session;
 }
 
 function normalizeEmailValue(email: string): string {
   return email.trim().toLowerCase();
 }
+
+export { normalizeEmailValue };
 
 export async function fetchProfileForSession(session: AuthSession): Promise<Awaited<
   ReturnType<typeof fetchProfileByPhone>
@@ -274,11 +291,11 @@ export function clearSession(): void {
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem('church_role');
   sessionStorage.removeItem('church_user');
-  void import('@/lib/auth/device-trust').then((m) => m.clearDeviceTrust());
 }
 
 export interface InviteSession {
   phone: string;
+  email?: string;
   token: string;
   officialName?: string;
   username?: string;
@@ -297,6 +314,7 @@ export function getInviteSession(): InviteSession | null {
     const parsed = JSON.parse(raw);
     return {
       phone: parsed.phone,
+      email: parsed.email,
       token: parsed.token,
       officialName: parsed.officialName,
       username: parsed.username,

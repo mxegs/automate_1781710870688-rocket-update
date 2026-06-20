@@ -104,6 +104,9 @@ export default function SignupWizard() {
     if (invite.officialName) {
       base.personal.fullName = invite.officialName;
     }
+    if (invite.email) {
+      base.personal.email = invite.email;
+    }
     if (invite.username) {
       base.personal.username = invite.username;
     }
@@ -114,7 +117,8 @@ export default function SignupWizard() {
           ...parsed,
           personal: {
             ...parsed.personal,
-            cellNo: invite.phone,
+            cellNo: parsed.personal.cellNo || invite.phone,
+            email: parsed.personal.email || invite.email || base.personal.email,
             fullName: parsed.personal.fullName || base.personal.fullName,
             username: parsed.personal.username || base.personal.username,
           },
@@ -430,8 +434,8 @@ export default function SignupWizard() {
                   <CkcInput type="tel" value={form.personal.telNo} onChange={(e) => updatePersonal({ telNo: e.target.value })} />
                 </CkcField>
               </div>
-              <CkcField label="Email address" optional error={errors.email}>
-                <CkcInput type="email" value={form.personal.email} onChange={(e) => updatePersonal({ email: e.target.value })} />
+              <CkcField label="Email address" required error={errors.email}>
+                <CkcInput type="email" value={form.personal.email} onChange={(e) => updatePersonal({ email: e.target.value })} placeholder="you@example.com" />
               </CkcField>
 
               <div className="grid grid-cols-2 gap-3">

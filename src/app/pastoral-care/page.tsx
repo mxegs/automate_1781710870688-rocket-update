@@ -16,14 +16,7 @@ interface CareRecord {
   notes?: string;
 }
 
-const mockCareRecords: CareRecord[] = [
-  { id: 1, memberName: 'John Sithole', type: 'Hospital Visit', description: 'John was admitted to Baragwanath Hospital for surgery.', assignedTo: 'Pastor Dlamini', status: 'Scheduled', date: '14 Jun 2025', scheduledDate: '18 Jun 2025', notes: 'Ward 7, visiting hours 14:00-16:00' },
-  { id: 2, memberName: 'Mary Khumalo', type: 'Counseling', description: 'Marriage counseling requested by Mary and her husband.', assignedTo: 'Pastor Dlamini', status: 'Open', date: '13 Jun 2025', scheduledDate: '20 Jun 2025' },
-  { id: 3, memberName: 'David Nkosi', type: 'Home Visit', description: 'David has been absent for 3 weeks. Pastoral check-in needed.', assignedTo: 'Elder Mokoena', status: 'Completed', date: '10 Jun 2025', notes: 'Visited on 12 Jun. David is going through a difficult season at work.' },
-  { id: 4, memberName: 'Grace Zulu', type: 'Follow-up', description: 'New member follow-up after joining the church last month.', assignedTo: 'Deacon Ndlovu', status: 'Completed', date: '5 Jun 2025' },
-  { id: 5, memberName: 'Sipho Mthembu', type: 'Counseling', description: 'Grief counseling after loss of a family member.', assignedTo: 'Pastor Dlamini', status: 'In Progress', date: '15 Jun 2025', scheduledDate: '22 Jun 2025' },
-  { id: 6, memberName: 'Nomsa Dlamini', type: 'Hospital Visit', description: 'Nomsa gave birth and is in Soweto Clinic.', assignedTo: 'Elder Mokoena', status: 'Open', date: '15 Jun 2025' },
-];
+const mockCareRecords: CareRecord[] = [];
 
 const statusColors: Record<string, string> = {
   Open: 'bg-sky/10 text-sky border-sky/20',

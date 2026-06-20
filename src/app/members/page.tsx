@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
@@ -9,31 +9,60 @@ import InviteRequestsPanel from '@/components/admin/InviteRequestsPanel';
 import PendingApplicationsPanel from '@/components/admin/PendingApplicationsPanel';
 import { AGE_CATEGORIES, CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import type { InviteRequest } from '@/lib/invites/request-service';
+import { apiFetch, useBackend } from '@/lib/api/client';
+import { formatPhoneDisplay } from '@/lib/auth/session';
 
 interface Member {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
   status: 'Active' | 'Inactive' | 'New';
   ministry: string;
   joinDate: string;
-  gender: 'Male' | 'Female';
+  gender: 'Male' | 'Female' | 'Unknown';
   ageCategory: 'child' | 'youth' | 'adult';
   campus: CampusId;
   baptised: boolean;
 }
 
-const mockMembers: Member[] = [
-  { id: 1, name: 'Thabo Mokoena', email: 'thabo@email.com', phone: '071 234 5678', status: 'Active', ministry: 'Worship Team', joinDate: '12 Jan 2022', gender: 'Male', ageCategory: 'adult', campus: 'midrand', baptised: true },
-  { id: 2, name: 'Lerato Dlamini', email: 'lerato@email.com', phone: '082 345 6789', status: 'Active', ministry: 'Youth Ministry', joinDate: '5 Mar 2021', gender: 'Female', ageCategory: 'adult', campus: 'verulam', baptised: true },
-  { id: 3, name: 'Sipho Nkosi', email: 'sipho@email.com', phone: '073 456 7890', status: 'Active', ministry: 'Media Team', joinDate: '20 Jun 2023', gender: 'Male', ageCategory: 'youth', campus: 'midrand', baptised: false },
-  { id: 4, name: 'Nomsa Zulu', email: 'nomsa@email.com', phone: '064 567 8901', status: 'Active', ministry: "Women's Ministry", joinDate: '8 Aug 2020', gender: 'Female', ageCategory: 'adult', campus: 'verulam', baptised: true },
-  { id: 5, name: 'David Sithole', email: 'david@email.com', phone: '079 678 9012', status: 'Inactive', ministry: 'Outreach Team', joinDate: '15 Feb 2019', gender: 'Male', ageCategory: 'adult', campus: 'midrand', baptised: true },
-  { id: 6, name: 'Grace Khumalo', email: 'grace@email.com', phone: '083 789 0123', status: 'Active', ministry: 'Hospitality', joinDate: '3 Nov 2022', gender: 'Female', ageCategory: 'adult', campus: 'midrand', baptised: true },
-  { id: 7, name: 'Bongani Mthembu', email: 'bongani@email.com', phone: '076 890 1234', status: 'New', ministry: 'None', joinDate: '1 Jun 2024', gender: 'Male', ageCategory: 'youth', campus: 'verulam', baptised: false },
-  { id: 8, name: 'Zanele Ndlovu', email: 'zanele@email.com', phone: '061 901 2345', status: 'Active', ministry: "Children's Ministry", joinDate: '22 Apr 2021', gender: 'Female', ageCategory: 'adult', campus: 'midrand', baptised: true },
-];
+function ageToCategory(age: number | null | undefined): 'child' | 'youth' | 'adult' {
+  if (age == null) return 'adult';
+  if (age <= 12) return 'child';
+  if (age <= 25) return 'youth';
+  return 'adult';
+}
+
+function mapDbMember(row: {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string;
+  campus_id: string;
+  gender: string | null;
+  age: number | null;
+  status: string;
+  member_since: string;
+}): Member {
+  const statusMap: Record<string, Member['status']> = {
+    active: 'Active',
+    inactive: 'Inactive',
+    pending: 'New',
+  };
+  return {
+    id: row.id,
+    name: row.full_name,
+    email: row.email ?? '',
+    phone: formatPhoneDisplay(row.phone),
+    status: statusMap[row.status] ?? 'Active',
+    ministry: '—',
+    joinDate: row.member_since,
+    gender: row.gender === 'Male' || row.gender === 'Female' ? row.gender : 'Unknown',
+    ageCategory: ageToCategory(row.age),
+    campus: row.campus_id as CampusId,
+    baptised: false,
+  };
+}
 
 const statusColors: Record<string, string> = {
   Active: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
@@ -44,7 +73,10 @@ const statusColors: Record<string, string> = {
 type Tab = 'members' | 'requests' | 'applications';
 
 export default function MembersPage() {
+  const backend = useBackend();
   const [tab, setTab] = useState<Tab>('requests');
+  const [members, setMembers] = useState<Member[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [genderFilter, setGenderFilter] = useState('All');
@@ -55,7 +87,28 @@ export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [requestsKey, setRequestsKey] = useState(0);
 
-  const filtered = mockMembers.filter((m) => {
+  useEffect(() => {
+    if (!backend || tab !== 'members') return;
+    setMembersLoading(true);
+    apiFetch<
+      {
+        id: string;
+        full_name: string;
+        email: string | null;
+        phone: string;
+        campus_id: string;
+        gender: string | null;
+        age: number | null;
+        status: string;
+        member_since: string;
+      }[]
+    >('/api/members')
+      .then((rows) => setMembers(rows.map(mapDbMember)))
+      .catch(() => setMembers([]))
+      .finally(() => setMembersLoading(false));
+  }, [backend, tab, requestsKey]);
+
+  const filtered = members.filter((m) => {
     const matchSearch =
       m.name.toLowerCase().includes(search.toLowerCase()) ||
       m.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -75,7 +128,7 @@ export default function MembersPage() {
   const handleApproveRequest = (req: InviteRequest) => {
     openSendInvite({
       officialName: `${req.fullName} ${req.surname}`,
-      phone: req.phone,
+      email: req.email,
       requestId: req.id,
       campusId: req.campus,
     });
@@ -157,6 +210,9 @@ export default function MembersPage() {
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+            {membersLoading ? (
+              <div className="py-12 text-center text-sm text-cloud/40">Loading members from Supabase…</div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -203,16 +259,17 @@ export default function MembersPage() {
                 </tbody>
               </table>
             </div>
-            {filtered.length === 0 && (
+            )}
+            {filtered.length === 0 && !membersLoading && (
               <div className="py-12 text-center text-cloud/30">
                 <Icon name="UsersIcon" size={32} variant="outline" className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No members match these filters</p>
+                <p className="text-sm">No members in Supabase yet — approve applications or run invite flow.</p>
               </div>
             )}
           </div>
 
           <p className="text-xs text-cloud/30">
-            Select filtered members to add to Groups or Ministries for messaging and rostering — coming with Supabase.
+            Member list comes from Supabase only — no dummy contacts shown.
           </p>
         </>
       )}

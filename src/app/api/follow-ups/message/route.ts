@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendSms } from '@/lib/sms/service';
-import { formatPhoneDisplay } from '@/lib/auth/session';
+import { isInternalPlaceholderPhone } from '@/lib/auth/super-admin';
 
 export async function POST(request: Request) {
   const db = getSupabaseAdmin();
@@ -22,7 +22,12 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   let sent = 0;
+  let skipped = 0;
   for (const contact of contacts ?? []) {
+    if ((channel === 'sms' || channel === 'whatsapp') && isInternalPlaceholderPhone(contact.phone)) {
+      skipped++;
+      continue;
+    }
     if (channel === 'sms' || channel === 'whatsapp') {
       await sendSms(
         contact.phone,
@@ -41,5 +46,5 @@ export async function POST(request: Request) {
       .eq('id', contact.id);
   }
 
-  return NextResponse.json({ sent, channel });
+  return NextResponse.json({ sent, skipped, channel });
 }

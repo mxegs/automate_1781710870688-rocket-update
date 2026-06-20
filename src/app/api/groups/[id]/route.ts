@@ -46,6 +46,15 @@ export async function PATCH(
   const { error } = await db.from('groups').update(patch).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  if (body.leaderPhone) {
+    const leaderPhone = normalizePhone(body.leaderPhone);
+    await db
+      .from('profiles')
+      .update({ role: 'leader' })
+      .eq('phone', leaderPhone)
+      .neq('role', 'super_admin');
+  }
+
   if (body.memberPhones) {
     await db.from('group_members').delete().eq('group_id', id);
     const phones = body.memberPhones.map(normalizePhone);

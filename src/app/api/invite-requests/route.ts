@@ -2,16 +2,21 @@ import { NextResponse } from 'next/server';
 import { getAppUrl } from '@/lib/app-url';
 import { getCampusLabel } from '@/lib/church/constants';
 import type { CampusId } from '@/lib/church/constants';
-import { formatPhoneDisplay, normalizePhone } from '@/lib/auth/session';
+import {
+  canManageInvites,
+  canManageCampus,
+  actorCampusScope,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
+import { isInternalPlaceholderPhone, normalizeEmail } from '@/lib/auth/super-admin';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapInviteRequest } from '@/lib/supabase/mappers';
 import { buildInviteRequestNotifyMessage, sendBulkSms } from '@/lib/sms/service';
-import { isInternalPlaceholderPhone } from '@/lib/auth/super-admin';
 
 async function notifyCampusAdmins(
   campusId: CampusId,
   fullName: string,
-  phone: string,
+  email: string,
   request: Request,
 ): Promise<void> {
   const db = getSupabaseAdmin();
@@ -32,7 +37,7 @@ async function notifyCampusAdmins(
   const membersUrl = `${getAppUrl(request)}/members`;
   const message = buildInviteRequestNotifyMessage(
     fullName,
-    formatPhoneDisplay(phone),
+    email,
     getCampusLabel(campusId),
     membersUrl,
   );
@@ -54,6 +59,12 @@ export async function GET(request: Request) {
     query = query.eq('status', status as 'pending' | 'approved' | 'declined');
   }
 
+  const actor = await resolveStaffActor(request);
+  const campusScope = actor ? actorCampusScope(actor) : null;
+  if (campusScope) {
+    query = query.eq('campus_id', campusScope);
+  }
+
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -67,16 +78,18 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const phone = normalizePhone(body.phone ?? '');
+  const email = normalizeEmail(body.email ?? '');
 
-  if (!body.surname?.trim() || !body.fullName?.trim() || phone.length < 9 || !body.campus) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  if (!body.surname?.trim() || !body.fullName?.trim() || !email.includes('@') || !body.campus) {
+    return NextResponse.json({ error: 'Name, surname, email, and campus are required' }, { status: 400 });
   }
+
+  const campusId = body.campus as CampusId;
 
   const { data: existing } = await db
     .from('invite_requests')
     .select('*')
-    .eq('phone', phone)
+    .eq('email', email)
     .eq('status', 'pending')
     .maybeSingle();
 
@@ -89,8 +102,8 @@ export async function POST(request: Request) {
     .insert({
       surname: body.surname.trim(),
       full_name: body.fullName.trim(),
-      phone,
-      campus_id: body.campus,
+      email,
+      campus_id: campusId,
       status: 'pending',
     })
     .select('*')
@@ -98,7 +111,7 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  void notifyCampusAdmins(body.campus as CampusId, body.fullName.trim(), phone, request);
+  void notifyCampusAdmins(campusId, `${body.fullName.trim()} ${body.surname.trim()}`, email, request);
 
   return NextResponse.json(mapInviteRequest(data));
 }

@@ -87,6 +87,7 @@ export interface Database {
           surname: string;
           full_name: string;
           phone: string;
+          email: string | null;
           campus_id: string;
           status: InviteRequestStatus;
           notes: string | null;
@@ -99,6 +100,7 @@ export interface Database {
           surname: string;
           full_name: string;
           phone: string;
+          email?: string | null;
           campus_id: string;
           status?: InviteRequestStatus;
           notes?: string | null;
@@ -111,6 +113,7 @@ export interface Database {
           surname?: string;
           full_name?: string;
           phone?: string;
+          email?: string | null;
           campus_id?: string;
           status?: InviteRequestStatus;
           notes?: string | null;
@@ -124,6 +127,7 @@ export interface Database {
           id: string;
           token: string;
           phone: string;
+          email: string | null;
           official_name: string;
           username: string | null;
           campus_id: string | null;
@@ -138,6 +142,7 @@ export interface Database {
           id?: string;
           token: string;
           phone: string;
+          email?: string | null;
           official_name: string;
           username?: string | null;
           campus_id?: string | null;
@@ -152,6 +157,7 @@ export interface Database {
           id?: string;
           token?: string;
           phone?: string;
+          email?: string | null;
           official_name?: string;
           username?: string | null;
           campus_id?: string | null;

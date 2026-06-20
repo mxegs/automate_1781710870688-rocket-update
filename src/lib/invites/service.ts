@@ -1,17 +1,22 @@
 import { DEMO_INVITES } from '@/lib/auth/demo-users';
-import { normalizePhone } from '@/lib/auth/session';
-import { apiFetch, useBackend } from '@/lib/api/client';
+import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
 
 export interface PendingInvite {
   id: string;
   token: string;
   phone: string;
+  email?: string;
   officialName: string;
   username?: string;
   sentAt: string;
   status: 'pending' | 'accepted';
   inviteUrl?: string;
   sms?: {
+    success: boolean;
+    demo?: boolean;
+    error?: string;
+  };
+  emailDelivery?: {
     success: boolean;
     demo?: boolean;
     error?: string;
@@ -40,27 +45,6 @@ function generateToken(): string {
 
 export async function getPendingInvites(): Promise<PendingInvite[]> {
   return readInvites();
-}
-
-export async function isPhoneInvited(phone: string): Promise<boolean> {
-  const normalized = normalizePhone(phone);
-
-  if (useBackend()) {
-    try {
-      const res = await apiFetch<{ registered: boolean; source?: string }>(
-        `/api/auth/check-phone?phone=${encodeURIComponent(normalized)}`,
-      );
-      return res.registered && (res.source === 'invite' || res.source === 'profile');
-    } catch {
-      /* fall through */
-    }
-  }
-
-  const demoMatch = DEMO_INVITES.some((i) => normalizePhone(i.phone) === normalized);
-  if (demoMatch) return true;
-  return readInvites().some(
-    (i) => normalizePhone(i.phone) === normalized && i.status === 'pending',
-  );
 }
 
 export async function findInviteByToken(token: string): Promise<PendingInvite | null> {
@@ -112,8 +96,9 @@ export async function findInviteByToken(token: string): Promise<PendingInvite | 
 }
 
 export interface CreateInviteInput {
-  phone: string;
+  email: string;
   officialName: string;
+  phone?: string;
   username?: string;
   campusId?: string;
   inviteRequestId?: string;
@@ -123,6 +108,7 @@ export async function createInvite(input: CreateInviteInput): Promise<PendingInv
   if (useBackend()) {
     return apiFetch<PendingInvite>('/api/invites', {
       method: 'POST',
+      headers: staffHeaders(),
       body: JSON.stringify(input),
     });
   }
@@ -131,7 +117,8 @@ export async function createInvite(input: CreateInviteInput): Promise<PendingInv
   const invite: PendingInvite = {
     id: `inv_${Date.now()}`,
     token,
-    phone: normalizePhone(input.phone),
+    phone: input.phone ?? '',
+    email: input.email.trim().toLowerCase(),
     officialName: input.officialName.trim(),
     username: input.username?.trim() || undefined,
     sentAt: new Date().toISOString(),

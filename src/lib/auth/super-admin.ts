@@ -1,4 +1,4 @@
-/** Super admin email sign-in — server and client safe (email is not secret) */
+/** Super admin email sign-in only — not used for church broadcasts (see broadcast/audience.ts). */
 
 export function getSuperAdminEmail(): string {
   return (

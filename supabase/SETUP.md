@@ -38,8 +38,15 @@ In Supabase Dashboard → **SQL Editor** → **New query**, run each file **in o
 3. `supabase/migrations/20250620000000_phone_auth_profiles.sql`
 4. `supabase/migrations/20250620000001_seed_demo_data.sql`
 5. `supabase/migrations/20250621000000_media_items.sql` ← **sermons / messages**
+6. `supabase/migrations/20250622000000_events_prayer_announcements.sql` ← **events, prayer, announcements**
+7. `supabase/migrations/20250622000001_rename_loco_to_yoco.sql`
+8. `supabase/migrations/20250623000000_super_admin_email_remove_demo_phones.sql`
+9. `supabase/migrations/20250623100000_trusted_devices.sql`
+10. `supabase/migrations/20250624000000_remove_dummy_contacts.sql` ← **removes fake phones/emails**
+11. `supabase/migrations/20250625000000_email_auth_invites.sql` ← **email on invites + invite requests**
+12. `supabase/migrations/20250626000000_simplify_email_signup.sql` ← **phone optional on requests/invites**
 
-Click **Run** after pasting each one. You should see “Success” with no errors.
+**Quick check:** paste and run `supabase/check_migrations.sql` — it shows ✓/✗ for each migration plus how many members have email for broadcast.
 
 ## Step 4 — Restart the app
 
@@ -53,23 +60,23 @@ Open http://localhost:4028
 
 | Step | Who | Action |
 |------|-----|--------|
-| 1 | New person | Go to `/request-invite` → submit name + phone |
-| 2 | Admin (`073 550 2014`) | Members → Invite Requests → Approve & Send Invite |
-| 3 | New person | Open invite link → OTP → complete signup wizard |
-| 4 | Admin | Members → **Pending Applications** → Approve |
-| 5 | New member | Sign in at `/login` with their phone |
+| 1 | New person | `/request-invite` → **name, surname, email, campus** (no phone) |
+| 2 | Admin | Members → Approve & **email** the invite link |
+| 3 | New person | Open link → membership form (cell number collected here for SMS broadcasts) |
+| 4 | Admin | Approve pending application |
+| 5 | Member | `/login` → email → tap **sign-in link** in inbox |
 
-**Demo accounts** (seeded in DB):
+**Auth model**
 
-| Phone | Role |
-|-------|------|
-| 073 550 2014 | Admin |
-| 073 550 2015 | Pastor |
-| 073 550 2016 | Worship leader |
-| 082 111 2222 | Member |
-| `/invite/demo` | Invite demo link |
+| Channel | Used for |
+|---------|----------|
+| **Resend** | Sign-in links, invite emails |
+| **BulkSMS** | Group/church SMS broadcasts (uses cell from membership form) |
+| **Mailchimp** | Email broadcasts / newsletters only |
 
-OTP is still **demo mode** (code shown on screen) until real SMS is wired.
+No OTP codes to type. Invite link = start signup. Login link = signed in.
+
+**Cleanup after setup:** see [`CLEANUP.md`](./CLEANUP.md) for DB audit, env check, and test checklist.
 
 ## What's stored in Supabase now
 
@@ -88,6 +95,6 @@ OTP is still **demo mode** (code shown on screen) until real SMS is wired.
 
 ## Next steps (later)
 
-- Enable Supabase Phone Auth + Twilio/Africa's Talking for real OTP
-- Replace demo OTP with real SMS on invites/broadcasts
+- Verify your church domain in Resend (SPF/DKIM) for reliable OTP delivery
+- Verify Mailchimp sender domain for broadcasts (reduce spam folder)
 - Event RSVP → visitors table

@@ -1,5 +1,6 @@
 import type { CampusId } from '@/lib/church/constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSuperAdminEmail, isInternalPlaceholderPhone } from '@/lib/auth/super-admin';
 
 export type BroadcastAudienceType = 'members' | 'group';
 
@@ -24,6 +25,32 @@ function ageCategoryToRange(category: string): { min?: number; max?: number } {
   if (category === 'youth') return { min: 13, max: 25 };
   if (category === 'adult') return { min: 26 };
   return {};
+}
+
+/** Super-admin login email and internal phones must never receive church broadcasts. */
+function isExcludedBroadcastRecipient(phone: string, email: string | null): boolean {
+  if (isInternalPlaceholderPhone(phone)) return true;
+  const superAdminEmail = getSuperAdminEmail();
+  if (email && email.trim().toLowerCase() === superAdminEmail) return true;
+  return false;
+}
+
+function filterBroadcastRecipients(rows: {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  campus_id: string;
+}[]): BroadcastRecipient[] {
+  return rows
+    .filter((m) => !isExcludedBroadcastRecipient(m.phone, m.email))
+    .map((m) => ({
+      id: m.id,
+      name: m.full_name,
+      phone: m.phone,
+      email: m.email,
+      campus: m.campus_id,
+    }));
 }
 
 export async function resolveBroadcastAudience(
@@ -69,13 +96,7 @@ export async function resolveBroadcastAudience(
       });
     }
 
-    return rows.map((m) => ({
-      id: m.id,
-      name: m.full_name,
-      phone: m.phone,
-      email: m.email,
-      campus: m.campus_id,
-    }));
+    return filterBroadcastRecipients(rows);
   }
 
   let query = db
@@ -98,11 +119,5 @@ export async function resolveBroadcastAudience(
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((m) => ({
-    id: m.id,
-    name: m.full_name,
-    phone: m.phone,
-    email: m.email,
-    campus: m.campus_id,
-  }));
+  return filterBroadcastRecipients(data ?? []);
 }

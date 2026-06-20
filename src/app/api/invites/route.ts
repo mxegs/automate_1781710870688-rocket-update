@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getAppUrl } from '@/lib/app-url';
+import type { CampusId } from '@/lib/church/constants';
+import {
+  canManageInvites,
+  canManageCampus,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
+import { normalizeEmail } from '@/lib/auth/super-admin';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { generateToken, mapInvite } from '@/lib/supabase/mappers';
-import { normalizePhone } from '@/lib/auth/session';
-import { buildInviteSmsMessage, sendSms } from '@/lib/sms/service';
+import { sendInviteEmail } from '@/lib/email/service';
 
 export async function POST(request: Request) {
   const db = getSupabaseAdmin();
@@ -11,11 +17,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
   }
 
-  const body = await request.json();
-  const phone = normalizePhone(body.phone ?? '');
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canManageInvites(actor)) {
+    return NextResponse.json({ error: 'Staff access required to send invites' }, { status: 403 });
+  }
 
-  if (!body.officialName?.trim() || phone.length < 9) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  const body = await request.json();
+  const email = normalizeEmail(body.email ?? '');
+  const campusId = (body.campusId as CampusId | undefined) ?? actor.campusId ?? 'midrand';
+
+  if (!body.officialName?.trim() || !email.includes('@')) {
+    return NextResponse.json({ error: 'Full name and email are required' }, { status: 400 });
+  }
+
+  if (!canManageCampus(actor, campusId)) {
+    return NextResponse.json({ error: 'You can only send invites for your campus' }, { status: 403 });
   }
 
   const token = generateToken();
@@ -23,10 +39,10 @@ export async function POST(request: Request) {
     .from('invites')
     .insert({
       token,
-      phone,
+      email,
       official_name: body.officialName.trim(),
       username: body.username?.trim() || null,
-      campus_id: body.campusId ?? null,
+      campus_id: campusId,
       invite_request_id: body.inviteRequestId ?? null,
       status: 'pending',
     })
@@ -36,16 +52,15 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const inviteUrl = `${getAppUrl(request)}/invite/${token}`;
-  const message = buildInviteSmsMessage(body.officialName.trim(), inviteUrl);
-  const smsResult = await sendSms(phone, message);
+  const emailResult = await sendInviteEmail(email, body.officialName.trim(), inviteUrl);
 
   return NextResponse.json({
     ...mapInvite(data),
     inviteUrl,
-    sms: {
-      success: smsResult.success,
-      demo: smsResult.demo ?? false,
-      error: smsResult.error,
+    emailDelivery: {
+      success: emailResult.success,
+      demo: emailResult.demo ?? false,
+      error: emailResult.error,
     },
   });
 }

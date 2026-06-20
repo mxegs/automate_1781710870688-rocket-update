@@ -16,14 +16,7 @@ interface Ministry {
   color: string;
 }
 
-const mockMinistries: Ministry[] = [
-  { id: 1, name: 'Worship Team', leader: 'Thabo Mokoena', members: 18, meetingDay: 'Saturday', meetingTime: '10:00', description: 'Leading the congregation in praise and worship every Sunday and special services.', icon: 'MusicalNoteIcon', color: 'sky' },
-  { id: 2, name: 'Youth Ministry', leader: 'Lerato Dlamini', members: 45, meetingDay: 'Friday', meetingTime: '18:30', description: 'Discipling and empowering the next generation through weekly youth nights and camps.', icon: 'SparklesIcon', color: 'purple' },
-  { id: 3, name: "Children's Ministry", leader: 'Nomsa Zulu', members: 12, meetingDay: 'Sunday', meetingTime: '09:00', description: 'Teaching children the Word of God through age-appropriate lessons and activities.', icon: 'AcademicCapIcon', color: 'amber' },
-  { id: 4, name: 'Media Team', leader: 'Sipho Nkosi', members: 8, meetingDay: 'Sunday', meetingTime: '07:30', description: 'Managing sound, visuals, live streaming and all media for church services.', icon: 'VideoCameraIcon', color: 'rose' },
-  { id: 5, name: 'Hospitality Team', leader: 'Grace Khumalo', members: 15, meetingDay: 'Sunday', meetingTime: '08:00', description: 'Welcoming members and visitors, managing refreshments and church facilities.', icon: 'HeartIcon', color: 'pink' },
-  { id: 6, name: 'Outreach Team', leader: 'David Sithole', members: 22, meetingDay: 'Last Sunday', meetingTime: '10:00', description: 'Community outreach, food distribution, and evangelism in surrounding areas.', icon: 'GlobeAltIcon', color: 'emerald' },
-];
+const mockMinistries: Ministry[] = [];
 
 const colorMap: Record<string, string> = {
   sky: 'bg-sky/10 text-sky border-sky/20',

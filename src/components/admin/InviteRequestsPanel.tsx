@@ -8,7 +8,6 @@ import {
   updateInviteRequestStatus,
   type InviteRequest,
 } from '@/lib/invites/request-service';
-import { formatPhoneDisplay } from '@/lib/auth/session';
 
 interface InviteRequestsPanelProps {
   onSendInvite: (request: InviteRequest) => void;
@@ -64,7 +63,7 @@ export default function InviteRequestsPanel({ onSendInvite }: InviteRequestsPane
               {req.fullName} {req.surname}
             </p>
             <p className="text-xs text-cloud/40">
-              {formatPhoneDisplay(req.phone)} · {getCampusLabel(req.campus)}
+              {req.email} · {getCampusLabel(req.campus)}
             </p>
             <p className="text-[10px] text-cloud/30 mt-0.5">
               Requested {new Date(req.requestedAt).toLocaleDateString('en-ZA')}

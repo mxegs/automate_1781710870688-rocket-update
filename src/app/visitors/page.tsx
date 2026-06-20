@@ -16,14 +16,7 @@ interface Visitor {
   followUpDate?: string;
 }
 
-const mockVisitors: Visitor[] = [
-  { id: 1, name: 'Thabo Mokoena', phone: '071 234 5678', email: 'thabo@email.com', firstVisit: '15 Jun 2025', source: 'Friend', status: 'New Visitor', notes: 'Came with the Dlamini family', followUpDate: '18 Jun 2025' },
-  { id: 2, name: 'Lerato Dlamini', phone: '082 345 6789', email: 'lerato@email.com', firstVisit: '15 Jun 2025', source: 'Social Media', status: 'Contacted', notes: 'Interested in youth group', followUpDate: '20 Jun 2025' },
-  { id: 3, name: 'Sipho Nkosi', phone: '073 456 7890', email: '', firstVisit: '8 Jun 2025', source: 'Walk-in', status: 'Follow-Up Scheduled', notes: 'Moved to the area recently', followUpDate: '22 Jun 2025' },
-  { id: 4, name: 'Nomsa Zulu', phone: '064 567 8901', email: 'nomsa@email.com', firstVisit: '8 Jun 2025', source: 'Family', status: 'Attending Regularly', notes: 'Daughter of church member', },
-  { id: 5, name: 'Bongani Mthembu', phone: '079 678 9012', email: '', firstVisit: '1 Jun 2025', source: 'Walk-in', status: 'Membership Candidate', notes: 'Ready to join membership class' },
-  { id: 6, name: 'Zanele Ndlovu', phone: '061 901 2345', email: 'zanele@email.com', firstVisit: '25 May 2025', source: 'Friend', status: 'Became Member', notes: 'Joined membership on 10 Jun' },
-];
+const mockVisitors: Visitor[] = [];
 
 const statusColors: Record<string, string> = {
   'New Visitor': 'bg-sky/10 text-sky border-sky/20',

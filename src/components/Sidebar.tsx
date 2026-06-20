@@ -28,6 +28,7 @@ interface NavItem {
 const adminNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'HomeIcon' },
   { label: 'Members', href: '/members', icon: 'UsersIcon' },
+  { label: 'Team & Roles', href: '/team', icon: 'ShieldCheckIcon' },
   { label: 'Visitors', href: '/visitors', icon: 'UserPlusIcon' },
   { label: 'Follow-Ups', href: '/follow-ups', icon: 'PhoneArrowUpRightIcon' },
   { label: 'Events', href: '/events', icon: 'CalendarDaysIcon' },
@@ -70,6 +71,7 @@ export default function Sidebar() {
   const [viewMode, setViewModeState] = useState<ViewMode>('staff');
 
   const [leadsGroups, setLeadsGroups] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -77,6 +79,7 @@ export default function Sidebar() {
       setUserRole(session.role);
       setDisplayName(getDisplayName(session));
       setViewModeState(getViewMode(session));
+      setIsSuperAdmin(session.isSuperAdmin === true);
       getGroupsLedBy(session.phone).then((led) => setLeadsGroups(led.length > 0));
     }
   }, [pathname]);
@@ -96,7 +99,7 @@ export default function Sidebar() {
         : memberNavItems
       : isLeader
         ? getLeaderNavItems()
-        : filterAdminNavForRole(adminNavItems, userRole);
+        : filterAdminNavForRole(adminNavItems, userRole, isSuperAdmin);
 
   const portalBadge = isVisitor
     ? 'Visitor Access'

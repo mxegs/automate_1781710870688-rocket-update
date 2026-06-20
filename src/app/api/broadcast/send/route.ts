@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { resolveBroadcastAudience, type BroadcastFilters } from '@/lib/broadcast/audience';
-import { sendMailchimpBroadcast } from '@/lib/email/mailchimp';
+import { sendMailchimpBroadcast, buildBroadcastEmailHtml } from '@/lib/email/mailchimp';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendBulkSms } from '@/lib/sms/service';
 
@@ -15,21 +15,7 @@ function parseFilters(body: Record<string, unknown>): BroadcastFilters {
 }
 
 function wrapEmailHtml(subject: string, body: string): string {
-  const paragraphs = body
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .map((p) => `<p style="margin:0 0 12px;line-height:1.5;">${p.replace(/</g, '&lt;')}</p>`)
-    .join('');
-
-  return `
-    <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#1a1a1a;">
-      <h1 style="font-size:22px;color:#c9a227;margin-bottom:16px;">${subject.replace(/</g, '&lt;')}</h1>
-      ${paragraphs}
-      <hr style="border:none;border-top:1px solid #eee;margin:24px 0;" />
-      <p style="font-size:12px;color:#888;">Christ Kingdom Citizens</p>
-    </div>
-  `;
+  return buildBroadcastEmailHtml(subject, body);
 }
 
 export async function POST(request: Request) {
@@ -82,6 +68,7 @@ export async function POST(request: Request) {
         sent: result.sent ?? emailRecipients.length,
         campaignId: result.campaignId,
         demo: result.demo,
+        warnings: result.warnings,
       });
     }
 
