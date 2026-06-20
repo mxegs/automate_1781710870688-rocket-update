@@ -101,14 +101,20 @@ export default function SignupWizard() {
     }
     const draft = localStorage.getItem(DRAFT_STORAGE_KEY);
     const base = createEmptyApplication(invite.phone);
-    if (invite.officialName) {
-      base.personal.fullName = invite.officialName;
+    if (invite.givenName) {
+      base.personal.fullName = invite.givenName;
+    } else if (invite.officialName) {
+      const parts = invite.officialName.trim().split(/\s+/);
+      base.personal.fullName = parts[0] ?? invite.officialName;
+      if (!invite.surname && parts.length > 1) {
+        base.personal.surname = parts.slice(1).join(' ');
+      }
+    }
+    if (invite.surname) {
+      base.personal.surname = invite.surname;
     }
     if (invite.email) {
       base.personal.email = invite.email;
-    }
-    if (invite.username) {
-      base.personal.username = invite.username;
     }
     if (draft) {
       try {
@@ -120,7 +126,7 @@ export default function SignupWizard() {
             cellNo: parsed.personal.cellNo || invite.phone,
             email: parsed.personal.email || invite.email || base.personal.email,
             fullName: parsed.personal.fullName || base.personal.fullName,
-            username: parsed.personal.username || base.personal.username,
+            surname: parsed.personal.surname || base.personal.surname,
           },
         });
       } catch {
@@ -267,15 +273,22 @@ export default function SignupWizard() {
 
     try {
       const inviteSession = getInviteSession();
-      await submitMembershipApplication({
+      const result = await submitMembershipApplication({
         phone: form.personal.cellNo || inviteSession?.phone || '',
         campusId: form.personal.campus as 'midrand' | 'verulam',
         applicationData: payload,
         inviteToken: inviteSession?.token,
       });
+      sessionStorage.setItem(
+        'ckc_password_setup',
+        JSON.stringify({
+          id: result.id,
+          email: form.personal.email.trim().toLowerCase(),
+        }),
+      );
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       clearInviteSession();
-      router.push('/signup/success');
+      router.push(`/signup/set-password?id=${result.id}`);
     } catch {
       localStorage.setItem('ckc_submitted_applications', JSON.stringify([
         ...JSON.parse(localStorage.getItem('ckc_submitted_applications') || '[]'),
@@ -428,7 +441,15 @@ export default function SignupWizard() {
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <CkcField label="Cell number" required error={errors.cellNo}>
-                  <CkcInput type="tel" value={form.personal.cellNo} readOnly className="opacity-60" />
+                  <CkcInput
+                    type="tel"
+                    value={form.personal.cellNo}
+                    onChange={(e) => updatePersonal({ cellNo: e.target.value })}
+                    placeholder="e.g. 082 123 4567"
+                  />
+                  <p className="mt-1 text-[10px] text-ckc-dim">
+                    Used for church SMS updates (events, announcements, group messages).
+                  </p>
                 </CkcField>
                 <CkcField label="Tel number" optional>
                   <CkcInput type="tel" value={form.personal.telNo} onChange={(e) => updatePersonal({ telNo: e.target.value })} />

@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, staffHeaders } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
 import type { BroadcastAudienceType } from '@/lib/broadcast/audience';
 
@@ -20,6 +20,7 @@ export interface BroadcastPreview {
 export async function previewBroadcast(filters: BroadcastFilters): Promise<BroadcastPreview> {
   return apiFetch('/api/broadcast/preview', {
     method: 'POST',
+    headers: staffHeaders(),
     body: JSON.stringify(filters),
   });
 }
@@ -33,6 +34,7 @@ export async function sendBroadcast(
 ): Promise<{ channel: string; total: number; sent: number; failed?: number; demo?: boolean; campaignId?: string; warnings?: string[] }> {
   return apiFetch('/api/broadcast/send', {
     method: 'POST',
+    headers: staffHeaders(),
     body: JSON.stringify(filters),
   });
 }
@@ -45,5 +47,5 @@ export async function testMailchimp(): Promise<{
   warning?: string;
   error?: string;
 }> {
-  return apiFetch('/api/broadcast/mailchimp/test');
+  return apiFetch('/api/broadcast/mailchimp/test', { headers: staffHeaders() });
 }

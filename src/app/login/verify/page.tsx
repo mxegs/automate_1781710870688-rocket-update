@@ -27,8 +27,14 @@ function VerifyForm() {
     let cancelled = false;
     (async () => {
       try {
-        const { email, allowVisitor } = await verifyMagicLink(token);
+        const { email, allowVisitor, needsPassword, setupToken } = await verifyMagicLink(token);
         if (cancelled) return;
+
+        if (needsPassword && setupToken) {
+          router.replace(`/account/set-password?token=${encodeURIComponent(setupToken)}`);
+          return;
+        }
+
         const session = await resolveSessionFromEmailAsync(email, { asVisitor: allowVisitor });
         setSession(session);
         router.replace(getPostLoginRoute(session.role, session.viewMode));

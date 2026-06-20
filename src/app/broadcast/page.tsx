@@ -1,22 +1,33 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
-import { AGE_CATEGORIES, CAMPUSES } from '@/lib/church/constants';
+import { AGE_CATEGORIES, CAMPUSES, getCampusLabel } from '@/lib/church/constants';
 import type { CampusId } from '@/lib/church/constants';
 import { previewBroadcast, sendBroadcast, testMailchimp } from '@/lib/broadcast/service';
-import { getAllGroups } from '@/lib/groups/service';
+import { getAllGroups, getGroupsLedBy } from '@/lib/groups/service';
 import type { ChurchGroup } from '@/lib/groups/types';
+import { getSession } from '@/lib/auth/session';
+import { hasAllCampusAccess, isChurchWideAppRole } from '@/lib/auth/church-wide-staff';
 
 type AudienceType = 'members' | 'group';
 type Channel = 'sms' | 'email';
 
 export default function BroadcastPage() {
-  const [audienceType, setAudienceType] = useState<AudienceType>('members');
+  const session = getSession();
+  const isLeader = session?.role === 'leader';
+  const churchWide = isChurchWideAppRole(session?.role ?? null);
+  const allCampuses = hasAllCampusAccess({
+    isSuperAdmin: session?.isSuperAdmin,
+    role: session?.role,
+  });
+  const campusScope = session?.campusId as CampusId | undefined;
+
+  const [audienceType, setAudienceType] = useState<AudienceType>(isLeader ? 'group' : 'members');
   const [channel, setChannel] = useState<Channel>('sms');
-  const [campusId, setCampusId] = useState<CampusId | 'all'>('all');
+  const [campusId, setCampusId] = useState<CampusId | 'all'>(allCampuses ? 'all' : campusScope ?? 'midrand');
   const [gender, setGender] = useState<'Male' | 'Female' | 'all'>('all');
   const [ageCategory, setAgeCategory] = useState<'child' | 'youth' | 'adult' | 'all'>('all');
   const [groupId, setGroupId] = useState('');
@@ -30,11 +41,29 @@ export default function BroadcastPage() {
   const [result, setResult] = useState<string | null>(null);
   const [mailchimpStatus, setMailchimpStatus] = useState<string | null>(null);
 
+  const campusLocked = Boolean(campusScope) && !isLeader && !churchWide;
+
   useEffect(() => {
-    getAllGroups().then((list) => {
-      setGroups(list);
-      if (list[0]) setGroupId((prev) => prev || list[0].id);
-    });
+    if (campusScope && !allCampuses) setCampusId(campusScope);
+  }, [campusScope, allCampuses]);
+
+  useEffect(() => {
+    const loadGroups = async () => {
+      if (isLeader && session?.phone) {
+        const led = await getGroupsLedBy(session.phone);
+        setGroups(led);
+        if (led[0]) setGroupId((prev) => prev || led[0].id);
+        return;
+      }
+      const list = await getAllGroups();
+      const scoped = allCampuses ? list : campusScope ? list.filter((g) => g.campus === campusScope) : list;
+      setGroups(scoped);
+      if (scoped[0]) setGroupId((prev) => prev || scoped[0].id);
+    };
+    loadGroups();
+  }, [isLeader, session?.phone, campusScope, allCampuses]);
+
+  useEffect(() => {
     testMailchimp().then((res) => {
       if (res.ok) {
         const from = res.fromEmail ? ` · from ${res.fromEmail}` : '';
@@ -47,13 +76,16 @@ export default function BroadcastPage() {
     });
   }, []);
 
-  const filters = {
-    audienceType,
-    campusId: audienceType === 'members' ? campusId : undefined,
-    gender: audienceType === 'members' ? gender : undefined,
-    ageCategory: audienceType === 'members' ? ageCategory : undefined,
-    groupId: audienceType === 'group' ? groupId : undefined,
-  };
+  const filters = useMemo(
+    () => ({
+      audienceType,
+      campusId: audienceType === 'members' ? campusId : undefined,
+      gender: audienceType === 'members' ? gender : undefined,
+      ageCategory: audienceType === 'members' ? ageCategory : undefined,
+      groupId: audienceType === 'group' ? groupId : undefined,
+    }),
+    [audienceType, campusId, gender, ageCategory, groupId],
+  );
 
   const refreshCount = async () => {
     try {
@@ -70,9 +102,17 @@ export default function BroadcastPage() {
 
   useEffect(() => {
     refreshCount();
-  }, [audienceType, campusId, gender, ageCategory, groupId]);
+  }, [filters]);
 
   const recipientCount = channel === 'sms' ? smsCount : emailCount;
+
+  const scopeHint = isLeader
+    ? 'Message groups you lead, or members on your campus if assigned.'
+    : churchWide
+      ? 'Church-wide access — broadcast to any campus or all members.'
+      : campusLocked
+        ? `Messages go to ${getCampusLabel(campusScope!)} members only.`
+        : 'Filter members or choose a group.';
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -110,7 +150,7 @@ export default function BroadcastPage() {
     <AppShell access="staff">
       <PageHeader
         title="Broadcast"
-        subtitle="Send SMS or email newsletters to members or groups"
+        subtitle={scopeHint}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -134,16 +174,20 @@ export default function BroadcastPage() {
             {audienceType === 'members' ? (
               <>
                 <Field label="Campus">
-                  <select
-                    value={campusId}
-                    onChange={(e) => setCampusId(e.target.value as CampusId | 'all')}
-                    className="input"
-                  >
-                    <option value="all">All campuses</option>
-                    {CAMPUSES.map((c) => (
-                      <option key={c.id} value={c.id}>{c.label}</option>
-                    ))}
-                  </select>
+                  {campusLocked ? (
+                    <p className="input opacity-80">{getCampusLabel(campusScope!)}</p>
+                  ) : (
+                    <select
+                      value={campusId}
+                      onChange={(e) => setCampusId(e.target.value as CampusId | 'all')}
+                      className="input"
+                    >
+                      {allCampuses && <option value="all">All campuses</option>}
+                      {(allCampuses ? CAMPUSES : CAMPUSES.filter((c) => c.id === campusScope)).map((c) => (
+                        <option key={c.id} value={c.id}>{c.label}</option>
+                      ))}
+                    </select>
+                  )}
                 </Field>
                 <div className="grid grid-cols-2 gap-2">
                   <Field label="Gender">

@@ -11,19 +11,22 @@ import {
   getAllGroups,
   getMemberOptions,
   updateGroup,
+  type MemberOption,
 } from '@/lib/groups/service';
-import { getCampusLabel, CAMPUSES, type CampusId } from '@/lib/church/constants';
+import { getCampusLabel, CAMPUSES, AGE_CATEGORIES, type CampusId } from '@/lib/church/constants';
 import { getSession } from '@/lib/auth/session';
 import type { ChurchGroup, GroupCategory } from '@/lib/groups/types';
 
 export default function GroupsAdminPage() {
   const router = useRouter();
   const [groups, setGroups] = useState<ChurchGroup[]>([]);
-  const [memberOptions, setMemberOptions] = useState<{ phone: string; name: string }[]>([]);
+  const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<ChurchGroup | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
   const [memberCampusFilter, setMemberCampusFilter] = useState<CampusId | 'all'>('all');
+  const [memberGenderFilter, setMemberGenderFilter] = useState<'all' | 'Male' | 'Female'>('all');
+  const [memberAgeFilter, setMemberAgeFilter] = useState<'all' | 'child' | 'youth' | 'adult'>('all');
   const [form, setForm] = useState({
     name: '',
     category: 'community' as GroupCategory,
@@ -104,10 +107,22 @@ export default function GroupsAdminPage() {
     }));
   };
 
+  const ageToCategory = (age: number | null): 'child' | 'youth' | 'adult' => {
+    if (age == null) return 'adult';
+    if (age <= 12) return 'child';
+    if (age <= 25) return 'youth';
+    return 'adult';
+  };
+
   const filteredMembers = memberOptions.filter((m) => {
     if (m.phone === form.leaderPhone) return false;
-    const matchSearch = !memberSearch || m.name.toLowerCase().includes(memberSearch.toLowerCase());
-    return matchSearch;
+    const matchSearch =
+      !memberSearch || m.name.toLowerCase().includes(memberSearch.toLowerCase());
+    const matchCampus = memberCampusFilter === 'all' || m.campus === memberCampusFilter;
+    const matchGender = memberGenderFilter === 'all' || m.gender === memberGenderFilter;
+    const matchAge =
+      memberAgeFilter === 'all' || ageToCategory(m.age) === memberAgeFilter;
+    return matchSearch && matchCampus && matchGender && matchAge;
   });
 
   const selectAllFiltered = () => {
@@ -239,7 +254,61 @@ export default function GroupsAdminPage() {
                   placeholder="Search members…"
                   className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-cloud"
                 />
-                <div className="max-h-32 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2">
+                <div className="mb-2 flex flex-wrap gap-1">
+                  <span className="mr-1 text-[10px] uppercase text-cloud/30">Campus</span>
+                  {(['all', ...CAMPUSES.map((c) => c.id)] as const).map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setMemberCampusFilter(id)}
+                      className={`rounded border px-2 py-0.5 text-[10px] font-semibold ${
+                        memberCampusFilter === id
+                          ? 'border-ckc-gold/30 bg-ckc-gold/10 text-ckc-gold'
+                          : 'border-white/10 text-cloud/50'
+                      }`}
+                    >
+                      {id === 'all' ? 'All' : getCampusLabel(id)}
+                    </button>
+                  ))}
+                </div>
+                <div className="mb-2 flex flex-wrap gap-1">
+                  <span className="mr-1 text-[10px] uppercase text-cloud/30">Gender</span>
+                  {(['all', 'Male', 'Female'] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setMemberGenderFilter(g)}
+                      className={`rounded border px-2 py-0.5 text-[10px] font-semibold ${
+                        memberGenderFilter === g
+                          ? 'border-ckc-gold/30 bg-ckc-gold/10 text-ckc-gold'
+                          : 'border-white/10 text-cloud/50'
+                      }`}
+                    >
+                      {g === 'all' ? 'All' : g}
+                    </button>
+                  ))}
+                </div>
+                <div className="mb-2 flex flex-wrap gap-1">
+                  <span className="mr-1 text-[10px] uppercase text-cloud/30">Age</span>
+                  {(['all', 'child', 'youth', 'adult'] as const).map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setMemberAgeFilter(id)}
+                      className={`rounded border px-2 py-0.5 text-[10px] font-semibold ${
+                        memberAgeFilter === id
+                          ? 'border-ckc-gold/30 bg-ckc-gold/10 text-ckc-gold'
+                          : 'border-white/10 text-cloud/50'
+                      }`}
+                    >
+                      {id === 'all' ? 'All' : AGE_CATEGORIES.find((a) => a.id === id)?.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mb-1 text-[10px] text-cloud/30">
+                  {filteredMembers.length} member{filteredMembers.length === 1 ? '' : 's'} match filters (active only)
+                </p>
+                <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2">
                   {filteredMembers.map((m) => (
                     <label key={m.phone} className="flex cursor-pointer items-center gap-2 text-xs text-cloud/70">
                       <input
@@ -249,6 +318,11 @@ export default function GroupsAdminPage() {
                         className="accent-ckc-gold"
                       />
                       {m.name}
+                      <span className="text-cloud/30">
+                        {' '}
+                        · {getCampusLabel(m.campus as CampusId)}
+                        {m.gender ? ` · ${m.gender}` : ''}
+                      </span>
                     </label>
                   ))}
                 </div>

@@ -7,6 +7,8 @@ export interface PendingInvite {
   phone: string;
   email?: string;
   officialName: string;
+  givenName?: string;
+  surname?: string;
   username?: string;
   sentAt: string;
   status: 'pending' | 'accepted';
@@ -97,9 +99,10 @@ export async function findInviteByToken(token: string): Promise<PendingInvite | 
 
 export interface CreateInviteInput {
   email: string;
-  officialName: string;
+  givenName: string;
+  surname: string;
+  officialName?: string;
   phone?: string;
-  username?: string;
   campusId?: string;
   inviteRequestId?: string;
 }
@@ -114,13 +117,15 @@ export async function createInvite(input: CreateInviteInput): Promise<PendingInv
   }
 
   const token = generateToken();
+  const officialName = input.officialName?.trim() || `${input.givenName} ${input.surname}`.trim();
   const invite: PendingInvite = {
     id: `inv_${Date.now()}`,
     token,
     phone: input.phone ?? '',
     email: input.email.trim().toLowerCase(),
-    officialName: input.officialName.trim(),
-    username: input.username?.trim() || undefined,
+    officialName,
+    givenName: input.givenName.trim(),
+    surname: input.surname.trim(),
     sentAt: new Date().toISOString(),
     status: 'pending',
   };

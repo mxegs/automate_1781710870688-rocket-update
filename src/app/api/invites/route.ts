@@ -23,12 +23,16 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
+  const givenName = String(body.givenName ?? body.firstName ?? '').trim();
+  const surname = String(body.surname ?? '').trim();
   const email = normalizeEmail(body.email ?? '');
   const campusId = (body.campusId as CampusId | undefined) ?? actor.campusId ?? 'midrand';
 
-  if (!body.officialName?.trim() || !email.includes('@')) {
-    return NextResponse.json({ error: 'Full name and email are required' }, { status: 400 });
+  if (!givenName || !surname || !email.includes('@')) {
+    return NextResponse.json({ error: 'First name, surname, and email are required' }, { status: 400 });
   }
+
+  const officialName = `${givenName} ${surname}`.trim();
 
   if (!canManageCampus(actor, campusId)) {
     return NextResponse.json({ error: 'You can only send invites for your campus' }, { status: 403 });
@@ -40,8 +44,10 @@ export async function POST(request: Request) {
     .insert({
       token,
       email,
-      official_name: body.officialName.trim(),
-      username: body.username?.trim() || null,
+      given_name: givenName,
+      surname,
+      official_name: officialName,
+      username: null,
       campus_id: campusId,
       invite_request_id: body.inviteRequestId ?? null,
       status: 'pending',
@@ -52,7 +58,7 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const inviteUrl = `${getAppUrl(request)}/invite/${token}`;
-  const emailResult = await sendInviteEmail(email, body.officialName.trim(), inviteUrl);
+  const emailResult = await sendInviteEmail(email, officialName, inviteUrl);
 
   return NextResponse.json({
     ...mapInvite(data),

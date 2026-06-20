@@ -1,7 +1,14 @@
 import { findDemoUser } from './demo-users';
 import { apiFetch, useBackend } from '@/lib/api/client';
 
-export type UserRole = 'member' | 'visitor' | 'admin' | 'pastor' | 'leader';
+export type UserRole =
+  | 'member'
+  | 'visitor'
+  | 'admin'
+  | 'pastor'
+  | 'leader'
+  | 'senior_pastor'
+  | 'administrative_manager';
 export type ViewMode = 'staff' | 'member';
 
 export interface AuthSession {
@@ -46,7 +53,13 @@ export function getDisplayName(session: AuthSession | null): string {
 }
 
 export function isStaffRole(role: UserRole): boolean {
-  return role === 'admin' || role === 'pastor' || role === 'leader';
+  return (
+    role === 'admin' ||
+    role === 'pastor' ||
+    role === 'leader' ||
+    role === 'senior_pastor' ||
+    role === 'administrative_manager'
+  );
 }
 
 /** Whether this phone may sign in as a member (demo users + pending invites). */
@@ -257,9 +270,13 @@ export function setSession(session: AuthSession): void {
       ? session.role
       : session.role === 'admin'
         ? 'super_admin'
-        : session.role === 'pastor'
-          ? 'pastor'
-          : 'ministry_leader';
+        : session.role === 'senior_pastor'
+          ? 'senior_pastor'
+          : session.role === 'administrative_manager'
+            ? 'administrative_manager'
+            : session.role === 'pastor'
+              ? 'pastor'
+              : 'ministry_leader';
   sessionStorage.setItem('church_role', legacyRole);
   sessionStorage.setItem('church_user', getDisplayName(session));
 }
@@ -298,6 +315,8 @@ export interface InviteSession {
   email?: string;
   token: string;
   officialName?: string;
+  givenName?: string;
+  surname?: string;
   username?: string;
 }
 
@@ -317,6 +336,8 @@ export function getInviteSession(): InviteSession | null {
       email: parsed.email,
       token: parsed.token,
       officialName: parsed.officialName,
+      givenName: parsed.givenName,
+      surname: parsed.surname,
       username: parsed.username,
     };
   } catch {

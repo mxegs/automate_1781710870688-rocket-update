@@ -1,5 +1,6 @@
 import type { UserRole, ViewMode } from './session';
 import { isStaffRole } from './session';
+import { canManageTeam, isChurchWideAppRole } from './church-wide-staff';
 
 const ADMIN_ROUTES = [
   '/dashboard',
@@ -31,9 +32,12 @@ const VISITOR_ALLOWED = [
   '/member/bible-study',
 ];
 
-const LEADER_RESTRICTED = ['/reports', '/members', '/visitors', '/follow-ups', '/announcements', '/broadcast', '/team'];
+const LEADER_RESTRICTED = ['/reports', '/members', '/visitors', '/follow-ups', '/announcements', '/team'];
 
-const SUPER_ADMIN_ROUTES = ['/team'];
+/** App developer (super admin) — not a church member; must not send/receive broadcasts. */
+const SUPER_ADMIN_BLOCKED = ['/broadcast'];
+
+const TEAM_ROUTES = ['/team'];
 
 export function isAdminRoute(pathname: string): boolean {
   return ADMIN_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
@@ -53,10 +57,15 @@ export function canAccessRoute(
   viewMode: ViewMode = 'staff',
   isSuperAdmin?: boolean,
 ): boolean {
+  if (TEAM_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
+    return canManageTeam({ isSuperAdmin, role });
+  }
+
   if (
-    SUPER_ADMIN_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))
+    isSuperAdmin &&
+    SUPER_ADMIN_BLOCKED.some((r) => pathname === r || pathname.startsWith(`${r}/`))
   ) {
-    return isSuperAdmin === true;
+    return false;
   }
 
   if (
@@ -94,7 +103,12 @@ export function canAccessRoute(
     return isAdminRoute(pathname);
   }
 
-  if (role === 'pastor' || role === 'admin') {
+  if (
+    role === 'pastor' ||
+    role === 'admin' ||
+    role === 'senior_pastor' ||
+    role === 'administrative_manager'
+  ) {
     return isAdminRoute(pathname) || isLeaderRoute(pathname);
   }
 
@@ -103,8 +117,10 @@ export function canAccessRoute(
 
 export function getRoleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
-    admin: 'Administrator',
-    pastor: 'Pastor',
+    admin: 'Campus Administrator',
+    pastor: 'Campus Pastor',
+    senior_pastor: 'Senior Pastor',
+    administrative_manager: 'Administrative Manager',
     leader: 'Group Leader',
     member: 'Member',
     visitor: 'Visitor',
@@ -118,7 +134,7 @@ export function filterAdminNavForRole(
   isSuperAdmin?: boolean,
 ) {
   let filtered = items;
-  if (!isSuperAdmin) {
+  if (!canManageTeam({ isSuperAdmin, role })) {
     filtered = filtered.filter((item) => item.href !== '/team');
   }
   if (role === 'leader') {
@@ -129,11 +145,13 @@ export function filterAdminNavForRole(
         item.href !== '/groups',
     );
   }
-  if (role === 'admin' || role === 'pastor') {
-    return filtered.filter(
-      (item) =>
-        !['/reports', '/broadcast'].includes(item.href),
-    );
+  // Super admin (app developer) — no broadcast; church staff use it for SMS/email
+  if (isSuperAdmin) {
+    filtered = filtered.filter((item) => item.href !== '/broadcast');
+  }
+  // Campus admin / pastor — hide reports only; church-wide roles keep full menu
+  if ((role === 'admin' && !isSuperAdmin) || role === 'pastor') {
+    filtered = filtered.filter((item) => item.href !== '/reports');
   }
   return filtered;
 }
@@ -141,6 +159,7 @@ export function filterAdminNavForRole(
 export function getLeaderNavItems(): { href: string; label: string; icon: string }[] {
   return [
     { label: 'My Groups', href: '/my-groups', icon: 'UserGroupIcon' },
+    { label: 'Broadcast', href: '/broadcast', icon: 'MegaphoneIcon' },
     { label: 'Events', href: '/events', icon: 'CalendarDaysIcon' },
     { label: 'Prayer Requests', href: '/prayer-requests', icon: 'HeartIcon' },
   ];
@@ -157,3 +176,5 @@ export function getGroupManagerNavItems(): { href: string; label: string; icon: 
     { label: 'Reports', href: '/reports', icon: 'ChartBarIcon' },
   ];
 }
+
+export { isChurchWideAppRole };

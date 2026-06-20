@@ -5,6 +5,7 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import { fetchProfileForSession, getSession } from '@/lib/auth/session';
+import { hasAllCampusAccess } from '@/lib/auth/church-wide-staff';
 import {
   createMediaItem,
   deleteMediaItem,
@@ -61,7 +62,7 @@ export default function AdminSermonsPage() {
   const [sermons, setSermons] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminCampus, setAdminCampus] = useState<CampusId>('midrand');
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [allCampusAccess, setAllCampusAccess] = useState(false);
   const [showAllCampuses, setShowAllCampuses] = useState(false);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
@@ -75,13 +76,13 @@ export default function AdminSermonsPage() {
     try {
       const items = await getAdminMediaItems({
         campusId: showAllCampuses ? undefined : adminCampus,
-        allCampuses: isSuperAdmin && showAllCampuses,
+        allCampuses: allCampusAccess && showAllCampuses,
       });
       setSermons(items);
     } finally {
       setLoading(false);
     }
-  }, [adminCampus, isSuperAdmin, showAllCampuses]);
+  }, [adminCampus, allCampusAccess, showAllCampuses]);
 
   useEffect(() => {
     const session = getSession();
@@ -91,9 +92,13 @@ export default function AdminSermonsPage() {
         setAdminCampus(profile.campusId as CampusId);
         setForm(emptyForm(profile.campusId as CampusId));
       }
-      if (profile && 'isSuperAdmin' in profile && profile.isSuperAdmin) {
-        setIsSuperAdmin(true);
-      }
+      setAllCampusAccess(
+        hasAllCampusAccess({
+          isSuperAdmin: profile?.isSuperAdmin,
+          role: profile?.role ?? session.role,
+          dbRole: profile?.dbRole,
+        }),
+      );
       refresh();
     });
   }, [refresh]);
@@ -187,7 +192,7 @@ export default function AdminSermonsPage() {
             className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-cloud placeholder-cloud/30 focus:outline-none focus:border-sky/50 transition-colors"
           />
         </div>
-        {isSuperAdmin && (
+        {allCampusAccess && (
           <label className="flex items-center gap-2 text-xs text-cloud/50 px-3 py-2 rounded-lg border border-white/10">
             <input
               type="checkbox"

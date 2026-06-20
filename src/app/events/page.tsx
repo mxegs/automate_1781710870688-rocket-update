@@ -15,6 +15,7 @@ import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants'
 import { EVENT_CATEGORIES, EVENT_VISIBILITY_OPTIONS, type ChurchEvent, type EventInput } from '@/lib/events/types';
 import { formatPrice } from '@/lib/events/utils';
 import { getSession } from '@/lib/auth/session';
+import { hasAllCampusAccess } from '@/lib/auth/church-wide-staff';
 import { useBackend } from '@/lib/api/client';
 import type { EventRsvp } from '@/lib/events/types';
 import type { ContentVisibility } from '@/lib/sermons/types';
@@ -45,12 +46,15 @@ export default function EventsPage() {
   const backend = useBackend();
 
   const session = getSession();
-  const isSuperAdmin = session?.isSuperAdmin === true;
+  const allCampusAccess = hasAllCampusAccess({
+    isSuperAdmin: session?.isSuperAdmin,
+    role: session?.role,
+  });
 
   const load = async () => {
     const list = await getAdminEvents({
-      allCampuses: campusFilter === 'all' && isSuperAdmin,
-      campusId: campusFilter !== 'all' ? campusFilter : isSuperAdmin ? undefined : 'midrand',
+      allCampuses: campusFilter === 'all' && allCampusAccess,
+      campusId: campusFilter !== 'all' ? campusFilter : allCampusAccess ? undefined : 'midrand',
     });
     setEvents(list);
   };
@@ -104,7 +108,7 @@ export default function EventsPage() {
         }
       />
 
-      {isSuperAdmin && (
+      {allCampusAccess && (
         <div className="mb-4 flex gap-2">
           {(['all', ...CAMPUSES.map((c) => c.id)] as const).map((c) => (
             <button

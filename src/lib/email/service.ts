@@ -95,6 +95,67 @@ export async function sendInviteEmail(
   return sendViaResend(to, subject, html);
 }
 
+export function buildApplicationReceivedEmailHtml(firstName: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
+      <h2 style="color:#c9a227;">Christ Kingdom Citizens</h2>
+      <p>Hi ${firstName},</p>
+      <p>We have received your membership registration. Thank you for completing the form.</p>
+      <p>Our team will review your application. You will receive an <strong>email and SMS</strong> when you are approved, with instructions to sign in to the member portal.</p>
+      <p style="font-size:12px;color:#888;">Please do not try to sign in until you receive your approval message.</p>
+    </div>
+  `;
+}
+
+export async function sendApplicationReceivedEmail(
+  to: string,
+  firstName: string,
+): Promise<SendEmailResult> {
+  const subject = 'We received your CKC membership application';
+  const html = buildApplicationReceivedEmailHtml(firstName);
+  const provider = process.env.EMAIL_PROVIDER ?? 'resend';
+
+  if (provider === 'demo') {
+    console.info('[CKC Email demo application received]', to);
+    return { success: true, demo: true };
+  }
+
+  return sendViaResend(to, subject, html);
+}
+
+export function buildMembershipApprovedEmailHtml(firstName: string, loginUrl: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
+      <h2 style="color:#c9a227;">Welcome to CKC!</h2>
+      <p>Hi ${firstName},</p>
+      <p>Your membership application has been <strong>approved</strong>. You can now sign in to the member portal with the email and password you chose during registration.</p>
+      <p style="margin:24px 0;">
+        <a href="${loginUrl}" style="background:#c9a227;color:#000;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">
+          Sign in to CKC
+        </a>
+      </p>
+      <p style="font-size:14px;color:#666;">Sign-in page: ${loginUrl}</p>
+    </div>
+  `;
+}
+
+export async function sendMembershipApprovedEmail(
+  to: string,
+  firstName: string,
+  loginUrl: string,
+): Promise<SendEmailResult> {
+  const subject = 'Your CKC membership has been approved';
+  const html = buildMembershipApprovedEmailHtml(firstName, loginUrl);
+  const provider = process.env.EMAIL_PROVIDER ?? 'resend';
+
+  if (provider === 'demo') {
+    console.info('[CKC Email demo membership approved]', to, loginUrl);
+    return { success: true, demo: true };
+  }
+
+  return sendViaResend(to, subject, html);
+}
+
 function buildMagicLinkEmailHtml(signInUrl: string): string {
   return `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">

@@ -1,9 +1,13 @@
 import type { CampusId } from '@/lib/church/constants';
+import { isChurchWideDbRole } from '@/lib/auth/church-wide-staff';
 import { isSuperAdminEmail, normalizeEmail } from '@/lib/auth/super-admin';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { UserRole as DbUserRole } from '@/lib/supabase/types';
 
-export type StaffDbRole = Extract<DbUserRole, 'super_admin' | 'admin' | 'pastor' | 'leader'>;
+export type StaffDbRole = Extract<
+  DbUserRole,
+  'super_admin' | 'senior_pastor' | 'administrative_manager' | 'admin' | 'pastor' | 'leader'
+>;
 
 export interface StaffActor {
   id: string;
@@ -47,7 +51,14 @@ export async function resolveStaffActor(request: Request): Promise<StaffActor | 
     return null;
   }
 
-  const staffRoles: DbUserRole[] = ['super_admin', 'admin', 'pastor', 'leader'];
+  const staffRoles: DbUserRole[] = [
+    'super_admin',
+    'senior_pastor',
+    'administrative_manager',
+    'admin',
+    'pastor',
+    'leader',
+  ];
   if (!staffRoles.includes(data.role)) return null;
 
   return {
@@ -62,20 +73,29 @@ export async function resolveStaffActor(request: Request): Promise<StaffActor | 
 }
 
 export function actorCampusScope(actor: StaffActor): CampusId | null {
-  if (actor.isSuperAdmin) return null;
+  if (actor.isSuperAdmin || isChurchWideDbRole(actor.dbRole)) return null;
   return actor.campusId;
 }
 
+export function hasAllCampusStaffAccess(actor: StaffActor): boolean {
+  return actor.isSuperAdmin || isChurchWideDbRole(actor.dbRole);
+}
+
 export function canManageStaffRoles(actor: StaffActor): boolean {
-  return actor.isSuperAdmin;
+  return actor.isSuperAdmin || isChurchWideDbRole(actor.dbRole);
 }
 
 export function canManageInvites(actor: StaffActor): boolean {
-  return actor.isSuperAdmin || actor.dbRole === 'admin' || actor.dbRole === 'pastor';
+  return (
+    actor.isSuperAdmin ||
+    isChurchWideDbRole(actor.dbRole) ||
+    actor.dbRole === 'admin' ||
+    actor.dbRole === 'pastor'
+  );
 }
 
 export function canManageCampus(actor: StaffActor, campusId: CampusId): boolean {
-  if (actor.isSuperAdmin) return true;
+  if (hasAllCampusStaffAccess(actor)) return true;
   if (actor.dbRole === 'admin' || actor.dbRole === 'pastor') {
     return actor.campusId === campusId;
   }

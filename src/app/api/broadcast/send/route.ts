@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { enforceBroadcastFilters } from '@/lib/broadcast/access-server';
 import { resolveBroadcastAudience, type BroadcastFilters } from '@/lib/broadcast/audience';
+import { resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { sendMailchimpBroadcast, buildBroadcastEmailHtml } from '@/lib/email/mailchimp';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendBulkSms } from '@/lib/sms/service';
@@ -22,6 +24,11 @@ export async function POST(request: Request) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
+  const actor = await resolveStaffActor(request);
+  if (!actor) {
+    return NextResponse.json({ error: 'Staff sign-in required' }, { status: 401 });
+  }
+
   const body = await request.json();
   const channel = body.channel as 'sms' | 'email';
   const message = String(body.message ?? '').trim();
@@ -31,7 +38,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Channel and message are required' }, { status: 400 });
   }
 
-  const filters = parseFilters(body);
+  const parsed = parseFilters(body);
+  const enforced = await enforceBroadcastFilters(db, actor, parsed);
+  if ('error' in enforced) {
+    return NextResponse.json({ error: enforced.error }, { status: enforced.status });
+  }
+
+  const filters = enforced.filters;
 
   try {
     const recipients = await resolveBroadcastAudience(db, filters);

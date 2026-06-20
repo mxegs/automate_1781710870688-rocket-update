@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { formatPhoneDisplay } from '@/lib/auth/session';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendSms } from '@/lib/sms/service';
 import { isInternalPlaceholderPhone } from '@/lib/auth/super-admin';

@@ -1,6 +1,11 @@
 import type { CampusId } from '@/lib/church/constants';
 
-export type AssignableStaffRole = 'admin' | 'pastor' | 'leader' | 'member';
+export type AssignableStaffRole =
+  | 'admin'
+  | 'pastor'
+  | 'leader'
+  | 'senior_pastor'
+  | 'administrative_manager';
 
 export interface StaffProfile {
   id: string;
@@ -18,6 +23,6 @@ export interface AssignStaffInput {
   email: string;
   displayName: string;
   officialName?: string;
-  campusId: CampusId;
+  campusId?: CampusId | null;
   role: AssignableStaffRole;
 }

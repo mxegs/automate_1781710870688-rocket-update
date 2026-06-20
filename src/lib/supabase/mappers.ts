@@ -20,6 +20,8 @@ type GroupRow = {
 
 export function dbRoleToAppRole(role: DbUserRole): UserRole {
   if (role === 'super_admin') return 'admin';
+  if (role === 'senior_pastor') return 'senior_pastor';
+  if (role === 'administrative_manager') return 'administrative_manager';
   return role as UserRole;
 }
 
@@ -53,6 +55,8 @@ export function mapInvite(row: {
   phone: string;
   email?: string | null;
   official_name: string;
+  given_name?: string | null;
+  surname?: string | null;
   username: string | null;
   sent_at: string;
   status: 'pending' | 'accepted' | 'expired';
@@ -63,6 +67,8 @@ export function mapInvite(row: {
     phone: row.phone,
     email: row.email ?? undefined,
     officialName: row.official_name,
+    givenName: row.given_name ?? undefined,
+    surname: row.surname ?? undefined,
     username: row.username ?? undefined,
     sentAt: row.sent_at,
     status: row.status === 'accepted' ? 'accepted' : 'pending',

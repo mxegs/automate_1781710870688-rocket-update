@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
+import { enforceBroadcastFilters } from '@/lib/broadcast/access-server';
 import { resolveBroadcastAudience, type BroadcastFilters } from '@/lib/broadcast/audience';
+import { resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function parseFilters(body: Record<string, unknown>): BroadcastFilters {
@@ -16,11 +18,20 @@ export async function POST(request: Request) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
+  const actor = await resolveStaffActor(request);
+  if (!actor) {
+    return NextResponse.json({ error: 'Staff sign-in required' }, { status: 401 });
+  }
+
   const body = await request.json();
-  const filters = parseFilters(body);
+  const parsed = parseFilters(body);
+  const enforced = await enforceBroadcastFilters(db, actor, parsed);
+  if ('error' in enforced) {
+    return NextResponse.json({ error: enforced.error }, { status: enforced.status });
+  }
 
   try {
-    const recipients = await resolveBroadcastAudience(db, filters);
+    const recipients = await resolveBroadcastAudience(db, enforced.filters);
     const withPhone = recipients.filter((r) => r.phone);
     const withEmail = recipients.filter((r) => r.email?.includes('@'));
 

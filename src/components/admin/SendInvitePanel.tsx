@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { createInvite, getInviteUrl } from '@/lib/invites/service';
 
 import { updateInviteRequestStatus } from '@/lib/invites/request-service';
 
 interface SendInvitePrefill {
-  officialName?: string;
+  givenName?: string;
+  surname?: string;
   email?: string;
-  username?: string;
   requestId?: string;
   campusId?: string;
 }
@@ -22,9 +22,9 @@ interface SendInvitePanelProps {
 export type { SendInvitePrefill };
 
 export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelProps) {
-  const [officialName, setOfficialName] = useState(prefill?.officialName ?? '');
+  const [givenName, setGivenName] = useState(prefill?.givenName ?? '');
+  const [surname, setSurname] = useState(prefill?.surname ?? '');
   const [email, setEmail] = useState(prefill?.email ?? '');
-  const [username, setUsername] = useState(prefill?.username ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState<{
@@ -33,11 +33,23 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
     emailError?: string;
   } | null>(null);
 
+  useEffect(() => {
+    if (prefill) {
+      setGivenName(prefill.givenName ?? '');
+      setSurname(prefill.surname ?? '');
+      setEmail(prefill.email ?? '');
+    }
+  }, [prefill]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
-    if (!officialName.trim()) {
-      setError('Enter the person\'s full name.');
+    if (!givenName.trim()) {
+      setError('Enter the person\'s first name.');
+      return;
+    }
+    if (!surname.trim()) {
+      setError('Enter the person\'s surname.');
       return;
     }
     if (!normalizedEmail.includes('@')) {
@@ -51,8 +63,8 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
     try {
       const invite = await createInvite({
         email: normalizedEmail,
-        officialName: officialName.trim(),
-        username: username.trim() || undefined,
+        givenName: givenName.trim(),
+        surname: surname.trim(),
         campusId: prefill?.campusId,
         inviteRequestId: prefill?.requestId,
       });
@@ -147,14 +159,25 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-cloud/50">Full name</label>
-              <input
-                value={officialName}
-                onChange={(e) => setOfficialName(e.target.value)}
-                placeholder="Full legal name"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:border-ckc-gold/50 focus:outline-none"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-cloud/50">First name(s)</label>
+                <input
+                  value={givenName}
+                  onChange={(e) => setGivenName(e.target.value)}
+                  placeholder="First name"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:border-ckc-gold/50 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-cloud/50">Surname</label>
+                <input
+                  value={surname}
+                  onChange={(e) => setSurname(e.target.value)}
+                  placeholder="Surname"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:border-ckc-gold/50 focus:outline-none"
+                />
+              </div>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-cloud/50">Email address</label>
@@ -166,17 +189,9 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:border-ckc-gold/50 focus:outline-none"
               />
             </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-cloud/50">
-                Username <span className="font-normal text-cloud/30">(optional)</span>
-              </label>
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="username"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:border-ckc-gold/50 focus:outline-none"
-              />
-            </div>
+            <p className="text-[11px] text-cloud/30">
+              They will choose their own username when completing the membership form.
+            </p>
 
             {error && <p className="text-xs text-red-400">{error}</p>}
 

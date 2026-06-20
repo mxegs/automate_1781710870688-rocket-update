@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import { CkcButton, CkcField, CkcInput } from '@/components/ui/CkcForm';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
+import { canManageTeam, churchWideRoleLabel } from '@/lib/auth/church-wide-staff';
 import { getSession } from '@/lib/auth/session';
 import { assignStaffRole, listStaffProfiles, removeStaffRole } from '@/lib/staff/service';
 import type { AssignableStaffRole, StaffProfile } from '@/lib/staff/types';
@@ -18,11 +19,17 @@ interface MemberOption {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  super_admin: 'Super Admin (church-wide)',
+  super_admin: 'Super Admin (app developer)',
+  senior_pastor: 'Senior Pastor (all campuses)',
+  administrative_manager: 'Administrative Manager (all campuses)',
   admin: 'Campus Admin',
   pastor: 'Campus Pastor',
   leader: 'Group / Ministry Leader',
 };
+
+function isChurchWideRole(role: AssignableStaffRole): boolean {
+  return role === 'senior_pastor' || role === 'administrative_manager';
+}
 
 export default function TeamPage() {
   const router = useRouter();
@@ -65,7 +72,7 @@ export default function TeamPage() {
 
   useEffect(() => {
     const session = getSession();
-    if (!session?.isSuperAdmin) {
+    if (!canManageTeam(session)) {
       router.replace('/dashboard');
       return;
     }
@@ -91,7 +98,7 @@ export default function TeamPage() {
       await assignStaffRole({
         email: form.email.trim(),
         displayName: form.displayName.trim(),
-        campusId: form.campusId,
+        campusId: isChurchWideRole(form.role) ? null : form.campusId,
         role: form.role,
       });
       setForm({ email: '', displayName: '', campusId: 'midrand', role: 'admin' });
@@ -110,33 +117,36 @@ export default function TeamPage() {
     await refresh();
   };
 
+  const churchWideForm = isChurchWideRole(form.role);
+
   return (
     <AppShell access="staff">
       <PageHeader
         title="Team & Roles"
-        subtitle="Assign campus admins and leaders — the foundation for invites, groups, and campus operations"
+        subtitle="Assign church-wide leaders and campus staff — the foundation for invites, groups, and operations"
       />
 
       <ContentCard title="How roles connect" icon="UserGroupIcon">
         <ul className="space-y-2 text-xs text-cloud/60 leading-relaxed list-disc pl-4">
           <li>
-            <strong className="text-cloud/80">Super Admin (you)</strong> — assigns campus admins here; sees all campuses.
+            <strong className="text-cloud/80">Super Admin (app developer)</strong> — builds and configures the app;
+            does not send church broadcasts.
           </li>
           <li>
-            <strong className="text-cloud/80">Campus Admin / Pastor</strong> — approves invite requests, sends member
-            invites, manages groups & events for their campus only.
+            <strong className="text-cloud/80">Senior Pastor & Administrative Manager</strong> — oversee all campuses,
+            full broadcast reach, Team & Roles, and Reports. Assign these when handing over day-to-day operations.
           </li>
           <li>
-            <strong className="text-cloud/80">Group Leader</strong> — runs My Groups (messaging, song library); assigned
-            when a campus admin sets them as leader on the Groups page.
+            <strong className="text-cloud/80">Campus Admin / Pastor</strong> — one campus: invites, groups, events,
+            broadcasts to their campus only.
           </li>
           <li>
-            Invite request SMS alerts go to the campus admin for that campus.
+            <strong className="text-cloud/80">Group Leader</strong> — My Groups messaging and group broadcasts.
           </li>
         </ul>
       </ContentCard>
 
-      <ContentCard title="Assign campus admin or leader" icon="ShieldCheckIcon">
+      <ContentCard title="Assign staff role" icon="ShieldCheckIcon">
         <form onSubmit={handleAssign} className="space-y-4 max-w-lg">
           {members.length > 0 && (
             <CkcField label="Pick from existing members (optional)">
@@ -160,7 +170,7 @@ export default function TeamPage() {
               type="email"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              placeholder="admin@example.com"
+              placeholder="leader@example.com"
             />
           </CkcField>
 
@@ -168,11 +178,29 @@ export default function TeamPage() {
             <CkcInput
               value={form.displayName}
               onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-              placeholder="Campus admin name"
+              placeholder="Staff name"
             />
           </CkcField>
 
-          <div className="grid grid-cols-2 gap-3">
+          <CkcField label="Role" required>
+            <select
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
+              value={form.role}
+              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as AssignableStaffRole }))}
+            >
+              <optgroup label="Church-wide (all campuses)">
+                <option value="senior_pastor">Senior Pastor</option>
+                <option value="administrative_manager">Administrative Manager</option>
+              </optgroup>
+              <optgroup label="Campus">
+                <option value="admin">Campus Admin</option>
+                <option value="pastor">Campus Pastor</option>
+                <option value="leader">Group Leader</option>
+              </optgroup>
+            </select>
+          </CkcField>
+
+          {!churchWideForm && (
             <CkcField label="Campus" required>
               <select
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
@@ -186,19 +214,13 @@ export default function TeamPage() {
                 ))}
               </select>
             </CkcField>
+          )}
 
-            <CkcField label="Role" required>
-              <select
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
-                value={form.role}
-                onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as AssignableStaffRole }))}
-              >
-                <option value="admin">Campus Admin</option>
-                <option value="pastor">Campus Pastor</option>
-                <option value="leader">Group Leader</option>
-              </select>
-            </CkcField>
-          </div>
+          {churchWideForm && (
+            <p className="text-xs text-cloud/50">
+              {churchWideRoleLabel(form.role)} — access to all campuses and church-wide broadcasts.
+            </p>
+          )}
 
           {error && <p className="text-xs text-red-400">{error}</p>}
 

@@ -285,14 +285,37 @@ export async function sendSongToBand(song: GroupSong, group: ChurchGroup): Promi
   return { sent, demo: true };
 }
 
-export const DEMO_MEMBER_OPTIONS: { phone: string; name: string }[] = [];
+export type MemberOption = {
+  phone: string;
+  name: string;
+  campus: string;
+  gender: string | null;
+  age: number | null;
+};
 
-export async function getMemberOptions(): Promise<{ phone: string; name: string }[]> {
+export const DEMO_MEMBER_OPTIONS: MemberOption[] = [];
+
+export async function getMemberOptions(): Promise<MemberOption[]> {
   if (useBackend()) {
     try {
-      const members = await apiFetch<{ full_name: string; phone: string }[]>('/api/members');
+      const members = await apiFetch<
+        {
+          full_name: string;
+          phone: string;
+          campus_id: string;
+          gender: string | null;
+          age: number | null;
+          status: string;
+        }[]
+      >('/api/members?status=active');
       if (members.length > 0) {
-        return members.map((m) => ({ phone: m.phone, name: m.full_name }));
+        return members.map((m) => ({
+          phone: m.phone,
+          name: m.full_name,
+          campus: m.campus_id,
+          gender: m.gender,
+          age: m.age,
+        }));
       }
     } catch {
       /* fall through */

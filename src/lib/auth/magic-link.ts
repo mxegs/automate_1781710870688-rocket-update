@@ -28,6 +28,8 @@ export async function sendMagicLink(
 export async function verifyMagicLink(token: string): Promise<{
   email: string;
   allowVisitor: boolean;
+  needsPassword?: boolean;
+  setupToken?: string;
 }> {
   return apiFetch('/api/auth/magic-link/verify', {
     method: 'POST',

@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getAppUrl } from '@/lib/app-url';
+import { sendApplicationReceivedEmail } from '@/lib/email/service';
+import { sendSms } from '@/lib/sms/service';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { normalizePhone } from '@/lib/auth/session';
 
@@ -75,6 +78,21 @@ export async function POST(request: Request) {
       .from('invites')
       .update({ status: 'accepted', accepted_at: new Date().toISOString() })
       .eq('token', body.inviteToken);
+  }
+
+  const personal = (applicationData as { personal?: { fullName?: string; email?: string } })?.personal;
+  const firstName = personal?.fullName?.trim().split(/\s+/)[0] || 'Friend';
+  const memberEmail = personal?.email?.trim().toLowerCase();
+
+  if (memberEmail?.includes('@')) {
+    await sendApplicationReceivedEmail(memberEmail, firstName);
+  }
+
+  if (phone.length >= 9) {
+    await sendSms(
+      phone,
+      `Hi ${firstName}, CKC received your membership application. We will email and SMS you when it is approved.`,
+    );
   }
 
   return NextResponse.json(mapApplication(data));

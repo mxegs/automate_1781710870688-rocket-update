@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getAppUrl } from '@/lib/app-url';
+import { sendMembershipApprovedEmail } from '@/lib/email/service';
+import { sendSms } from '@/lib/sms/service';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export async function PATCH(
@@ -38,6 +41,7 @@ export async function PATCH(
   if (status === 'approved' && app) {
     const personal = (app.application_data as { personal?: Record<string, string> })?.personal ?? {};
     const covenant = (app.application_data as { covenant?: { dateSigned?: string } })?.covenant;
+    const appRow = app as { password_hash?: string | null };
 
     await db.from('members').insert({
       application_id: id,
@@ -66,9 +70,25 @@ export async function PATCH(
         gender: (personal.gender as 'Male' | 'Female') ?? null,
         date_of_birth: personal.dateOfBirth || null,
         email: personal.email ?? null,
+        password_hash: appRow.password_hash ?? null,
       },
       { onConflict: 'phone' },
     );
+
+    const firstName = personal.fullName?.trim().split(/\s+/)[0] || 'Friend';
+    const memberEmail = personal.email?.trim().toLowerCase();
+    const loginUrl = `${getAppUrl(request)}/login`;
+
+    if (memberEmail?.includes('@')) {
+      await sendMembershipApprovedEmail(memberEmail, firstName, loginUrl);
+    }
+
+    if (app.phone) {
+      await sendSms(
+        app.phone,
+        `Hi ${firstName}, your CKC membership is approved! Sign in at ${loginUrl} with your email and password.`,
+      );
+    }
   }
 
   return NextResponse.json(data);

@@ -3,11 +3,19 @@
  * Regenerate with: npx supabase gen types typescript --project-id YOUR_PROJECT_ID
  */
 
-export type UserRole = 'super_admin' | 'admin' | 'pastor' | 'leader' | 'member' | 'visitor';
+export type UserRole =
+  | 'super_admin'
+  | 'senior_pastor'
+  | 'administrative_manager'
+  | 'admin'
+  | 'pastor'
+  | 'leader'
+  | 'member'
+  | 'visitor';
 export type InviteRequestStatus = 'pending' | 'approved' | 'declined';
 export type InviteStatus = 'pending' | 'accepted' | 'expired';
 export type ApplicationStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
-export type MemberStatus = 'active' | 'inactive';
+export type MemberStatus = 'active' | 'inactive' | 'suspended';
 export type GroupCategory = 'ministry' | 'community';
 export type GroupMemberRole = 'leader' | 'member';
 export type BroadcastStatus = 'draft' | 'scheduled' | 'sent';
@@ -46,6 +54,7 @@ export interface Database {
           photo_url: string | null;
           email: string | null;
           gender: 'Male' | 'Female' | null;
+          password_hash: string | null;
           date_of_birth: string | null;
           created_at: string;
           updated_at: string;
@@ -226,6 +235,7 @@ export interface Database {
           phone: string;
           email: string | null;
           gender: 'Male' | 'Female' | null;
+          password_hash: string | null;
           date_of_birth: string | null;
           age: number | null;
           marital_status: string | null;

@@ -7,23 +7,18 @@ import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import SendInvitePanel, { type SendInvitePrefill } from '@/components/admin/SendInvitePanel';
 import InviteRequestsPanel from '@/components/admin/InviteRequestsPanel';
 import PendingApplicationsPanel from '@/components/admin/PendingApplicationsPanel';
+import MemberManageMenu, { type MemberRow } from '@/components/admin/MemberManageMenu';
 import { AGE_CATEGORIES, CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import type { InviteRequest } from '@/lib/invites/request-service';
 import { apiFetch, useBackend } from '@/lib/api/client';
 import { formatPhoneDisplay } from '@/lib/auth/session';
 
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: 'Active' | 'Inactive' | 'New';
+interface Member extends MemberRow {
   ministry: string;
   joinDate: string;
-  gender: 'Male' | 'Female' | 'Unknown';
   ageCategory: 'child' | 'youth' | 'adult';
-  campus: CampusId;
   baptised: boolean;
+  displayStatus: 'Active' | 'Suspended' | 'New';
 }
 
 function ageToCategory(age: number | null | undefined): 'child' | 'youth' | 'adult' {
@@ -44,17 +39,18 @@ function mapDbMember(row: {
   status: string;
   member_since: string;
 }): Member {
-  const statusMap: Record<string, Member['status']> = {
-    active: 'Active',
-    inactive: 'Inactive',
-    pending: 'New',
-  };
+  const dbStatus = row.status as Member['dbStatus'];
+  let displayStatus: Member['displayStatus'] = 'Active';
+  if (dbStatus === 'suspended' || dbStatus === 'inactive') displayStatus = 'Suspended';
+  else if (dbStatus === 'pending') displayStatus = 'New';
+
   return {
     id: row.id,
     name: row.full_name,
     email: row.email ?? '',
     phone: formatPhoneDisplay(row.phone),
-    status: statusMap[row.status] ?? 'Active',
+    dbStatus,
+    displayStatus,
     ministry: '—',
     joinDate: row.member_since,
     gender: row.gender === 'Male' || row.gender === 'Female' ? row.gender : 'Unknown',
@@ -66,7 +62,7 @@ function mapDbMember(row: {
 
 const statusColors: Record<string, string> = {
   Active: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
-  Inactive: 'bg-white/5 text-cloud/40 border-white/10',
+  Suspended: 'bg-amber-500/10 text-amber-400 border-amber-400/20',
   New: 'bg-sky/10 text-sky border-sky/20',
 };
 
@@ -84,8 +80,8 @@ export default function MembersPage() {
   const [ageFilter, setAgeFilter] = useState('All');
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [invitePrefill, setInvitePrefill] = useState<SendInvitePrefill>();
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [requestsKey, setRequestsKey] = useState(0);
+  const [membersKey, setMembersKey] = useState(0);
 
   useEffect(() => {
     if (!backend || tab !== 'members') return;
@@ -106,14 +102,14 @@ export default function MembersPage() {
       .then((rows) => setMembers(rows.map(mapDbMember)))
       .catch(() => setMembers([]))
       .finally(() => setMembersLoading(false));
-  }, [backend, tab, requestsKey]);
+  }, [backend, tab, requestsKey, membersKey]);
 
   const filtered = members.filter((m) => {
     const matchSearch =
       m.name.toLowerCase().includes(search.toLowerCase()) ||
       m.email.toLowerCase().includes(search.toLowerCase()) ||
       m.ministry.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'All' || m.status === statusFilter;
+    const matchStatus = statusFilter === 'All' || m.displayStatus === statusFilter;
     const matchGender = genderFilter === 'All' || m.gender === genderFilter;
     const matchCampus = campusFilter === 'All' || m.campus === campusFilter;
     const matchAge = ageFilter === 'All' || m.ageCategory === ageFilter;
@@ -127,7 +123,8 @@ export default function MembersPage() {
 
   const handleApproveRequest = (req: InviteRequest) => {
     openSendInvite({
-      officialName: `${req.fullName} ${req.surname}`,
+      givenName: req.fullName,
+      surname: req.surname,
       email: req.email,
       requestId: req.id,
       campusId: req.campus,
@@ -185,7 +182,8 @@ export default function MembersPage() {
         <ContentCard title="Pending applications" icon="DocumentCheckIcon">
           <PendingApplicationsPanel />
           <p className="mt-4 text-xs text-cloud/30">
-            Approve to create a member record. They can then sign in with their cell number.
+            Open an application to review all details (next of kin, dependants, spiritual background)
+            before approving. Approved members sign in with email + password.
           </p>
         </ContentCard>
       ) : (
@@ -202,74 +200,51 @@ export default function MembersPage() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <FilterPills label="Status" options={['All', 'Active', 'Inactive', 'New']} value={statusFilter} onChange={setStatusFilter} />
+              <FilterPills label="Status" options={['All', 'Active', 'Suspended', 'New']} value={statusFilter} onChange={setStatusFilter} />
               <FilterPills label="Gender" options={['All', 'Male', 'Female']} value={genderFilter} onChange={setGenderFilter} />
               <FilterPills label="Age" options={['All', ...AGE_CATEGORIES.map((a) => a.id)]} labels={['All', ...AGE_CATEGORIES.map((a) => a.label)]} value={ageFilter} onChange={setAgeFilter} />
               <FilterPills label="Campus" options={['All', ...CAMPUSES.map((c) => c.id)]} labels={['All', ...CAMPUSES.map((c) => c.label)]} value={campusFilter} onChange={setCampusFilter} />
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+          <div className="space-y-2">
             {membersLoading ? (
               <div className="py-12 text-center text-sm text-cloud/40">Loading members from Supabase…</div>
-            ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-cloud/40">Member</th>
-                    <th className="hidden px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-cloud/40 md:table-cell">Campus</th>
-                    <th className="hidden px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-cloud/40 lg:table-cell">Ministry</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-cloud/40">Status</th>
-                    <th className="px-5 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((member) => (
-                    <tr key={member.id} className="border-b border-white/5 transition-colors last:border-0 hover:bg-white/3">
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ckc-gold/10">
-                            <span className="text-xs font-bold text-ckc-gold">{member.name.charAt(0)}</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-cloud">{member.name}</p>
-                            <p className="text-xs text-cloud/40">{member.gender} · {AGE_CATEGORIES.find((a) => a.id === member.ageCategory)?.label}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="hidden px-5 py-3.5 md:table-cell">
-                        <span className="text-sm text-cloud/60">{getCampusLabel(member.campus)}</span>
-                      </td>
-                      <td className="hidden px-5 py-3.5 lg:table-cell">
-                        <span className="text-sm text-cloud/60">{member.ministry}</span>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${statusColors[member.status]}`}>
-                          {member.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <button onClick={() => setSelectedMember(member)} className="text-cloud/30 transition-colors hover:text-ckc-gold">
-                          <Icon name="EllipsisHorizontalIcon" size={18} variant="outline" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            )}
-            {filtered.length === 0 && !membersLoading && (
+            ) : filtered.length === 0 ? (
               <div className="py-12 text-center text-cloud/30">
                 <Icon name="UsersIcon" size={32} variant="outline" className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm">No members in Supabase yet — approve applications or run invite flow.</p>
               </div>
+            ) : (
+              filtered.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ckc-gold/10">
+                      <span className="text-xs font-bold text-ckc-gold">{member.name.charAt(0)}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-cloud">{member.name}</p>
+                      <p className="truncate text-xs text-cloud/40">
+                        {getCampusLabel(member.campus)} · {member.gender} · {member.email || member.phone}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-3">
+                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusColors[member.displayStatus]}`}>
+                      {member.displayStatus}
+                    </span>
+                    <MemberManageMenu member={member} onUpdated={() => setMembersKey((k) => k + 1)} />
+                  </div>
+                </div>
+              ))
             )}
           </div>
 
           <p className="text-xs text-cloud/30">
-            Member list comes from Supabase only — no dummy contacts shown.
+            Use the ··· menu to view full membership info, suspend, or terminate. Suspended members cannot sign in or receive messages.
           </p>
         </>
       )}
@@ -285,49 +260,6 @@ export default function MembersPage() {
         />
       )}
 
-      {selectedMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1E293B] p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-cloud">Member Profile</h2>
-              <button onClick={() => setSelectedMember(null)} className="text-cloud/40 hover:text-cloud">
-                <Icon name="XMarkIcon" size={20} variant="outline" />
-              </button>
-            </div>
-            <div className="mb-5 flex items-center gap-4 border-b border-white/10 pb-5">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-ckc-gold/10">
-                <span className="text-xl font-bold text-ckc-gold">{selectedMember.name.charAt(0)}</span>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-cloud">{selectedMember.name}</p>
-                <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${statusColors[selectedMember.status]}`}>
-                  {selectedMember.status}
-                </span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {[
-                { label: 'Campus', value: getCampusLabel(selectedMember.campus), icon: 'BuildingLibraryIcon' },
-                { label: 'Email', value: selectedMember.email, icon: 'EnvelopeIcon' },
-                { label: 'Phone', value: selectedMember.phone, icon: 'PhoneIcon' },
-                { label: 'Ministry', value: selectedMember.ministry, icon: 'UserGroupIcon' },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center gap-3">
-                  <Icon name={row.icon} size={15} variant="outline" className="flex-shrink-0 text-cloud/30" />
-                  <span className="w-16 text-xs text-cloud/40">{row.label}</span>
-                  <span className="text-sm text-cloud">{row.value}</span>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => setSelectedMember(null)}
-              className="mt-6 w-full rounded-xl bg-ckc-gold py-2.5 text-sm font-bold text-ckc-black"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </AppShell>
   );
 }

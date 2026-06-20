@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { CampusId } from '@/lib/church/constants';
+import { isChurchWideDbRole } from '@/lib/auth/church-wide-staff';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import {
   canManageStaffRoles,
@@ -7,6 +8,23 @@ import {
 } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { AssignableStaffRole } from '@/lib/staff/types';
+
+const STAFF_LIST_ROLES = [
+  'super_admin',
+  'senior_pastor',
+  'administrative_manager',
+  'admin',
+  'pastor',
+  'leader',
+] as const;
+
+const ASSIGNABLE_ROLES: AssignableStaffRole[] = [
+  'admin',
+  'pastor',
+  'leader',
+  'senior_pastor',
+  'administrative_manager',
+];
 
 function mapStaffRow(row: {
   id: string;
@@ -51,13 +69,13 @@ export async function GET(request: Request) {
 
   const actor = await resolveStaffActor(request);
   if (!actor || !canManageStaffRoles(actor)) {
-    return NextResponse.json({ error: 'Super admin access required' }, { status: 403 });
+    return NextResponse.json({ error: 'Team management access required' }, { status: 403 });
   }
 
   const { data, error } = await db
     .from('profiles')
     .select('id, email, phone, role, campus_id, display_name, official_name, username, created_at')
-    .in('role', ['super_admin', 'admin', 'pastor', 'leader'])
+    .in('role', [...STAFF_LIST_ROLES])
     .order('role')
     .order('display_name');
 
@@ -73,25 +91,27 @@ export async function POST(request: Request) {
 
   const actor = await resolveStaffActor(request);
   if (!actor || !canManageStaffRoles(actor)) {
-    return NextResponse.json({ error: 'Super admin access required' }, { status: 403 });
+    return NextResponse.json({ error: 'Team management access required' }, { status: 403 });
   }
 
   const body = await request.json();
   const email = normalizeEmail(body.email ?? '');
   const role = body.role as AssignableStaffRole;
-  const campusId = body.campusId as CampusId;
+  const campusId = (body.campusId as CampusId | null | undefined) ?? null;
   const displayName = (body.displayName ?? body.officialName ?? '').trim();
   const officialName = (body.officialName ?? displayName).trim();
+  const churchWide = isChurchWideDbRole(role);
 
-  if (!email.includes('@') || !displayName || !campusId) {
-    return NextResponse.json({ error: 'Email, name, and campus are required' }, { status: 400 });
+  if (!email.includes('@') || !displayName) {
+    return NextResponse.json({ error: 'Email and name are required' }, { status: 400 });
   }
 
-  if (!['admin', 'pastor', 'leader'].includes(role)) {
-    return NextResponse.json(
-      { error: 'Role must be admin (campus admin), pastor, or leader' },
-      { status: 400 },
-    );
+  if (!churchWide && !campusId) {
+    return NextResponse.json({ error: 'Campus is required for this role' }, { status: 400 });
+  }
+
+  if (!ASSIGNABLE_ROLES.includes(role)) {
+    return NextResponse.json({ error: 'Invalid staff role' }, { status: 400 });
   }
 
   const { data: existing } = await db
@@ -109,7 +129,7 @@ export async function POST(request: Request) {
       .from('profiles')
       .update({
         role,
-        campus_id: campusId,
+        campus_id: churchWide ? null : campusId,
         display_name: displayName,
         official_name: officialName,
         username: existing.username ?? displayName.toLowerCase().replace(/\s+/g, '_'),
@@ -129,7 +149,7 @@ export async function POST(request: Request) {
       phone,
       email,
       role,
-      campus_id: campusId,
+      campus_id: churchWide ? null : campusId,
       display_name: displayName,
       official_name: officialName,
       username: displayName.toLowerCase().replace(/\s+/g, '_').slice(0, 32),

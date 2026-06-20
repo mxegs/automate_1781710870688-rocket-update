@@ -120,15 +120,15 @@ export default function FollowUpsPage() {
 
         <div className="space-y-3">
           {filtered.map((f) => (
-            <div key={f.id} className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+            <div key={f.id} className="flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="min-w-0 flex-1">
                 <p className="font-semibold text-cloud">{f.name}</p>
                 <p className="text-xs text-cloud/40">
                   {f.phone} · {getCampusLabel(f.campus)} · {f.source}
                 </p>
                 <p className="text-xs text-cloud/30 mt-0.5">Last contact: {f.lastContact}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex-shrink-0">
                 <select
                   value={f.stage}
                   onChange={(e) => handleStageChange(f.id, e.target.value as FollowUpStageId)}

@@ -42,7 +42,8 @@ export default function InvitePage() {
       email: inviteEmail,
       token,
       officialName: inviteMeta.officialName,
-      username: inviteMeta.username,
+      givenName: inviteMeta.givenName,
+      surname: inviteMeta.surname,
     });
     router.push('/signup/complete');
   };
@@ -63,14 +64,11 @@ export default function InvitePage() {
           <div className="space-y-4">
             <span className="ckc-label-pill">Invite received</span>
             <h2 className="text-base font-semibold text-ckc-white">
-              Welcome, {inviteMeta?.officialName.split(' ')[0]}
+              Welcome, {inviteMeta?.givenName || inviteMeta?.officialName?.split(' ')[0]}
             </h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
               You&apos;ve been invited to join {BRAND.name}. Tap below to open the membership form.
-              You&apos;ll add your cell number there so the church can send SMS updates.
-              {inviteMeta?.username && (
-                <span className="mt-1 block text-ckc-dim">Suggested username: {inviteMeta.username}</span>
-              )}
+              You&apos;ll add your cell number and choose a username there.
             </p>
 
             <CkcButton type="button" onClick={handleContinue}>

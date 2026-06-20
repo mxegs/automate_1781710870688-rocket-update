@@ -219,9 +219,16 @@ export default function Sidebar() {
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/10">
           <UserFooter showText={true} />
           <ViewModeToggle showText={true} />
+          <Link
+            href="/account/change-password"
+            className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-cloud/40 hover:text-ckc-gold hover:bg-ckc-gold/5 transition-colors"
+          >
+            <Icon name="KeyIcon" size={14} variant="outline" />
+            <span>Change password</span>
+          </Link>
           <button
             onClick={handleLogout}
-            className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-cloud/40 hover:text-rose-400 hover:bg-rose-500/5 transition-colors"
+            className="mt-1 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-cloud/40 hover:text-rose-400 hover:bg-rose-500/5 transition-colors"
           >
             <Icon name="ArrowLeftOnRectangleIcon" size={14} variant="outline" />
             <span>Sign Out</span>
@@ -262,6 +269,15 @@ export default function Sidebar() {
         <div className="p-3 border-t border-white/10">
           <UserFooter showText={!collapsed} />
           <ViewModeToggle showText={!collapsed} />
+          {!collapsed && (
+            <Link
+              href="/account/change-password"
+              className="mt-1 w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-cloud/40 hover:text-ckc-gold hover:bg-ckc-gold/5 transition-colors"
+            >
+              <Icon name="KeyIcon" size={13} variant="outline" />
+              <span>Change password</span>
+            </Link>
+          )}
           {!collapsed && (
             <button
               onClick={handleLogout}

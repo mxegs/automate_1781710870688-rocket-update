@@ -19,14 +19,11 @@ export default function SignupSuccessPage() {
         </div>
         <h2 className="ckc-gradient-title mb-2 text-xl font-bold">Thank you!</h2>
         <p className="mb-6 text-sm leading-relaxed text-ckc-muted">
-          Your membership application has been received. Our team will review it and notify you
-          once approved.
-        </p>
-        <p className="mb-6 text-xs text-ckc-dim">
-          Questions? Call {BRAND.supportPhone}
+          Your membership registration has been received. We will email and SMS you when your
+          application is approved, with instructions to sign in using the password you just saved.
         </p>
         <Link href="/login">
-          <CkcButton type="button">Return to Sign In</CkcButton>
+          <CkcButton type="button" variant="ghost">Close</CkcButton>
         </Link>
       </CkcCard>
     </AuthShell>
