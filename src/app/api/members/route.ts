@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { shouldHideFromMemberDirectory } from '@/lib/auth/super-admin';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET(request: Request) {
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
 
   let query = db
     .from('members')
-    .select('id, full_name, surname, phone, email, campus_id, gender, age, status, member_since, application_id')
+    .select('id, full_name, surname, phone, email, campus_id, gender, age, status, member_since, application_id, date_of_birth')
     .order('full_name');
 
   if (statusFilter === 'active') {
@@ -22,5 +23,14 @@ export async function GET(request: Request) {
   const { data, error } = await query;
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data ?? []);
+
+  const filtered = (data ?? []).filter(
+    (row) =>
+      !shouldHideFromMemberDirectory({
+        email: row.email,
+        phone: row.phone,
+      }),
+  );
+
+  return NextResponse.json(filtered);
 }

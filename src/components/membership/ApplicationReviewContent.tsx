@@ -117,14 +117,16 @@ export default function ApplicationReviewContent({
       </ReviewBlock>
 
       {(guardian.title ||
+        guardian.fullName ||
         guardian.surname ||
-        guardian.relationship ||
+        guardian.identityNumber ||
         depCount > 0) && (
         <ReviewBlock title="Guardian / spouse">
           <ReviewRow
-            label="Guardian"
-            value={[guardian.title, guardian.initial, guardian.surname].filter(Boolean).join(' ')}
+            label="Spouse"
+            value={[guardian.title, guardian.fullName, guardian.surname].filter(Boolean).join(' ')}
           />
+          <ReviewRow label="Spouse ID" value={guardian.identityNumber} />
           <ReviewRow label="Relationship" value={guardian.relationship} />
           <ReviewRow label="Tel home" value={guardian.telHome} />
           <ReviewRow label="Tel work" value={guardian.telWork} />
@@ -142,7 +144,7 @@ export default function ApplicationReviewContent({
             <ReviewRow
               key={i}
               label={`Dependant ${i + 1}`}
-              value={`${d.name}${d.age !== '' ? `, age ${d.age}` : ''}`}
+              value={`${d.name} ${d.surname}${d.age !== '' ? `, age ${d.age}` : ''}${d.familySerial ? ` (${d.familySerial})` : ''}`}
             />
           ))}
       </ReviewBlock>

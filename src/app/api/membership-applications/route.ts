@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { assignDependantSerials } from '@/lib/membership/family';
 import { getAppUrl } from '@/lib/app-url';
 import { sendApplicationReceivedEmail } from '@/lib/email/service';
 import { sendSms } from '@/lib/sms/service';
@@ -52,10 +53,21 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const phone = normalizePhone(body.phone ?? '');
-  const applicationData = body.applicationData ?? body;
+  let applicationData = (body.applicationData ?? body) as import('@/lib/membership/types').MembershipApplication;
 
   if (phone.length < 9 || !body.campusId) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  applicationData = await assignDependantSerials(applicationData);
+  if (!applicationData.guardian.familyGroupId) {
+    applicationData = {
+      ...applicationData,
+      guardian: {
+        ...applicationData.guardian,
+        familyGroupId: applicationData.personal.identityNumber,
+      },
+    };
   }
 
   const { data, error } = await db

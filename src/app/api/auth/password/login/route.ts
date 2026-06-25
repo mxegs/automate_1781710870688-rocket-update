@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyPassword } from '@/lib/auth/password-server';
+import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
 import { isSuperAdminEmail, normalizeEmail } from '@/lib/auth/super-admin';
 import { getMemberStatusForEmail, isLoginBlockedMemberStatus } from '@/lib/members/status-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -26,7 +27,10 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!profile?.email) {
+
+  const resolved = profile?.email ? profile : await ensureProfileForEmail(db, email);
+
+  if (!resolved?.email) {
     return NextResponse.json({ error: 'No account found for this email' }, { status: 404 });
   }
 
@@ -38,27 +42,27 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!profile.password_hash) {
+  if (!resolved.password_hash) {
     return NextResponse.json(
-      { error: 'Password sign-in is not set up for this account yet. Contact your admin.' },
+      { error: 'Password sign-in is not set up for this account yet. Use Forgot password on the login page, or contact your admin.' },
       { status: 400 },
     );
   }
 
-  const valid = await verifyPassword(password, profile.password_hash);
+  const valid = await verifyPassword(password, resolved.password_hash);
   if (!valid) {
     return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
   }
 
   return NextResponse.json({
-    email: profile.email,
-    phone: profile.phone,
-    role: dbRoleToAppRole(profile.role),
-    campusId: profile.campus_id,
-    officialName: profile.official_name,
-    username: profile.username,
-    displayName: profile.display_name,
-    isSuperAdmin: profile.role === 'super_admin' || isSuperAdminEmail(profile.email),
-    dbRole: profile.role,
+    email: resolved.email,
+    phone: resolved.phone,
+    role: dbRoleToAppRole(resolved.role),
+    campusId: resolved.campus_id,
+    officialName: resolved.official_name,
+    username: resolved.username,
+    displayName: resolved.display_name,
+    isSuperAdmin: resolved.role === 'super_admin' || isSuperAdminEmail(resolved.email),
+    dbRole: resolved.role,
   });
 }

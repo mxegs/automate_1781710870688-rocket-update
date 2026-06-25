@@ -59,3 +59,12 @@ export async function changePassword(input: {
     body: JSON.stringify(input),
   });
 }
+
+export async function requestPasswordReset(
+  email: string,
+): Promise<{ ok: boolean; message?: string; demoLink?: string }> {
+  return apiFetch('/api/auth/password/forgot', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}

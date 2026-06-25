@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAppUrl } from '@/lib/app-url';
+import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
+import { normalizeEmail } from '@/lib/auth/super-admin';
+import { normalizePhone } from '@/lib/auth/session';
 import { sendMembershipApprovedEmail } from '@/lib/email/service';
 import { sendSms } from '@/lib/sms/service';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -43,14 +46,16 @@ export async function PATCH(
     const covenant = (app.application_data as { covenant?: { dateSigned?: string } })?.covenant;
     const appRow = app as { password_hash?: string | null };
 
+    const memberPhone = normalizePhone(app.phone ?? '');
+
     await db.from('members').insert({
       application_id: id,
       campus_id: app.campus_id,
       surname: personal.surname ?? '',
       full_name: personal.fullName ?? '',
       username: personal.username ?? null,
-      phone: app.phone,
-      email: personal.email ?? null,
+      phone: memberPhone,
+      email: personal.email ? normalizeEmail(personal.email) : null,
       gender: (personal.gender as 'Male' | 'Female') ?? null,
       date_of_birth: personal.dateOfBirth || null,
       age: typeof personal.age === 'number' ? personal.age : null,
@@ -59,24 +64,31 @@ export async function PATCH(
       status: 'active',
     });
 
-    await db.from('profiles').upsert(
-      {
-        phone: app.phone,
-        role: 'member',
-        campus_id: app.campus_id,
-        official_name: personal.fullName ?? null,
-        username: personal.username ?? null,
-        display_name: personal.username ?? personal.fullName ?? null,
-        gender: (personal.gender as 'Male' | 'Female') ?? null,
-        date_of_birth: personal.dateOfBirth || null,
-        email: personal.email ?? null,
-        password_hash: appRow.password_hash ?? null,
-      },
-      { onConflict: 'phone' },
-    );
+    const memberEmail = personal.email ? normalizeEmail(personal.email) : '';
+    if (memberEmail.includes('@')) {
+      const profile = await ensureProfileForEmail(db, memberEmail);
+      if (!profile?.email) {
+        console.error('[approval] failed to create login profile for', memberEmail);
+      }
+    } else {
+      await db.from('profiles').upsert(
+        {
+          phone: memberPhone,
+          role: 'member',
+          campus_id: app.campus_id,
+          official_name: personal.fullName ?? null,
+          username: personal.username ?? null,
+          display_name: personal.username ?? personal.fullName ?? null,
+          gender: (personal.gender as 'Male' | 'Female') ?? null,
+          date_of_birth: personal.dateOfBirth || null,
+          email: null,
+          password_hash: appRow.password_hash ?? null,
+        },
+        { onConflict: 'phone' },
+      );
+    }
 
     const firstName = personal.fullName?.trim().split(/\s+/)[0] || 'Friend';
-    const memberEmail = personal.email?.trim().toLowerCase();
     const loginUrl = `${getAppUrl(request)}/login`;
 
     if (memberEmail?.includes('@')) {

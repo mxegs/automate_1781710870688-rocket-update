@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { dbRoleToAppRole } from '@/lib/supabase/mappers';
@@ -22,17 +23,19 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!data) return NextResponse.json(null);
+
+  const row = data ?? (await ensureProfileForEmail(db, email));
+  if (!row) return NextResponse.json(null);
 
   return NextResponse.json({
-    email: data.email,
-    phone: data.phone,
-    role: dbRoleToAppRole(data.role),
-    dbRole: data.role,
-    isSuperAdmin: data.role === 'super_admin',
-    officialName: data.official_name,
-    username: data.username,
-    displayName: data.display_name,
-    campusId: data.campus_id,
+    email: row.email,
+    phone: row.phone,
+    role: dbRoleToAppRole(row.role),
+    dbRole: row.role,
+    isSuperAdmin: row.role === 'super_admin',
+    officialName: row.official_name,
+    username: row.username,
+    displayName: row.display_name,
+    campusId: row.campus_id,
   });
 }

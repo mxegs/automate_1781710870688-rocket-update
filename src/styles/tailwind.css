@@ -52,6 +52,32 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--slate-mid); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--sky-dim); }
 
+/* Birthday celebration */
+@keyframes birthday-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  50% { transform: translateY(-12px) rotate(8deg); opacity: 0.85; }
+}
+
+@keyframes birthday-shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.birthday-banner {
+  background: linear-gradient(90deg, rgba(244, 63, 94, 0.15), rgba(201, 168, 76, 0.2), rgba(244, 63, 94, 0.15));
+  background-size: 200% 100%;
+  animation: birthday-shimmer 4s ease infinite;
+}
+
+.birthday-emoji {
+  display: inline-block;
+  animation: birthday-float 2s ease-in-out infinite;
+}
+
+.birthday-emoji:nth-child(2) { animation-delay: 0.3s; }
+.birthday-emoji:nth-child(3) { animation-delay: 0.6s; }
+.birthday-emoji:nth-child(4) { animation-delay: 0.9s; }
+
 /* Counter animation */
 @keyframes countUp {
   from { opacity: 0; transform: translateY(12px); }
@@ -281,6 +307,16 @@ body {
 
 .ckc-input::placeholder {
   color: var(--ckc-dim, #737373);
+}
+
+.ckc-input[type='date'] {
+  color-scheme: dark;
+}
+
+.ckc-input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(0.85) brightness(1.2);
+  opacity: 0.9;
+  cursor: pointer;
 }
 
 .ckc-card {

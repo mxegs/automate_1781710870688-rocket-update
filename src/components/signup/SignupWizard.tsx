@@ -37,31 +37,10 @@ import {
 } from '@/lib/membership/types';
 import { getInviteSession, clearInviteSession } from '@/lib/auth/session';
 import { submitMembershipApplication } from '@/lib/membership/service';
+import { migrateApplication } from '@/lib/membership/migrate';
+import { suggestUsername } from '@/lib/membership/migrate';
 
 const SignaturePad = dynamic(() => import('@/components/signup/SignaturePad'), { ssr: false });
-
-function migrateApplication(data: MembershipApplication): MembershipApplication {
-  const personal = data.personal as MembershipApplication['personal'] & { churchMembership?: string };
-  if (!personal.identityType) {
-    personal.identityType =
-      personal.identityNumber && /^\d{13}$/.test(personal.identityNumber) ? 'sa_id' : '';
-  }
-  if (!personal.countryOfOrigin) personal.countryOfOrigin = '';
-
-  const spiritual = data.spiritual as MembershipApplication['spiritual'] & {
-    baptismDateLocation?: string;
-    previousChurchDateLocation?: string;
-  };
-  if (spiritual.baptismDateLocation && !spiritual.baptismLocation) {
-    spiritual.baptismLocation = spiritual.baptismDateLocation;
-  }
-  if (spiritual.previousChurchDateLocation && !spiritual.previousChurchLocation) {
-    spiritual.previousChurchLocation = spiritual.previousChurchDateLocation;
-  }
-  if (!spiritual.previousChurchName) spiritual.previousChurchName = '';
-
-  return data;
-}
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
@@ -92,6 +71,8 @@ export default function SignupWizard() {
   const [covenantScrolled, setCovenantScrolled] = useState(false);
   const [showReview, setShowReview] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [usernameEdited, setUsernameEdited] = useState(false);
+  const [spouseLookupNote, setSpouseLookupNote] = useState('');
 
   useEffect(() => {
     const invite = getInviteSession();
@@ -115,6 +96,12 @@ export default function SignupWizard() {
     }
     if (invite.email) {
       base.personal.email = invite.email;
+    }
+    if (invite.username) {
+      base.personal.username = invite.username;
+      setUsernameEdited(true);
+    } else if (base.personal.fullName && base.personal.surname) {
+      base.personal.username = suggestUsername(base.personal.fullName, base.personal.surname);
     }
     if (draft) {
       try {
@@ -200,9 +187,45 @@ export default function SignupWizard() {
 
   const syncDependants = (count: number) => {
     const current = [...form.guardian.dependants];
-    while (current.length < count) current.push({ name: '', age: '' });
+    while (current.length < count) current.push({ name: '', surname: '', age: '', familySerial: '' });
     while (current.length > count) current.pop();
     updateGuardian({ numberOfDependants: count, dependants: current.slice(0, MAX_DEPENDANTS) });
+  };
+
+  const lookupSpouseById = async (idNumber: string) => {
+    const trimmed = idNumber.trim();
+    if (trimmed.length < 5) {
+      setSpouseLookupNote('');
+      return;
+    }
+    try {
+      const res = await fetch(
+        `/api/membership-applications/spouse-family?idNumber=${encodeURIComponent(trimmed)}`,
+      );
+      const data = (await res.json()) as {
+        found: boolean;
+        spouseName?: string;
+        dependants?: MembershipApplication['guardian']['dependants'];
+        familyGroupId?: string;
+      };
+      if (data.found && data.dependants && data.dependants.length > 0) {
+        updateGuardian({
+          dependants: data.dependants,
+          numberOfDependants: data.dependants.length,
+          familyGroupId: data.familyGroupId ?? trimmed,
+        });
+        setSpouseLookupNote(
+          `Linked to ${data.spouseName ?? 'your spouse'} — dependants loaded from their registration.`,
+        );
+      } else if (data.found) {
+        setSpouseLookupNote(`Linked to ${data.spouseName ?? 'your spouse'} — no dependants on file yet.`);
+        updateGuardian({ familyGroupId: data.familyGroupId ?? trimmed });
+      } else {
+        setSpouseLookupNote('');
+      }
+    } catch {
+      setSpouseLookupNote('');
+    }
   };
 
   const validateStep = (): boolean => {
@@ -214,7 +237,10 @@ export default function SignupWizard() {
         result = personalStepSchema.safeParse(form.personal);
         break;
       case 2:
-        result = guardianStepSchema.safeParse(form.guardian);
+        result = guardianStepSchema.safeParse({
+          ...form.guardian,
+          _maritalStatus: form.personal.maritalStatus,
+        });
         break;
       case 3:
         result = emergencyStepSchema.safeParse(form.emergencyContact);
@@ -268,6 +294,10 @@ export default function SignupWizard() {
     const payload: MembershipApplication = {
       ...form,
       submittedAt: new Date().toISOString(),
+      guardian: {
+        ...form.guardian,
+        familyGroupId: form.guardian.familyGroupId || form.personal.identityNumber,
+      },
       covenant: { ...form.covenant, signatureDataUrl: sig },
     };
 
@@ -327,20 +357,52 @@ export default function SignupWizard() {
               </CkcField>
               <div className="grid grid-cols-2 gap-3">
                 <CkcField label="Surname" required error={errors.surname}>
-                  <CkcInput value={form.personal.surname} onChange={(e) => updatePersonal({ surname: e.target.value })} />
+                  <CkcInput
+                    value={form.personal.surname}
+                    onChange={(e) => {
+                      const surname = e.target.value;
+                      setForm((f) => {
+                        const personal = { ...f.personal, surname };
+                        if (!usernameEdited) {
+                          personal.username = suggestUsername(personal.fullName, surname);
+                        }
+                        const next = { ...f, personal };
+                        saveDraft(next);
+                        return next;
+                      });
+                    }}
+                  />
                 </CkcField>
                 <CkcField label="Full name (official)" required error={errors.fullName}>
-                  <CkcInput value={form.personal.fullName} onChange={(e) => updatePersonal({ fullName: e.target.value })} placeholder="As on your ID" />
+                  <CkcInput
+                    value={form.personal.fullName}
+                    onChange={(e) => {
+                      const fullName = e.target.value;
+                      setForm((f) => {
+                        const personal = { ...f.personal, fullName };
+                        if (!usernameEdited) {
+                          personal.username = suggestUsername(fullName, personal.surname);
+                        }
+                        const next = { ...f, personal };
+                        saveDraft(next);
+                        return next;
+                      });
+                    }}
+                    placeholder="As on your ID"
+                  />
                 </CkcField>
               </div>
               <CkcField label="Username" required error={errors.username}>
                 <CkcInput
                   value={form.personal.username}
-                  onChange={(e) => updatePersonal({ username: e.target.value.toLowerCase().replace(/\s/g, '_') })}
-                  placeholder="How we greet you e.g. thabo"
+                  onChange={(e) => {
+                    setUsernameEdited(true);
+                    updatePersonal({ username: e.target.value.toLowerCase().replace(/\s/g, '_') });
+                  }}
+                  placeholder="How we greet you e.g. thabo_mokoena"
                 />
               </CkcField>
-              <p className="-mt-2 text-[11px] text-ckc-dim">Used in the app for greetings — not your phone number.</p>
+              <p className="-mt-2 text-[11px] text-ckc-dim">Pre-filled from your name — change it if you prefer something else.</p>
               <CkcField label="Campus" required error={errors.campus}>
                 <select
                   value={form.personal.campus}
@@ -504,14 +566,34 @@ export default function SignupWizard() {
               {spouseVisible ? (
                 <>
                   <p className="text-xs text-ckc-gold">Spouse / partner information</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <CkcField label="Title" optional><CkcInput value={form.guardian.title} onChange={(e) => updateGuardian({ title: e.target.value })} /></CkcField>
-                    <CkcField label="Initial" optional><CkcInput value={form.guardian.initial} onChange={(e) => updateGuardian({ initial: e.target.value })} /></CkcField>
-                    <CkcField label="Surname" optional><CkcInput value={form.guardian.surname} onChange={(e) => updateGuardian({ surname: e.target.value })} /></CkcField>
+                  <p className="text-[11px] text-ckc-muted">
+                    Enter your spouse&apos;s full name and ID number exactly as on their ID — this links your family in the system.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <CkcField label="Title" optional>
+                      <CkcInput value={form.guardian.title} onChange={(e) => updateGuardian({ title: e.target.value })} />
+                    </CkcField>
+                    <CkcField label="Relationship" optional>
+                      <CkcInput value={form.guardian.relationship} onChange={(e) => updateGuardian({ relationship: e.target.value })} placeholder="e.g. Wife, Husband" />
+                    </CkcField>
                   </div>
-                  <CkcField label="Relationship" optional>
-                    <CkcInput value={form.guardian.relationship} onChange={(e) => updateGuardian({ relationship: e.target.value })} placeholder="e.g. Wife, Husband" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <CkcField label="Spouse full name" required error={errors.fullName}>
+                      <CkcInput value={form.guardian.fullName} onChange={(e) => updateGuardian({ fullName: e.target.value })} placeholder="First name(s)" />
+                    </CkcField>
+                    <CkcField label="Spouse surname" required error={errors.surname}>
+                      <CkcInput value={form.guardian.surname} onChange={(e) => updateGuardian({ surname: e.target.value })} />
+                    </CkcField>
+                  </div>
+                  <CkcField label="Spouse ID / passport number" required error={errors.identityNumber}>
+                    <CkcInput
+                      value={form.guardian.identityNumber}
+                      onChange={(e) => updateGuardian({ identityNumber: e.target.value })}
+                      onBlur={() => void lookupSpouseById(form.guardian.identityNumber)}
+                      placeholder="13-digit SA ID or passport — links your couple"
+                    />
                   </CkcField>
+                  {spouseLookupNote && <p className="text-xs text-emerald-400/90">{spouseLookupNote}</p>}
                   <div className="grid grid-cols-2 gap-3">
                     <CkcField label="Tel (Home)" optional><CkcInput type="tel" value={form.guardian.telHome} onChange={(e) => updateGuardian({ telHome: e.target.value })} /></CkcField>
                     <CkcField label="Tel (Work)" optional><CkcInput type="tel" value={form.guardian.telWork} onChange={(e) => updateGuardian({ telWork: e.target.value })} /></CkcField>
@@ -543,21 +625,42 @@ export default function SignupWizard() {
 
               {depCount > 0 && (
                 <div className="space-y-3">
-                  <p className="text-xs text-ckc-gold">Dependants (linked to your account)</p>
+                  <p className="text-xs text-ckc-gold">Dependants (family group)</p>
                   {form.guardian.dependants.slice(0, depCount).map((dep, i) => (
                     <div key={i} className="rounded-lg border border-white/5 bg-ckc-elevated p-3">
-                      <p className="mb-2 text-xs text-ckc-muted">Dependant {i + 1}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <CkcInput placeholder="Name" value={dep.name} onChange={(e) => {
-                          const deps = [...form.guardian.dependants];
-                          deps[i] = { ...deps[i], name: e.target.value };
-                          updateGuardian({ dependants: deps });
-                        }} />
-                        <CkcInput type="number" placeholder="Age" value={dep.age.toString()} onChange={(e) => {
-                          const deps = [...form.guardian.dependants];
-                          deps[i] = { ...deps[i], age: parseInt(e.target.value, 10) || '' };
-                          updateGuardian({ dependants: deps });
-                        }} />
+                      <p className="mb-2 text-xs text-ckc-muted">
+                        Dependant {i + 1}
+                        {dep.familySerial ? ` · ${dep.familySerial}` : ''}
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <CkcInput
+                          placeholder="Name"
+                          value={dep.name}
+                          onChange={(e) => {
+                            const deps = [...form.guardian.dependants];
+                            deps[i] = { ...deps[i], name: e.target.value };
+                            updateGuardian({ dependants: deps });
+                          }}
+                        />
+                        <CkcInput
+                          placeholder="Surname"
+                          value={dep.surname}
+                          onChange={(e) => {
+                            const deps = [...form.guardian.dependants];
+                            deps[i] = { ...deps[i], surname: e.target.value };
+                            updateGuardian({ dependants: deps });
+                          }}
+                        />
+                        <CkcInput
+                          type="number"
+                          placeholder="Age"
+                          value={dep.age.toString()}
+                          onChange={(e) => {
+                            const deps = [...form.guardian.dependants];
+                            deps[i] = { ...deps[i], age: parseInt(e.target.value, 10) || '' };
+                            updateGuardian({ dependants: deps });
+                          }}
+                        />
                       </div>
                     </div>
                   ))}
@@ -678,10 +781,20 @@ export default function SignupWizard() {
                       <ReviewRow label="Occupation" value={form.personal.occupation.join(', ')} />
                     </ReviewBlock>
                     <ReviewBlock title="Family">
+                      {spouseVisible && (
+                        <>
+                          <ReviewRow label="Spouse" value={`${form.guardian.fullName} ${form.guardian.surname}`.trim()} />
+                          <ReviewRow label="Spouse ID" value={form.guardian.identityNumber} />
+                        </>
+                      )}
                       <ReviewRow label="Dependants" value={depCount > 0 ? String(depCount) : 'None'} />
                       {depCount > 0 &&
                         form.guardian.dependants.slice(0, depCount).map((d, i) => (
-                          <ReviewRow key={i} label={`Dependant ${i + 1}`} value={`${d.name}${d.age !== '' ? `, age ${d.age}` : ''}`} />
+                          <ReviewRow
+                            key={i}
+                            label={`Dependant ${i + 1}`}
+                            value={`${d.name} ${d.surname}${d.age !== '' ? `, age ${d.age}` : ''}${d.familySerial ? ` (${d.familySerial})` : ''}`}
+                          />
                         ))}
                     </ReviewBlock>
                     <ReviewBlock title="Emergency contact">
@@ -757,7 +870,7 @@ export default function SignupWizard() {
                   </div>
 
                   {!covenantScrolled && (
-                    <p className="text-xs text-amber-400">Scroll through the entire covenant to continue.</p>
+                    <p className="text-xs text-red-400">Scroll through the entire covenant to continue.</p>
                   )}
 
                   <label className="flex items-start gap-2 text-xs text-ckc-muted">

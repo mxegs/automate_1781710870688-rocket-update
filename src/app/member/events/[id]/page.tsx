@@ -5,11 +5,18 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
-import EventRsvpForm from '@/components/events/EventRsvpForm';
+import EventRegisterPanel from '@/components/events/EventRegisterPanel';
+import VisitorEventSignupForm from '@/components/events/VisitorEventSignupForm';
+import EventDetailSections from '@/components/events/EventDetailSections';
+import EventDetailFooter, { EventEntryBar } from '@/components/events/EventDetailFooter';
 import { getEventById } from '@/lib/events/service';
-import { formatPrice } from '@/lib/events/utils';
-import { getCampusLabel } from '@/lib/church/constants';
+import { eventActionLabel } from '@/lib/events/form';
 import { getDisplayName, getSession } from '@/lib/auth/session';
+import {
+  getVisitorEventProfile,
+  hasCompleteVisitorEventProfile,
+  type VisitorEventProfile,
+} from '@/lib/events/visitor-profile';
 import type { ChurchEvent } from '@/lib/events/types';
 
 export default function MemberEventDetailPage() {
@@ -17,6 +24,8 @@ export default function MemberEventDetailPage() {
   const eventId = params.id as string;
   const [event, setEvent] = useState<ChurchEvent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showRegister, setShowRegister] = useState(false);
+  const [visitorProfile, setVisitorProfile] = useState<VisitorEventProfile | null>(null);
   const session = getSession();
   const isVisitor = session?.role === 'visitor';
 
@@ -25,7 +34,20 @@ export default function MemberEventDetailPage() {
       setEvent(e);
       setLoading(false);
     });
-  }, [eventId]);
+    if (isVisitor) {
+      setVisitorProfile(getVisitorEventProfile());
+    }
+  }, [eventId, isVisitor]);
+
+  const handleShare = async () => {
+    if (!event) return;
+    const url = `${window.location.origin}/rsvp/${event.id}`;
+    if (navigator.share) {
+      await navigator.share({ title: event.title, url }).catch(() => undefined);
+    } else {
+      await navigator.clipboard.writeText(url);
+    }
+  };
 
   if (loading) {
     return (
@@ -46,74 +68,68 @@ export default function MemberEventDetailPage() {
     );
   }
 
+  const visitorReady = !isVisitor || hasCompleteVisitorEventProfile(visitorProfile);
+  const registerLabel = eventActionLabel(event);
+
   return (
     <AppShell access="shared">
-      <Link href="/member/events" className="inline-flex items-center gap-1 text-sm text-cloud/50 hover:text-ckc-gold mb-4">
-        <Icon name="ArrowLeftIcon" size={14} variant="outline" />
-        All events
-      </Link>
+      <div className="pb-28 max-w-lg mx-auto">
+        <Link href="/member/events" className="inline-flex items-center gap-1 text-sm text-cloud/50 hover:text-ckc-gold mb-4">
+          <Icon name="ArrowLeftIcon" size={14} variant="outline" />
+          Back to events
+        </Link>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div>
-          {event.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={event.imageUrl} alt={event.title} className="w-full rounded-2xl object-cover aspect-video" />
-          ) : (
-            <div className="w-full rounded-2xl bg-white/5 aspect-video flex items-center justify-center">
-              <Icon name="CalendarDaysIcon" size={48} variant="outline" className="text-cloud/20" />
-            </div>
-          )}
+        {event.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={event.imageUrl} alt={event.title} className="w-full rounded-2xl object-cover aspect-video" />
+        ) : (
+          <div className="w-full rounded-2xl bg-white/5 aspect-video flex items-center justify-center">
+            <Icon name="CalendarDaysIcon" size={48} variant="outline" className="text-cloud/20" />
+          </div>
+        )}
 
-          <div className="mt-4">
-            <div className="flex flex-wrap gap-2 mb-2">
-              <span className="rounded-full border border-ckc-gold/30 bg-ckc-gold/10 px-2.5 py-0.5 text-xs text-ckc-gold">
-                {event.category}
-              </span>
-              {event.visibility === 'church_wide' && (
-                <span className="rounded-full border border-sky/30 bg-sky/10 px-2.5 py-0.5 text-xs text-sky">
-                  All campuses
-                </span>
-              )}
-              {event.isPaid && event.priceCents && (
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs text-emerald-400">
-                  {formatPrice(event.priceCents, event.currency)}
-                </span>
-              )}
+        <h1 className="mt-5 text-2xl font-bold text-cloud">{event.title}</h1>
+
+        <div className="mt-5">
+          <EventDetailSections event={event} />
+        </div>
+
+        <EventEntryBar event={event} />
+      </div>
+
+      <EventDetailFooter event={event} onAction={() => setShowRegister(true)} onShare={handleShare} />
+
+      {showRegister && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-lg font-bold text-cloud">
+                {isVisitor && !visitorReady ? 'Visitor sign-up' : registerLabel}
+              </h2>
+              <button type="button" onClick={() => setShowRegister(false)} className="text-cloud/40 hover:text-cloud">
+                ✕
+              </button>
             </div>
-            <h1 className="text-2xl font-bold text-cloud">{event.title}</h1>
-            <div className="mt-3 space-y-1 text-sm text-cloud/60">
-              <p className="flex items-center gap-2">
-                <Icon name="CalendarDaysIcon" size={16} variant="outline" />
-                {event.date} · {event.time}
-              </p>
-              <p className="flex items-center gap-2">
-                <Icon name="MapPinIcon" size={16} variant="outline" />
-                {event.location || getCampusLabel(event.campus)}
-              </p>
-              <p className="flex items-center gap-2">
-                <Icon name="UsersIcon" size={16} variant="outline" />
-                {event.rsvpCount} registered
-                {event.capacity ? ` / ${event.capacity} capacity` : ''}
-              </p>
-            </div>
-            {event.description && (
-              <p className="mt-4 text-sm text-cloud/70 leading-relaxed">{event.description}</p>
+
+            {isVisitor && !visitorReady ? (
+              <VisitorEventSignupForm
+                campusId={event.campus}
+                onComplete={(profile) => setVisitorProfile(profile)}
+              />
+            ) : (
+              <EventRegisterPanel
+                event={event}
+                isVisitor={isVisitor}
+                memberName={getDisplayName(session)}
+                memberPhone={session?.phone ?? ''}
+                memberEmail={session?.email ?? ''}
+                visitorProfile={visitorProfile}
+                embedded
+              />
             )}
           </div>
         </div>
-
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h2 className="text-lg font-bold text-cloud mb-4">
-            {isVisitor ? 'Register as visitor' : 'RSVP'}
-          </h2>
-          <EventRsvpForm
-            event={event}
-            defaultName={isVisitor ? '' : getDisplayName(session)}
-            defaultPhone={session?.phone ?? ''}
-            isVisitor={isVisitor}
-          />
-        </div>
-      </div>
+      )}
     </AppShell>
   );
 }

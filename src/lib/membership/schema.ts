@@ -62,25 +62,63 @@ export const personalStepSchema = z
     }
   });
 
-export const guardianStepSchema = z.object({
-  title: z.string().optional(),
-  initial: z.string().optional(),
-  surname: z.string().optional(),
-  relationship: z.string().optional(),
-  telHome: z.string().optional(),
-  telWork: z.string().optional(),
-  streetAddress: z.string().optional(),
-  occupation: z.string().optional(),
-  organisation: z.string().optional(),
-  spouseJoining: z.enum(['Yes', 'No', '']).optional(),
-  numberOfDependants: z.union([z.number().min(0).max(MAX_DEPENDANTS), z.literal('')]).optional(),
-  dependants: z.array(
-    z.object({
-      name: z.string(),
-      age: z.union([z.number().min(0).max(120), z.literal('')]),
-    }),
-  ),
-});
+export const guardianStepSchema = z
+  .object({
+    title: z.string().optional(),
+    fullName: z.string().optional(),
+    surname: z.string().optional(),
+    identityNumber: z.string().optional(),
+    familyGroupId: z.string().optional(),
+    relationship: z.string().optional(),
+    telHome: z.string().optional(),
+    telWork: z.string().optional(),
+    streetAddress: z.string().optional(),
+    occupation: z.string().optional(),
+    organisation: z.string().optional(),
+    spouseJoining: z.enum(['Yes', 'No', '']).optional(),
+    numberOfDependants: z.union([z.number().min(0).max(MAX_DEPENDANTS), z.literal('')]).optional(),
+    dependants: z.array(
+      z.object({
+        name: z.string(),
+        surname: z.string(),
+        age: z.union([z.number().min(0).max(120), z.literal('')]),
+        familySerial: z.string().optional(),
+      }),
+    ),
+    _maritalStatus: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const showSpouse = showSpouseSection(data._maritalStatus ?? '');
+    if (showSpouse) {
+      if (!data.fullName?.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Spouse full name is required', path: ['fullName'] });
+      }
+      if (!data.surname?.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Spouse surname is required', path: ['surname'] });
+      }
+      if (!data.identityNumber?.trim()) {
+        ctx.addIssue({
+          code: 'custom',
+          message: "Spouse ID / passport number is required to link your family",
+          path: ['identityNumber'],
+        });
+      }
+    }
+
+    const depCount = typeof data.numberOfDependants === 'number' ? data.numberOfDependants : 0;
+    for (let i = 0; i < depCount; i++) {
+      const dep = data.dependants[i];
+      if (!dep?.name?.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Dependant name is required', path: ['dependants', i, 'name'] });
+      }
+      if (!dep?.surname?.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Dependant surname is required', path: ['dependants', i, 'surname'] });
+      }
+      if (dep?.age === '' || dep?.age === undefined) {
+        ctx.addIssue({ code: 'custom', message: 'Dependant age is required', path: ['dependants', i, 'age'] });
+      }
+    }
+  });
 
 export const emergencyStepSchema = z.object({
   name: z.string().optional(),

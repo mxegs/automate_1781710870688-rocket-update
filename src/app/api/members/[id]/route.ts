@@ -91,6 +91,11 @@ export async function PATCH(
 
   if (action === 'terminate') {
     await db.from('group_members').delete().eq('member_phone', member.phone);
+
+    if (member.application_id) {
+      await db.from('membership_applications').delete().eq('id', member.application_id);
+    }
+
     await db.from('members').delete().eq('id', id);
 
     const { data: profile } = await db

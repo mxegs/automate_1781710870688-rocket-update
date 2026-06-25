@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import { getMemberStatusForEmail, isLoginBlockedMemberStatus } from '@/lib/members/status-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -15,11 +16,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ registered: false });
   }
 
-  const { data: profile } = await db
+  let profile = await db
     .from('profiles')
     .select('email, role, password_hash')
     .ilike('email', email)
-    .maybeSingle();
+    .maybeSingle()
+    .then((r) => r.data);
+
+  if (!profile?.email) {
+    const synced = await ensureProfileForEmail(db, email);
+    if (synced?.email) {
+      profile = { email: synced.email, role: synced.role, password_hash: synced.password_hash };
+    }
+  }
 
   if (profile?.email && profile.role !== 'visitor') {
     const memberStatus = await getMemberStatusForEmail(db, email);

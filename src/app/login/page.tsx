@@ -219,6 +219,10 @@ function LoginForm() {
               {loading ? 'Signing in…' : 'Sign in'}
             </CkcButton>
 
+            <Link href="/forgot-password" className="block w-full text-center text-xs text-ckc-muted hover:text-ckc-gold">
+              Forgot password?
+            </Link>
+
             {hasPassword === false && (
               <>
                 <button

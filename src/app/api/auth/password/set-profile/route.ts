@@ -4,6 +4,7 @@ import {
   hashPassword,
   validatePasswordStrength,
 } from '@/lib/auth/password-server';
+import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 /** Set password on an existing profile (staff/admin) using a one-time setup token. */
@@ -31,13 +32,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Setup link expired. Sign in with email link again.' }, { status: 401 });
   }
 
-  const { data: profile, error: fetchError } = await db
+  let profile = await db
     .from('profiles')
     .select('id, email')
     .ilike('email', email)
-    .maybeSingle();
+    .maybeSingle()
+    .then((r) => r.data);
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  if (!profile?.email) {
+    const synced = await ensureProfileForEmail(db, email);
+    if (synced?.email) {
+      const { data: row } = await db
+        .from('profiles')
+        .select('id, email')
+        .ilike('email', email)
+        .maybeSingle();
+      profile = row;
+    }
+  }
+
   if (!profile?.email) {
     return NextResponse.json({ error: 'No profile found for this email' }, { status: 404 });
   }

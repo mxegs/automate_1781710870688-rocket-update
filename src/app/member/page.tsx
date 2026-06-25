@@ -51,7 +51,9 @@ export default function MemberHomePage() {
   const [userName, setUserName] = useState('Member');
   const [greeting, setGreeting] = useState('Good morning');
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifList, setNotifList] = useState(notifications);
+  const [notifList, setNotifList] = useState(notifications.filter((n) => n.type !== 'birthday'));
+  const [myBirthday, setMyBirthday] = useState(false);
+  const [birthdayName, setBirthdayName] = useState<string | null>(null);
   const [upcomingEvents, setUpcomingEvents] = useState<ChurchEvent[]>([]);
   const [latestSermon, setLatestSermon] = useState<MediaItem | null>(null);
   const [givingForm, setGivingForm] = useState<GivingForm>({ name: '', amount: '', reference: '', type: 'Tithe' });
@@ -77,6 +79,34 @@ export default function MemberHomePage() {
       setUpcomingEvents(events.slice(0, 4));
       const sermons = await getMemberMediaFeed({ memberCampus: campus, isVisitor });
       setLatestSermon(sermons[0] ?? null);
+
+      const phoneDigits = session?.phone?.replace(/\D/g, '') ?? '';
+      try {
+        const res = await fetch(`/api/members/birthdays?phone=${encodeURIComponent(phoneDigits)}`);
+        const data = (await res.json()) as {
+          myBirthday?: boolean;
+          myFirstName?: string | null;
+          celebrants?: { name: string; phone: string }[];
+        };
+        setMyBirthday(Boolean(data.myBirthday));
+        setBirthdayName(data.myFirstName ?? displayName.split(' ')[0] ?? 'Friend');
+
+        const birthdayNotifs = (data.celebrants ?? [])
+          .filter((c) => c.phone.replace(/\D/g, '') !== phoneDigits)
+          .map((c, i) => ({
+            id: 1000 + i,
+            type: 'birthday' as const,
+            message: `Wish ${c.name} a happy birthday today! 🎂`,
+            time: 'Today',
+            read: false,
+          }));
+
+        if (birthdayNotifs.length > 0) {
+          setNotifList((prev) => [...birthdayNotifs, ...prev]);
+        }
+      } catch {
+        // Non-fatal
+      }
     })();
   }, []);
 
@@ -163,6 +193,23 @@ export default function MemberHomePage() {
             )}
           </div>
         </div>
+
+        {myBirthday && (
+          <div className="birthday-banner relative overflow-hidden rounded-2xl border border-rose-400/30 p-5 text-center">
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-around opacity-30 text-2xl">
+              <span className="birthday-emoji">🎂</span>
+              <span className="birthday-emoji">🎉</span>
+              <span className="birthday-emoji">✨</span>
+              <span className="birthday-emoji">🎈</span>
+            </div>
+            <p className="relative text-lg font-bold text-cloud">
+              Happy Birthday, {birthdayName}! 🎂
+            </p>
+            <p className="relative mt-1 text-sm text-cloud/70">
+              The CKC family celebrates you today — may God bless your new year!
+            </p>
+          </div>
+        )}
 
         {/* Quick Nav Links */}
         <div className="flex gap-2 flex-wrap">

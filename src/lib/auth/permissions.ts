@@ -70,6 +70,9 @@ export function canAccessRoute(
 
   if (
     pathname.startsWith('/login') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/account/set-password') ||
     pathname.startsWith('/request-invite') ||
     pathname.startsWith('/invite') ||
     pathname.startsWith('/signup') ||

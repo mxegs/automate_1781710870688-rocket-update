@@ -189,3 +189,32 @@ export async function sendMagicLinkEmail(to: string, signInUrl: string): Promise
   console.info('[CKC Email fallback magic link]', to, signInUrl, result.error);
   return { success: true, demo: true };
 }
+
+export function buildPasswordResetEmailHtml(resetUrl: string): string {
+  return `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="color: #c9a227;">Christ Kingdom Citizens</h2>
+      <p>You requested a password reset for your CKC account.</p>
+      <p style="margin: 24px 0;">
+        <a href="${resetUrl}" style="background:#c9a227;color:#000;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">
+          Reset my password
+        </a>
+      </p>
+      <p style="font-size:14px;color:#666;">Or copy this link: ${resetUrl}</p>
+      <p style="font-size:12px;color:#888;">This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>
+    </div>
+  `;
+}
+
+export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<SendEmailResult> {
+  const subject = 'Reset your CKC password';
+  const html = buildPasswordResetEmailHtml(resetUrl);
+  const provider = process.env.EMAIL_PROVIDER ?? 'resend';
+
+  if (provider === 'demo') {
+    console.info('[CKC Email demo password reset]', to, resetUrl);
+    return { success: true, demo: true };
+  }
+
+  return sendViaResend(to, subject, html);
+}

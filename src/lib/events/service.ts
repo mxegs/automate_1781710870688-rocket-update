@@ -58,11 +58,30 @@ export async function rsvpToEvent(
     phone?: string;
     email?: string;
     profileId?: string;
+    visitorId?: string;
     isVisitor?: boolean;
     guestsCount?: number;
   },
 ): Promise<{ rsvp: EventRsvp; paymentUrl?: string; ticketCode?: string }> {
   return apiFetch(`/api/events/${eventId}/rsvp`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function registerEventVisitor(data: {
+  givenName: string;
+  surname: string;
+  email: string;
+  phone: string;
+  gender: 'Male' | 'Female';
+  maritalStatus: string;
+  acceptedJesus: boolean;
+  wantsToJoinChurch: boolean;
+  eventNewsConsent: boolean;
+  campusId?: string;
+}): Promise<{ visitor: { id: string; name: string; email: string; phone: string } }> {
+  return apiFetch('/api/visitors/register', {
     method: 'POST',
     body: JSON.stringify(data),
   });

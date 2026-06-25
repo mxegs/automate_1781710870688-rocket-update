@@ -8,10 +8,16 @@ export interface ChurchEvent {
   id: string;
   title: string;
   description: string;
+  eventInfo: string;
   campus: CampusId;
   visibility: ContentVisibility;
   category: string;
   location: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueCity?: string;
+  venueDirectionsUrl?: string;
+  importantInfo?: string;
   startsAt: string;
   endsAt?: string;
   date: string;
@@ -44,10 +50,16 @@ export interface EventRsvp {
 export interface EventInput {
   title: string;
   description?: string;
+  eventInfo?: string;
   campus: CampusId;
   visibility: ContentVisibility;
   category: string;
   location: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueCity?: string;
+  venueDirectionsUrl?: string;
+  importantInfo?: string;
   startsAt: string;
   endsAt?: string;
   imageUrl?: string;

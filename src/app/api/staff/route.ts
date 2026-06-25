@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { CampusId } from '@/lib/church/constants';
 import { isChurchWideDbRole } from '@/lib/auth/church-wide-staff';
-import { normalizeEmail } from '@/lib/auth/super-admin';
+import { normalizeEmail, shouldHideFromMemberDirectory } from '@/lib/auth/super-admin';
 import {
   canManageStaffRoles,
   resolveStaffActor,
@@ -80,7 +80,14 @@ export async function GET(request: Request) {
     .order('display_name');
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json((data ?? []).map(mapStaffRow));
+
+  const rows = (data ?? []).filter((row) => {
+    if (row.role === 'super_admin' && !actor.isSuperAdmin) return false;
+    if (shouldHideFromMemberDirectory({ email: row.email, phone: row.phone })) return false;
+    return true;
+  });
+
+  return NextResponse.json(rows.map(mapStaffRow));
 }
 
 export async function POST(request: Request) {

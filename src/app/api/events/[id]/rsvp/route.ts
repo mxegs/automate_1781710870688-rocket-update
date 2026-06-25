@@ -64,12 +64,34 @@ export async function POST(
   if (eventErr) return NextResponse.json({ error: eventErr.message }, { status: 500 });
   if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
 
+  const phoneNorm = body.phone?.replace(/\D/g, '') ?? '';
+  const emailNorm = body.email?.trim().toLowerCase() ?? '';
+
+  if (phoneNorm || emailNorm) {
+    const { data: existingRsvps } = await db
+      .from('event_rsvps')
+      .select('id, phone, email')
+      .eq('event_id', eventId);
+
+    const duplicate = (existingRsvps ?? []).some((row) => {
+      const rowPhone = row.phone?.replace(/\D/g, '') ?? '';
+      const rowEmail = row.email?.trim().toLowerCase() ?? '';
+      if (phoneNorm && rowPhone && phoneNorm === rowPhone) return true;
+      if (emailNorm && rowEmail && emailNorm === rowEmail) return true;
+      return false;
+    });
+
+    if (duplicate) {
+      return NextResponse.json({ error: 'You are already registered for this event.' }, { status: 409 });
+    }
+  }
+
   const isPaid = Boolean(event.is_paid);
   const ticketCode = generateTicketCode(eventId);
   const paymentStatus = isPaid ? 'pending' : 'free';
 
-  let visitorId: string | null = null;
-  if (body.isVisitor) {
+  let visitorId: string | null = body.visitorId ?? null;
+  if (!visitorId && body.isVisitor) {
     const { data: visitor } = await db
       .from('visitors')
       .insert({

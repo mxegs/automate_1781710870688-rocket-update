@@ -1,6 +1,9 @@
 export interface Dependant {
   name: string;
+  surname: string;
   age: number | '';
+  /** System-wide child serial, e.g. CKC-0001 */
+  familySerial?: string;
 }
 
 export interface MembershipApplication {
@@ -32,8 +35,10 @@ export interface MembershipApplication {
   };
   guardian: {
     title: string;
-    initial: string;
+    fullName: string;
     surname: string;
+    identityNumber: string;
+    familyGroupId: string;
     relationship: string;
     telHome: string;
     telWork: string;
@@ -160,8 +165,10 @@ export function createEmptyApplication(cellNo = ''): MembershipApplication {
     },
     guardian: {
       title: '',
-      initial: '',
+      fullName: '',
       surname: '',
+      identityNumber: '',
+      familyGroupId: '',
       relationship: '',
       telHome: '',
       telWork: '',

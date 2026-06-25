@@ -1,37 +1,30 @@
 import { NextResponse } from 'next/server';
+import { mapEventRow } from '@/lib/events/mappers';
+import { filterEventsFeed } from '@/lib/events/utils';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { deriveEventStatus, filterEventsFeed, formatEventDateTime } from '@/lib/events/utils';
-import type { ChurchEvent } from '@/lib/events/types';
-import type { ContentVisibility } from '@/lib/sermons/types';
 
-function mapEventRow(
-  row: Record<string, unknown>,
-  rsvpCount = 0,
-): ChurchEvent {
-  const startsAt = row.starts_at as string;
-  const endsAt = row.ends_at as string | null;
-  const { date, time } = formatEventDateTime(startsAt);
+function eventInsertPayload(body: Record<string, unknown>) {
   return {
-    id: row.id as string,
-    title: row.title as string,
-    description: (row.description as string) ?? '',
-    campus: row.campus_id as ChurchEvent['campus'],
-    visibility: row.visibility as ContentVisibility,
-    category: (row.category as string) ?? 'General',
-    location: (row.location as string) ?? '',
-    startsAt,
-    endsAt: endsAt ?? undefined,
-    date,
-    time,
-    imageUrl: (row.image_url as string) ?? undefined,
-    capacity: (row.capacity as number) ?? undefined,
-    rsvpCount,
-    isPaid: Boolean(row.is_paid),
-    priceCents: (row.price_cents as number) ?? undefined,
-    currency: (row.currency as string) ?? 'ZAR',
-    yocoPaymentLink: (row.yoco_payment_link as string) ?? undefined,
-    reminderHoursBefore: (row.reminder_hours_before as number) ?? 24,
-    status: deriveEventStatus(startsAt, endsAt ?? undefined),
+    title: String(body.title ?? '').trim(),
+    description: String(body.description ?? '').trim() || null,
+    event_info: String(body.eventInfo ?? '').trim() || null,
+    campus_id: body.campus,
+    visibility: body.visibility ?? 'campus_only',
+    category: body.category ?? 'General',
+    location: String(body.location ?? '').trim() || null,
+    venue_name: String(body.venueName ?? '').trim() || null,
+    venue_address: String(body.venueAddress ?? '').trim() || null,
+    venue_city: String(body.venueCity ?? '').trim() || null,
+    venue_directions_url: String(body.venueDirectionsUrl ?? '').trim() || null,
+    important_info: String(body.importantInfo ?? '').trim() || null,
+    starts_at: body.startsAt,
+    ends_at: body.endsAt || null,
+    image_url: String(body.imageUrl ?? '').trim() || null,
+    capacity: body.capacity ?? null,
+    is_paid: Boolean(body.isPaid),
+    price_cents: body.isPaid ? body.priceCents ?? null : null,
+    yoco_payment_link: String(body.yocoPaymentLink ?? '').trim() || null,
+    reminder_hours_before: body.reminderHoursBefore ?? 24,
   };
 }
 
@@ -92,22 +85,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await db
     .from('events')
-    .insert({
-      title: body.title.trim(),
-      description: body.description?.trim() || null,
-      campus_id: body.campus,
-      visibility: body.visibility ?? 'campus_only',
-      category: body.category ?? 'General',
-      location: body.location?.trim() || null,
-      starts_at: body.startsAt,
-      ends_at: body.endsAt || null,
-      image_url: body.imageUrl?.trim() || null,
-      capacity: body.capacity ?? null,
-      is_paid: Boolean(body.isPaid),
-      price_cents: body.isPaid ? body.priceCents ?? null : null,
-      yoco_payment_link: body.yocoPaymentLink?.trim() || null,
-      reminder_hours_before: body.reminderHoursBefore ?? 24,
-    })
+    .insert(eventInsertPayload(body))
     .select('*')
     .single();
 
