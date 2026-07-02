@@ -1,4 +1,4 @@
-import { apiFetch, useBackend } from '@/lib/api/client';
+import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
 import type { ChurchEvent, EventInput, EventRsvp } from './types';
 
@@ -49,6 +49,28 @@ export async function updateEvent(id: string, input: Partial<EventInput>): Promi
 
 export async function deleteEvent(id: string): Promise<void> {
   await apiFetch(`/api/events/${id}`, { method: 'DELETE' });
+}
+
+export async function uploadEventImage(
+  file: File,
+  eventId?: string,
+): Promise<{ url: string; path: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (eventId) formData.append('eventId', eventId);
+
+  const res = await fetch('/api/events/upload-image', {
+    method: 'POST',
+    headers: staffHeaders(),
+    body: formData,
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || `Upload failed (${res.status})`);
+  }
+
+  return body as { url: string; path: string };
 }
 
 export async function rsvpToEvent(

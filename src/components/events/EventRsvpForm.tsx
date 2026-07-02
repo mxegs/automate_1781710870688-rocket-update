@@ -70,8 +70,8 @@ export default function EventRsvpForm({
 
   if (ticketCode) {
     return (
-      <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-6 text-center">
-        <Icon name="CheckCircleIcon" size={40} variant="solid" className="mx-auto text-emerald-400 mb-3" />
+      <div className="rounded-xl border border-ckc-gold/30 bg-ckc-gold/10 p-6 text-center">
+        <Icon name="CheckCircleIcon" size={40} variant="solid" className="mx-auto text-ckc-gold mb-3" />
         <h3 className="text-lg font-bold text-cloud">You&apos;re registered!</h3>
         <p className="text-sm text-cloud/60 mt-1">Show this ticket code at the event entrance:</p>
         <p className="mt-3 font-mono text-2xl font-bold tracking-widest text-ckc-gold">{ticketCode}</p>

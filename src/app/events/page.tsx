@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
-import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
+import PageHeader from '@/components/portal/PageHeader';
 import EventFormFields from '@/components/events/EventFormFields';
+import EventListRow from '@/components/events/EventListRow';
 import {
   createEvent,
   deleteEvent,
@@ -15,8 +16,8 @@ import {
 } from '@/lib/events/service';
 import { churchEventToInput } from '@/lib/events/form';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
-import { EVENT_VISIBILITY_OPTIONS, type ChurchEvent, type EventInput, type EventRsvp } from '@/lib/events/types';
-import { formatPrice } from '@/lib/events/utils';
+import { groupEventsByMonth } from '@/lib/events/utils';
+import type { ChurchEvent, EventInput, EventRsvp } from '@/lib/events/types';
 import { getSession } from '@/lib/auth/session';
 import { hasAllCampusAccess } from '@/lib/auth/church-wide-staff';
 import { useBackend } from '@/lib/api/client';
@@ -115,13 +116,14 @@ export default function EventsPage() {
     load();
   };
 
-  const openDetail = async (event: ChurchEvent) => {
+  const openRsvps = async (event: ChurchEvent) => {
     setSelected(event);
     if (backend) setRsvps(await getEventRsvps(event.id));
   };
 
   const visitorRsvps = rsvps.filter((r) => r.isVisitor);
   const memberRsvps = rsvps.filter((r) => !r.isVisitor);
+  const monthGroups = groupEventsByMonth(events);
 
   return (
     <AppShell access="staff">
@@ -165,74 +167,48 @@ export default function EventsPage() {
       )}
 
       {!backend && (
-        <p className="mb-4 text-sm text-amber-400">Connect Supabase to manage events. No dummy data shown.</p>
+        <p className="mb-4 text-sm text-ckc-gold">Connect Supabase to manage events. No dummy data shown.</p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {events.map((e) => (
-          <ContentCard key={e.id}>
-            {e.imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={e.imageUrl} alt="" className="mb-3 h-28 w-full rounded-lg object-cover" />
-            )}
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              <span className="text-[10px] font-semibold uppercase text-ckc-gold">{e.category}</span>
-              {e.visibility === 'church_wide' && <span className="text-[10px] text-sky">· All campuses</span>}
-              {!e.isPaid && <span className="text-[10px] text-emerald-400">· Free</span>}
-            </div>
-            <h3 className="font-bold text-cloud">{e.title}</h3>
-            <p className="text-xs text-cloud/40 mt-1">
-              {e.date} · {e.time}
-            </p>
-            <p className="text-xs text-cloud/40">{e.venueName || e.location || getCampusLabel(e.campus)}</p>
-            <p className="text-xs text-cloud/30 mt-2">
-              {e.rsvpCount} RSVPs
-              {e.isPaid && e.priceCents ? ` · ${formatPrice(e.priceCents)}` : ''}
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button
-                onClick={() => openEdit(e)}
-                className="rounded-lg border border-white/10 py-2 text-xs text-cloud/60 hover:border-ckc-gold/30 hover:text-ckc-gold"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(e.id, e.title)}
-                className="rounded-lg border border-rose-400/20 py-2 text-xs text-rose-400 hover:border-rose-400/40"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => openDetail(e)}
-                className="rounded-lg border border-white/10 py-2 text-xs text-cloud/60 hover:border-ckc-gold/30"
-              >
-                RSVPs
-              </button>
-              <Link
-                href={`/member/events/${e.id}`}
-                className="rounded-lg border border-white/10 py-2 text-center text-xs text-cloud/60 hover:border-ckc-gold/30"
-              >
-                Preview
-              </Link>
-            </div>
-          </ContentCard>
-        ))}
-      </div>
-
-      {events.length === 0 && backend && (
-        <p className="text-center text-cloud/40 py-12">No events yet — create your first event above.</p>
+      {monthGroups.length > 0 ? (
+        <div className="space-y-8">
+          {monthGroups.map((group) => (
+            <section key={group.monthKey}>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ckc-gold">
+                {group.monthLabel}
+              </h2>
+              <div className="space-y-3">
+                {group.events.map((event) => (
+                  <EventListRow
+                    key={event.id}
+                    event={event}
+                    variant="admin"
+                    theme="dark"
+                    onEdit={openEdit}
+                    onDelete={(e) => handleDelete(e.id, e.title)}
+                    onRsvps={openRsvps}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        backend && (
+          <p className="py-12 text-center text-cloud/40">No events yet — create your first event above.</p>
+        )
       )}
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#1E293B] p-6">
-            <div className="flex justify-between items-start mb-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-ckc-card p-6">
+            <div className="mb-4 flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-bold text-cloud">{selected.title}</h2>
                 <p className="text-xs text-cloud/40">
                   {selected.date} · {selected.rsvpCount} total RSVPs
                 </p>
-                <Link href={`/rsvp/${selected.id}`} className="text-xs text-ckc-gold mt-1 inline-block">
+                <Link href={`/rsvp/${selected.id}`} className="mt-1 inline-block text-xs text-ckc-gold">
                   Share RSVP link
                 </Link>
               </div>
@@ -243,27 +219,27 @@ export default function EventsPage() {
 
             {visitorRsvps.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-xs font-semibold text-amber-400 uppercase mb-2">
+                <h3 className="mb-2 text-xs font-semibold uppercase text-ckc-gold">
                   Visitor RSVPs ({visitorRsvps.length})
                 </h3>
                 <div className="space-y-2">
                   {visitorRsvps.map((r) => (
-                    <div key={r.id} className="rounded-lg border border-amber-400/20 bg-amber-500/5 p-3 text-xs">
+                    <div key={r.id} className="rounded-lg border border-ckc-gold/20 bg-ckc-gold/5 p-3 text-xs">
                       <p className="font-semibold text-cloud">{r.name}</p>
                       <p className="text-cloud/40">
                         {r.phone || r.email} · {r.guestsCount} guest(s)
                       </p>
-                      {r.ticketCode && <p className="font-mono text-ckc-gold mt-1">{r.ticketCode}</p>}
+                      {r.ticketCode && <p className="mt-1 font-mono text-ckc-gold">{r.ticketCode}</p>}
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            <h3 className="text-xs font-semibold text-cloud/50 uppercase mb-2">
+            <h3 className="mb-2 text-xs font-semibold uppercase text-cloud/50">
               Member RSVPs ({memberRsvps.length})
             </h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="max-h-48 space-y-2 overflow-y-auto">
               {memberRsvps.map((r) => (
                 <div key={r.id} className="rounded-lg border border-white/10 p-3 text-xs">
                   <p className="font-semibold text-cloud">{r.name}</p>
@@ -272,7 +248,7 @@ export default function EventsPage() {
                   </p>
                 </div>
               ))}
-              {memberRsvps.length === 0 && <p className="text-cloud/30 text-xs">No member RSVPs yet</p>}
+              {memberRsvps.length === 0 && <p className="text-xs text-cloud/30">No member RSVPs yet</p>}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -285,12 +261,12 @@ export default function EventsPage() {
               >
                 Edit event
               </button>
-              <button
-                onClick={() => handleDelete(selected.id, selected.title)}
-                className="rounded-lg border border-rose-400/30 px-4 py-2 text-xs text-rose-400"
+              <Link
+                href={`/events/${selected.id}`}
+                className="rounded-lg border border-white/10 px-4 py-2 text-xs text-cloud/70 hover:border-ckc-gold/30"
               >
-                Delete event
-              </button>
+                View details
+              </Link>
             </div>
           </div>
         </div>
@@ -298,11 +274,11 @@ export default function EventsPage() {
 
       {showFormModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#1E293B] p-6">
-            <h2 className="text-lg font-bold text-cloud mb-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-ckc-card p-6">
+            <h2 className="mb-4 text-lg font-bold text-cloud">
               {editingId ? 'Edit Event' : 'Create Event'}
             </h2>
-            <EventFormFields form={form} onChange={setForm} />
+            <EventFormFields form={form} onChange={setForm} eventId={editingId ?? undefined} />
             <div className="mt-6 flex gap-3">
               <button
                 onClick={closeFormModal}

@@ -593,7 +593,7 @@ export default function SignupWizard() {
                       placeholder="13-digit SA ID or passport — links your couple"
                     />
                   </CkcField>
-                  {spouseLookupNote && <p className="text-xs text-emerald-400/90">{spouseLookupNote}</p>}
+                  {spouseLookupNote && <p className="text-xs text-ckc-gold/90">{spouseLookupNote}</p>}
                   <div className="grid grid-cols-2 gap-3">
                     <CkcField label="Tel (Home)" optional><CkcInput type="tel" value={form.guardian.telHome} onChange={(e) => updateGuardian({ telHome: e.target.value })} /></CkcField>
                     <CkcField label="Tel (Work)" optional><CkcInput type="tel" value={form.guardian.telWork} onChange={(e) => updateGuardian({ telWork: e.target.value })} /></CkcField>

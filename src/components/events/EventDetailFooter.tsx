@@ -9,51 +9,62 @@ interface EventDetailFooterProps {
   event: ChurchEvent;
   onAction: () => void;
   onShare: () => void;
+  onSecondary?: () => void;
+  theme?: 'light' | 'dark';
 }
 
-/** Sticky bottom bar — RSVP for free events, Continue Booking for paid. */
-export default function EventDetailFooter({ event, onAction, onShare }: EventDetailFooterProps) {
+/** Inline bottom actions — not sticky. */
+export default function EventDetailFooter({
+  event,
+  onAction,
+  onShare,
+  onSecondary,
+  theme = 'light',
+}: EventDetailFooterProps) {
   const isPaid = Boolean(event.isPaid && event.priceCents);
-  const actionLabel = isPaid ? 'Continue Booking' : 'R S V P';
+  const actionLabel = isPaid ? 'Continue Booking' : 'Book your Seat';
+  const isLight = theme === 'light';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-ckc-black/95 backdrop-blur-md px-4 py-3">
-      <div className="mx-auto flex max-w-lg items-center gap-2">
+    <div className={`mt-5 pt-5 ${isLight ? 'border-t border-[#E5E5E5]' : 'border-t border-white/10'}`}>
+      {isPaid ? (
+        <>
+          <p className={`text-3xl font-bold ${isLight ? 'text-ckc-black' : 'text-cloud'}`}>
+            {formatPrice(event.priceCents!, event.currency)}
+          </p>
+          <p className={`mt-1 text-xs ${isLight ? 'text-ckc-muted' : 'text-cloud/40'}`}>per person</p>
+        </>
+      ) : (
+        <p className={`text-base font-bold ${isLight ? 'text-ckc-black' : 'text-cloud uppercase tracking-[0.25em]'}`}>
+          Free
+        </p>
+      )}
+
+      <div className="mt-4 flex items-center gap-2">
         <button
           type="button"
           onClick={onAction}
-          className={`flex-1 rounded-xl bg-cloud py-3.5 text-sm font-bold text-ckc-black hover:bg-white transition-colors ${
-            isPaid ? '' : 'tracking-[0.35em] uppercase pl-[0.35em]'
-          }`}
+          className="btn-life-primary flex-1 py-3.5 text-sm"
         >
           {actionLabel}
         </button>
         <button
           type="button"
+          onClick={onSecondary}
+          className="btn-life-secondary flex h-12 w-12 items-center justify-center"
+          aria-label="Event options"
+        >
+          <Icon name="AdjustmentsHorizontalIcon" size={18} variant="outline" />
+        </button>
+        <button
+          type="button"
           onClick={onShare}
-          className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cloud/60 hover:border-ckc-gold/30 hover:text-ckc-gold"
+          className="btn-life-secondary flex h-12 w-12 items-center justify-center"
           aria-label="Share event"
         >
           <Icon name="ShareIcon" size={18} variant="outline" />
         </button>
       </div>
-    </div>
-  );
-}
-
-export function EventEntryBar({ event }: { event: ChurchEvent }) {
-  const isPaid = Boolean(event.isPaid && event.priceCents);
-
-  return (
-    <div className="border-t border-white/10 py-5 mt-2">
-      {isPaid ? (
-        <>
-          <p className="text-3xl font-bold text-cloud">{formatPrice(event.priceCents!, event.currency)}</p>
-          <p className="text-xs text-cloud/40 mt-1">per person</p>
-        </>
-      ) : (
-        <p className="text-base font-bold tracking-[0.25em] text-cloud uppercase">Free Entry</p>
-      )}
     </div>
   );
 }

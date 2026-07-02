@@ -7,8 +7,7 @@ import AppLogo from '@/components/ui/AppLogo';
 import Icon from '@/components/ui/AppIcon';
 import EventRegisterPanel from '@/components/events/EventRegisterPanel';
 import VisitorEventSignupForm from '@/components/events/VisitorEventSignupForm';
-import EventDetailSections from '@/components/events/EventDetailSections';
-import EventDetailFooter, { EventEntryBar } from '@/components/events/EventDetailFooter';
+import EventDetailCard from '@/components/events/EventDetailCard';
 import { getEventById } from '@/lib/events/service';
 import {
   getVisitorEventProfile,
@@ -43,52 +42,44 @@ export default function RsvpPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ckc-black px-4 py-8 pb-28">
-      <div className="mx-auto max-w-lg">
-        <div className="flex justify-center mb-6">
-          <AppLogo size={64} />
-        </div>
+    <div className="min-h-screen bg-[#E8E8E8]">
+      <div
+        data-portal="church-life"
+        className="relative mx-auto min-h-screen w-full max-w-life bg-white shadow-[0_0_40px_rgba(0,0,0,0.08)]"
+      >
+        <header className="flex items-center justify-center border-b border-[#E5E5E5] px-4 py-4">
+          <AppLogo size={40} />
+        </header>
 
-        {!event ? (
-          <p className="text-center text-cloud/40">Loading…</p>
-        ) : (
-          <>
-            <Link href="/login" className="text-xs text-cloud/40 hover:text-ckc-gold mb-4 inline-block">
-              ← Church app home
-            </Link>
+        <main className="px-4 py-5 text-ckc-black">
+          {!event ? (
+            <p className="text-center text-ckc-muted">Loading…</p>
+          ) : (
+            <>
+              <Link href="/login" className="mb-4 inline-flex items-center gap-1 text-sm text-ckc-muted hover:text-ckc-gold">
+                <Icon name="ArrowLeftIcon" size={14} variant="outline" />
+                Church app home
+              </Link>
 
-            {event.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={event.imageUrl} alt={event.title} className="w-full rounded-2xl object-cover aspect-video" />
-            ) : (
-              <div className="w-full rounded-2xl bg-white/5 aspect-video flex items-center justify-center">
-                <Icon name="CalendarDaysIcon" size={48} variant="outline" className="text-cloud/20" />
-              </div>
-            )}
-
-            <h1 className="text-xl font-bold text-cloud mt-5">{event.title}</h1>
-
-            <div className="mt-5">
-              <EventDetailSections event={event} />
-            </div>
-
-            <EventEntryBar event={event} />
-          </>
-        )}
+              <EventDetailCard
+                event={event}
+                onAction={() => setShowRegister(true)}
+                onShare={handleShare}
+                theme="light"
+              />
+            </>
+          )}
+        </main>
       </div>
 
-      {event && (
-        <EventDetailFooter event={event} onAction={() => setShowRegister(true)} onShare={handleShare} />
-      )}
-
       {showRegister && event && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#1E293B] p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="text-lg font-bold text-cloud">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
+          <div className="max-h-[85vh] w-full max-w-life overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-6">
+            <div className="mb-4 flex items-start justify-between">
+              <h2 className="text-lg font-bold text-ckc-black">
                 {!visitorReady ? 'Visitor sign-up' : 'RSVP'}
               </h2>
-              <button type="button" onClick={() => setShowRegister(false)} className="text-cloud/40 hover:text-cloud">
+              <button type="button" onClick={() => setShowRegister(false)} className="text-ckc-muted hover:text-ckc-black">
                 ✕
               </button>
             </div>

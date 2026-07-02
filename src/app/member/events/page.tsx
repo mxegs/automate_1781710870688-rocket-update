@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import EventListRow from '@/components/events/EventListRow';
+import LifeHero from '@/components/church-life/LifeHero';
 import { getMemberEventsFeed } from '@/lib/events/service';
 import { groupEventsByMonth } from '@/lib/events/utils';
 import { resolveMemberCampus } from '@/lib/member/campus';
@@ -27,40 +28,36 @@ export default function MemberEventsPage() {
   }, [isVisitor]);
 
   const monthGroups = groupEventsByMonth(events);
+  const heroImage = events[0]?.imageUrl;
 
   return (
     <AppShell access="shared">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-cloud tracking-tight">Events</h1>
-        <p className="text-cloud/40 text-sm mt-0.5">
-          {isVisitor ? 'Church-wide events open to visitors' : 'Your campus events & joint services'}
-        </p>
+      <div className="space-y-6">
+        <LifeHero imageUrl={heroImage} titleLead="Upcoming" titleRest="Events" />
+
+        {!backend && (
+          <p className="text-sm text-ckc-muted">No events to show — your campus admin will add events soon.</p>
+        )}
+
+        {monthGroups.length > 0 ? (
+          <div className="space-y-8">
+            {monthGroups.map((group) => (
+              <section key={group.monthKey}>
+                <h2 className="life-month-heading">{group.monthLabel}</h2>
+                <div className="mt-4 space-y-3">
+                  {group.events.map((event) => (
+                    <EventListRow key={event.id} event={event} theme="light" />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          backend && (
+            <p className="py-12 text-center text-ckc-muted">No upcoming events for your campus.</p>
+          )
+        )}
       </div>
-
-      {!backend && (
-        <p className="text-sm text-cloud/40 mb-4">No events to show — your campus admin will add events soon.</p>
-      )}
-
-      {monthGroups.length > 0 ? (
-        <div className="space-y-8">
-          {monthGroups.map((group) => (
-            <section key={group.monthKey}>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ckc-gold">
-                {group.monthLabel}
-              </h2>
-              <div className="space-y-3">
-                {group.events.map((event) => (
-                  <EventListRow key={event.id} event={event} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        backend && (
-          <p className="text-center text-cloud/40 py-12">No upcoming events for your campus.</p>
-        )
-      )}
     </AppShell>
   );
 }

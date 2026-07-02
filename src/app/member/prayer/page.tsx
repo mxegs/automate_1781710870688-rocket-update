@@ -90,8 +90,8 @@ export default function MemberPrayerPage() {
       <div className="max-w-xl mx-auto">
         <div className="mb-6 text-center">
           <Icon name="HeartIcon" size={40} variant="outline" className="mx-auto text-ckc-gold mb-3" />
-          <h1 className="text-2xl font-bold text-cloud">Submit a Prayer Request</h1>
-          <p className="text-cloud/40 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-ckc-black">Submit a Prayer Request</h1>
+          <p className="text-ckc-muted text-sm mt-1">
             {campusLabel
               ? `Your request goes directly to ${campusLabel} pastors and prayer team`
               : 'Your campus pastor and prayer team will receive your request'}
@@ -99,10 +99,10 @@ export default function MemberPrayerPage() {
         </div>
 
         {submitted ? (
-          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6 text-center">
-            <Icon name="CheckCircleIcon" size={40} variant="solid" className="mx-auto text-emerald-400 mb-3" />
-            <h2 className="text-lg font-bold text-cloud">Prayer request sent</h2>
-            <p className="text-sm text-cloud/70 mt-3 leading-relaxed">{autoReply}</p>
+          <div className="rounded-2xl border border-ckc-gold/30 bg-ckc-gold/10 p-6 text-center">
+            <Icon name="CheckCircleIcon" size={40} variant="solid" className="mx-auto text-ckc-gold mb-3" />
+            <h2 className="text-lg font-bold text-ckc-black">Prayer request sent</h2>
+            <p className="text-sm text-ckc-black/70 mt-3 leading-relaxed">{autoReply}</p>
             <button
               onClick={() => setSubmitted(false)}
               className="mt-6 text-sm text-ckc-gold font-semibold hover:underline"
@@ -111,36 +111,36 @@ export default function MemberPrayerPage() {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="rounded-2xl bg-neutral-50 border border-[#E5E5E5] bg-neutral-50 p-6 space-y-4">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-cloud/50">Title</label>
+              <label className="mb-1 block text-xs font-semibold text-ckc-muted">Title</label>
               <input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 required
                 placeholder="Brief title for your request"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
+                className="w-full rounded-lg bg-neutral-50 border border-[#E5E5E5] bg-neutral-50 px-3 py-2.5 text-sm text-ckc-black"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold text-cloud/50">Prayer request</label>
+              <label className="mb-1 block text-xs font-semibold text-ckc-muted">Prayer request</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 required
                 rows={4}
                 placeholder="Share what you'd like us to pray for…"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
+                className="w-full rounded-lg bg-neutral-50 border border-[#E5E5E5] bg-neutral-50 px-3 py-2.5 text-sm text-ckc-black"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold text-cloud/50">Category</label>
+              <label className="mb-1 block text-xs font-semibold text-ckc-muted">Category</label>
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
+                className="w-full rounded-lg bg-neutral-50 border border-[#E5E5E5] bg-neutral-50 px-3 py-2.5 text-sm text-ckc-black"
               >
                 {PRAYER_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -150,28 +150,28 @@ export default function MemberPrayerPage() {
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-cloud/50">Phone</label>
+                <label className="mb-1 block text-xs font-semibold text-ckc-muted">Phone</label>
                 <input
                   value={form.contactPhone}
                   onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
                   placeholder="082 123 4567"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
+                  className="w-full rounded-lg bg-neutral-50 border border-[#E5E5E5] bg-neutral-50 px-3 py-2.5 text-sm text-ckc-black"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-cloud/50">Email</label>
+                <label className="mb-1 block text-xs font-semibold text-ckc-muted">Email</label>
                 <input
                   type="email"
                   value={form.contactEmail}
                   onChange={(e) => setForm({ ...form, contactEmail: e.target.value })}
                   placeholder="you@email.com"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
+                  className="w-full rounded-lg bg-neutral-50 border border-[#E5E5E5] bg-neutral-50 px-3 py-2.5 text-sm text-ckc-black"
                 />
               </div>
             </div>
-            <p className="text-[10px] text-cloud/30">Phone or email required — for automated confirmation</p>
+            <p className="text-[10px] text-ckc-muted/80">Phone or email required — for automated confirmation</p>
 
-            <label className="flex items-center gap-2 text-xs text-cloud/60">
+            <label className="flex items-center gap-2 text-xs text-ckc-muted">
               <input
                 type="checkbox"
                 checked={form.isConfidential}

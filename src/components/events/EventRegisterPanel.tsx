@@ -70,9 +70,9 @@ export default function EventRegisterPanel({
 
   if (registered) {
     return (
-      <div className={embedded ? 'space-y-4' : 'rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6'}>
+      <div className={embedded ? 'space-y-4' : 'rounded-2xl border border-ckc-gold/30 bg-ckc-gold/10 p-6'}>
         <div className="text-center">
-          <Icon name="CheckCircleIcon" size={44} variant="solid" className="mx-auto text-emerald-400 mb-3" />
+          <Icon name="CheckCircleIcon" size={44} variant="solid" className="mx-auto text-ckc-gold mb-3" />
           <h3 className="text-lg font-bold text-cloud">You&apos;re registered!</h3>
           <p className="text-sm text-cloud/60 mt-2">
             You have just registered for <strong className="text-cloud">{event.title}</strong>.

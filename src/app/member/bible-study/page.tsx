@@ -102,12 +102,12 @@ export default function BibleStudyPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-bold text-cloud">Bible Study</h1>
-          <p className="text-cloud/40 text-sm mt-0.5">Weekly series, devotionals, scripture study, and giving</p>
+          <h1 className="text-xl font-bold text-ckc-black">Bible Study</h1>
+          <p className="text-ckc-muted text-sm mt-0.5">Weekly series, devotionals, scripture study, and giving</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 bg-neutral-50 border border-[#E5E5E5] rounded-xl p-1 w-fit">
           {([
             { id: 'series', label: 'Study Series', icon: 'BookOpenIcon' },
             { id: 'devotional', label: 'Daily Devotional', icon: 'SunIcon' },
@@ -117,7 +117,7 @@ export default function BibleStudyPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.id ? 'bg-sky/10 text-sky border border-sky/20' : 'text-cloud/50 hover:text-cloud'
+                activeTab === tab.id ? 'bg-ckc-gold/10 text-ckc-gold border border-ckc-gold/20' : 'text-ckc-muted hover:text-ckc-black'
               }`}
             >
               <Icon name={tab.icon} size={13} variant="outline" />
@@ -129,14 +129,14 @@ export default function BibleStudyPage() {
         {activeTab === 'series' && (
           <div className="space-y-4">
             {/* Series header */}
-            <div className="bg-gradient-to-r from-emerald-500/10 via-white/5 to-transparent border border-emerald-400/20 rounded-2xl p-5">
+            <div className="bg-gradient-to-r from-ckc-gold/10 via-neutral-100 to-transparent border border-ckc-gold/20 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Icon name="BookOpenIcon" size={16} variant="outline" className="text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Current Series</span>
+                <Icon name="BookOpenIcon" size={16} variant="outline" className="text-ckc-gold" />
+                <span className="text-xs font-semibold text-ckc-gold uppercase tracking-wider">Current Series</span>
               </div>
-              <h2 className="text-cloud font-bold text-lg">Foundations of Faith</h2>
-              <p className="text-cloud/50 text-sm mt-1">An 8-week journey through the core foundations of the Christian faith. Every Wednesday at 18:30 in the Fellowship Hall.</p>
-              <div className="flex items-center gap-4 mt-3 text-xs text-cloud/40">
+              <h2 className="text-ckc-black font-bold text-lg">Foundations of Faith</h2>
+              <p className="text-ckc-muted text-sm mt-1">An 8-week journey through the core foundations of the Christian faith. Every Wednesday at 18:30 in the Fellowship Hall.</p>
+              <div className="flex items-center gap-4 mt-3 text-xs text-ckc-muted">
                 <span className="flex items-center gap-1"><Icon name="CalendarDaysIcon" size={11} variant="outline" />Starting 2 Jul 2025</span>
                 <span className="flex items-center gap-1"><Icon name="ClockIcon" size={11} variant="outline" />8 weeks</span>
                 <span className="flex items-center gap-1"><Icon name="MapPinIcon" size={11} variant="outline" />Fellowship Hall</span>
@@ -146,35 +146,35 @@ export default function BibleStudyPage() {
             {/* Lessons */}
             <div className="space-y-3">
               {lessons.map((lesson) => (
-                <div key={lesson.id} className={`bg-white/5 border rounded-2xl overflow-hidden transition-all ${expandedLesson === lesson.id ? 'border-emerald-400/20' : 'border-white/10 hover:border-emerald-400/10'}`}>
+                <div key={lesson.id} className={`bg-neutral-50 border rounded-2xl overflow-hidden transition-all ${expandedLesson === lesson.id ? 'border-ckc-gold/20' : 'border-[#E5E5E5] hover:border-ckc-gold/10'}`}>
                   <button
                     onClick={() => setExpandedLesson(expandedLesson === lesson.id ? null : lesson.id)}
                     className="w-full text-left p-5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${lesson.completed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-cloud/50'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${lesson.completed ? 'bg-ckc-gold/20 text-ckc-gold' : 'bg-neutral-100 text-ckc-muted'}`}>
                           {lesson.completed ? <Icon name="CheckIcon" size={14} variant="outline" /> : lesson.week}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-cloud font-semibold text-sm">{lesson.title}</p>
-                          <p className="text-cloud/40 text-xs mt-0.5">{lesson.date} · {lesson.leader}</p>
-                          <p className="text-emerald-400/70 text-xs mt-0.5 font-mono">{lesson.scripture}</p>
+                          <p className="text-ckc-black font-semibold text-sm">{lesson.title}</p>
+                          <p className="text-ckc-muted text-xs mt-0.5">{lesson.date} · {lesson.leader}</p>
+                          <p className="text-ckc-gold/70 text-xs mt-0.5 font-mono">{lesson.scripture}</p>
                         </div>
                       </div>
-                      <Icon name={expandedLesson === lesson.id ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={15} variant="outline" className="text-cloud/30 flex-shrink-0" />
+                      <Icon name={expandedLesson === lesson.id ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={15} variant="outline" className="text-ckc-muted/80 flex-shrink-0" />
                     </div>
                   </button>
                   {expandedLesson === lesson.id && (
                     <div className="px-5 pb-5">
-                      <div className="h-px bg-white/5 mb-4" />
-                      <p className="text-cloud/60 text-sm leading-relaxed mb-4">{lesson.summary}</p>
+                      <div className="h-px bg-neutral-50 mb-4" />
+                      <p className="text-ckc-muted text-sm leading-relaxed mb-4">{lesson.summary}</p>
                       <div className="mb-4">
-                        <p className="text-xs font-semibold text-cloud/50 uppercase tracking-wider mb-2">Key Points</p>
+                        <p className="text-xs font-semibold text-ckc-muted uppercase tracking-wider mb-2">Key Points</p>
                         <ul className="space-y-2">
                           {lesson.keyPoints.map((point, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-cloud/70">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
+                            <li key={i} className="flex items-start gap-2 text-sm text-ckc-black/70">
+                              <div className="w-1.5 h-1.5 rounded-full bg-ckc-gold mt-2 flex-shrink-0" />
                               {point}
                             </li>
                           ))}
@@ -202,29 +202,29 @@ export default function BibleStudyPage() {
         {activeTab === 'devotional' && (
           <div className="space-y-4">
             {/* Today's devotional */}
-            <div className="bg-gradient-to-br from-amber-500/10 via-white/5 to-transparent border border-amber-400/20 rounded-2xl p-6">
+            <div className="bg-gradient-to-br from-ckc-gold/10 via-neutral-100 to-transparent border border-ckc-gold/20 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-3">
-                <Icon name="SunIcon" size={15} variant="outline" className="text-amber-400" />
-                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Today — {todayDevotional.day}</span>
+                <Icon name="SunIcon" size={15} variant="outline" className="text-ckc-gold" />
+                <span className="text-xs font-semibold text-ckc-gold uppercase tracking-wider">Today — {todayDevotional.day}</span>
               </div>
-              <h2 className="text-cloud font-bold text-lg mb-3">{todayDevotional.title}</h2>
-              <blockquote className="border-l-2 border-amber-400/40 pl-4 mb-4">
-                <p className="text-cloud/80 text-sm italic leading-relaxed">&ldquo;{todayDevotional.verse}&rdquo;</p>
+              <h2 className="text-ckc-black font-bold text-lg mb-3">{todayDevotional.title}</h2>
+              <blockquote className="border-l-2 border-ckc-gold/40 pl-4 mb-4">
+                <p className="text-ckc-black/80 text-sm italic leading-relaxed">&ldquo;{todayDevotional.verse}&rdquo;</p>
               </blockquote>
-              <p className="text-cloud/60 text-sm leading-relaxed">{todayDevotional.reflection}</p>
+              <p className="text-ckc-muted text-sm leading-relaxed">{todayDevotional.reflection}</p>
             </div>
 
             {/* All devotionals */}
             <div className="space-y-3">
               {devotionals.map((dev, i) => (
-                <div key={i} className={`bg-white/5 border border-white/10 rounded-xl p-4 ${dev.day === todayDevotional.day ? 'border-amber-400/20' : ''}`}>
+                <div key={i} className={`bg-neutral-50 border border-[#E5E5E5] rounded-xl p-4 ${dev.day === todayDevotional.day ? 'border-ckc-gold/20' : ''}`}>
                   <div className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${dev.day === todayDevotional.day ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-cloud/40'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${dev.day === todayDevotional.day ? 'bg-ckc-gold/20 text-ckc-gold' : 'bg-neutral-50 text-ckc-muted'}`}>
                       {dev.day.slice(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-cloud text-sm font-semibold">{dev.title}</p>
-                      <p className="text-cloud/40 text-xs mt-0.5 italic">{dev.verse}</p>
+                      <p className="text-ckc-black text-sm font-semibold">{dev.title}</p>
+                      <p className="text-ckc-muted text-xs mt-0.5 italic">{dev.verse}</p>
                     </div>
                   </div>
                 </div>
@@ -235,21 +235,21 @@ export default function BibleStudyPage() {
 
         {activeTab === 'give' && (
           <div className="space-y-4">
-            <div className="bg-gradient-to-r from-amber-500/10 via-white/5 to-transparent border border-amber-400/20 rounded-2xl p-5">
-              <blockquote className="text-cloud/70 text-sm italic leading-relaxed">
+            <div className="bg-gradient-to-r from-ckc-gold/10 via-neutral-100 to-transparent border border-ckc-gold/20 rounded-2xl p-5">
+              <blockquote className="text-ckc-black/70 text-sm italic leading-relaxed">
                 &ldquo;Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver.&rdquo;
               </blockquote>
-              <p className="text-amber-400 text-xs font-semibold mt-2">— 2 Corinthians 9:7</p>
+              <p className="text-ckc-gold text-xs font-semibold mt-2">— 2 Corinthians 9:7</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-              <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-400/20 flex items-center justify-center mx-auto mb-4">
-                <Icon name="GiftIcon" size={24} variant="outline" className="text-amber-400" />
+            <div className="bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-6 text-center">
+              <div className="w-14 h-14 rounded-full bg-ckc-gold/10 border border-ckc-gold/20 flex items-center justify-center mx-auto mb-4">
+                <Icon name="GiftIcon" size={24} variant="outline" className="text-ckc-gold" />
               </div>
-              <h3 className="text-cloud font-bold text-base mb-2">Give Online</h3>
-              <p className="text-cloud/50 text-sm mb-5">Support the work of the church with your tithes, offerings, and special contributions.</p>
+              <h3 className="text-ckc-black font-bold text-base mb-2">Give Online</h3>
+              <p className="text-ckc-muted text-sm mb-5">Support the work of the church with your tithes, offerings, and special contributions.</p>
               <Link
                 href="/member/give"
-                className="inline-flex items-center justify-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30 text-amber-400 font-semibold text-sm py-3 px-8 rounded-xl transition-all hover:scale-[1.01]"
+                className="inline-flex items-center justify-center gap-2 bg-ckc-gold/20 hover:bg-ckc-gold/30 border border-ckc-gold/30 text-ckc-gold font-semibold text-sm py-3 px-8 rounded-xl transition-all hover:scale-[1.01]"
               >
                 <Icon name="CreditCardIcon" size={15} variant="outline" />
                 Go to Give Page →

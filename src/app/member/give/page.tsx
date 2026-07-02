@@ -43,50 +43,50 @@ export default function GivePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-bold text-cloud">Give Online</h1>
-          <p className="text-cloud/40 text-sm mt-0.5">Tithes, offerings, and special contributions</p>
+          <h1 className="text-xl font-bold text-ckc-black">Give Online</h1>
+          <p className="text-ckc-muted text-sm mt-0.5">Tithes, offerings, and special contributions</p>
         </div>
 
         {/* Scripture */}
-        <div className="bg-gradient-to-r from-amber-500/10 via-white/5 to-transparent border border-amber-400/20 rounded-2xl p-5">
-          <blockquote className="text-cloud/70 text-sm italic leading-relaxed">
+        <div className="bg-gradient-to-r from-ckc-gold/10 via-neutral-100 to-transparent border border-ckc-gold/20 rounded-2xl p-5">
+          <blockquote className="text-ckc-black/70 text-sm italic leading-relaxed">
             &ldquo;Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver.&rdquo;
           </blockquote>
-          <p className="text-amber-400 text-xs font-semibold mt-2">— 2 Corinthians 9:7</p>
+          <p className="text-ckc-gold text-xs font-semibold mt-2">— 2 Corinthians 9:7</p>
         </div>
 
         {givingSubmitted ? (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center mx-auto mb-4">
-              <Icon name="CheckCircleIcon" size={32} variant="outline" className="text-emerald-400" />
+          <div className="bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-ckc-gold/10 border border-ckc-gold/20 flex items-center justify-center mx-auto mb-4">
+              <Icon name="CheckCircleIcon" size={32} variant="outline" className="text-ckc-gold" />
             </div>
-            <h3 className="text-cloud font-bold text-lg mb-2">Thank you for your generosity!</h3>
-            <p className="text-cloud/50 text-sm mb-1">
-              Giving type: <span className="text-amber-400 font-medium">{givingForm.type}</span>
+            <h3 className="text-ckc-black font-bold text-lg mb-2">Thank you for your generosity!</h3>
+            <p className="text-ckc-muted text-sm mb-1">
+              Giving type: <span className="text-ckc-gold font-medium">{givingForm.type}</span>
             </p>
-            <p className="text-cloud/50 text-sm mb-1">
-              Amount: <span className="text-amber-400 font-medium">R {givingForm.amount}</span>
+            <p className="text-ckc-muted text-sm mb-1">
+              Amount: <span className="text-ckc-gold font-medium">R {givingForm.amount}</span>
             </p>
-            <p className="text-cloud/50 text-sm mb-4">
-              Reference: <span className="text-amber-400 font-mono text-xs">{givingForm.reference || 'CC-' + Date.now().toString().slice(-6)}</span>
+            <p className="text-ckc-muted text-sm mb-4">
+              Reference: <span className="text-ckc-gold font-mono text-xs">{givingForm.reference || 'CC-' + Date.now().toString().slice(-6)}</span>
             </p>
-            <div className="bg-amber-500/10 border border-amber-400/20 rounded-xl p-4 text-left max-w-sm mx-auto mb-5">
-              <p className="text-amber-400 text-xs font-semibold mb-1">⚡ PayFast Integration Coming Soon</p>
-              <p className="text-cloud/50 text-xs">Secure payment processing via PayFast will be enabled in the next release. Your giving details have been recorded.</p>
+            <div className="bg-ckc-gold/10 border border-ckc-gold/20 rounded-xl p-4 text-left max-w-sm mx-auto mb-5">
+              <p className="text-ckc-gold text-xs font-semibold mb-1">⚡ PayFast Integration Coming Soon</p>
+              <p className="text-ckc-muted text-xs">Secure payment processing via PayFast will be enabled in the next release. Your giving details have been recorded.</p>
             </div>
             <button
               onClick={() => { setGivingSubmitted(false); setGivingForm((f) => ({ ...f, amount: '', reference: '' })); }}
-              className="text-xs text-sky hover:text-sky/80 transition-colors"
+              className="text-xs text-ckc-gold hover:text-ckc-gold/80 transition-colors"
             >
               Give again
             </button>
           </div>
         ) : (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-6">
             <form onSubmit={handleGivingSubmit} className="space-y-5">
               {/* Giving Type Selector */}
               <div>
-                <label className="block text-xs font-medium text-cloud/60 mb-2">Giving Type</label>
+                <label className="block text-xs font-medium text-ckc-muted mb-2">Giving Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   {givingTypes.map((gt) => (
                     <button
@@ -95,7 +95,7 @@ export default function GivePage() {
                       onClick={() => setGivingForm((f) => ({ ...f, type: gt.value }))}
                       className={`flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
                         givingForm.type === gt.value
-                          ? 'bg-amber-500/10 border-amber-400/30 text-amber-400' :'bg-white/5 border-white/10 text-cloud/50 hover:border-white/20 hover:text-cloud/70'
+                          ? 'bg-ckc-gold/10 border-ckc-gold/30 text-ckc-gold' :'bg-neutral-50 border-[#E5E5E5] text-ckc-muted hover:border-ckc-gold/30 hover:text-ckc-black/70'
                       }`}
                     >
                       <span className="text-base flex-shrink-0">{gt.icon}</span>
@@ -110,26 +110,26 @@ export default function GivePage() {
 
               {/* Name */}
               <div>
-                <label className="block text-xs font-medium text-cloud/60 mb-1.5">Full Name</label>
+                <label className="block text-xs font-medium text-ckc-muted mb-1.5">Full Name</label>
                 <input
                   type="text"
                   value={givingForm.name}
                   onChange={(e) => setGivingForm((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors"
+                  className="w-full bg-neutral-50 border border-[#E5E5E5] rounded-lg px-3 py-2.5 text-sm text-ckc-black placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors"
                   placeholder="Your name"
                 />
               </div>
 
               {/* Amount */}
               <div>
-                <label className="block text-xs font-medium text-cloud/60 mb-1.5">Amount (ZAR)</label>
+                <label className="block text-xs font-medium text-ckc-muted mb-1.5">Amount (ZAR)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cloud/40 text-sm font-medium">R</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ckc-muted text-sm font-medium">R</span>
                   <input
                     type="number"
                     value={givingForm.amount}
                     onChange={(e) => setGivingForm((f) => ({ ...f, amount: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors"
+                    className="w-full bg-neutral-50 border border-[#E5E5E5] rounded-lg pl-7 pr-3 py-2.5 text-sm text-ckc-black placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors"
                     placeholder="0.00"
                     min="1"
                     required
@@ -144,7 +144,7 @@ export default function GivePage() {
                       onClick={() => setGivingForm((f) => ({ ...f, amount: amt }))}
                       className={`flex-1 text-xs py-1.5 rounded-lg border transition-all ${
                         givingForm.amount === amt
-                          ? 'bg-sky/10 text-sky border-sky/20' :'bg-white/5 text-cloud/40 border-white/10 hover:border-white/20 hover:text-cloud/60'
+                          ? 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20' :'bg-neutral-50 text-ckc-muted border-[#E5E5E5] hover:border-ckc-gold/30 hover:text-ckc-muted'
                       }`}
                     >
                       R{amt}
@@ -155,24 +155,24 @@ export default function GivePage() {
 
               {/* Reference */}
               <div>
-                <label className="block text-xs font-medium text-cloud/60 mb-1.5">Reference (optional)</label>
+                <label className="block text-xs font-medium text-ckc-muted mb-1.5">Reference (optional)</label>
                 <input
                   type="text"
                   value={givingForm.reference}
                   onChange={(e) => setGivingForm((f) => ({ ...f, reference: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors"
+                  className="w-full bg-neutral-50 border border-[#E5E5E5] rounded-lg px-3 py-2.5 text-sm text-ckc-black placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors"
                   placeholder="e.g. Tithe June 2025"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30 text-amber-400 font-semibold text-sm py-3 rounded-xl transition-all hover:scale-[1.01]"
+                className="w-full flex items-center justify-center gap-2 bg-ckc-gold/20 hover:bg-ckc-gold/30 border border-ckc-gold/30 text-ckc-gold font-semibold text-sm py-3 rounded-xl transition-all hover:scale-[1.01]"
               >
                 <Icon name="CreditCardIcon" size={16} variant="outline" />
                 Proceed to PayFast →
               </button>
-              <p className="text-center text-cloud/30 text-xs">🔒 Secure payment via PayFast · No banking details stored</p>
+              <p className="text-center text-ckc-muted/80 text-xs">🔒 Secure payment via PayFast · No banking details stored</p>
             </form>
           </div>
         )}

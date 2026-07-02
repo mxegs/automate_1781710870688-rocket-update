@@ -71,7 +71,7 @@ export default function TicketScanPage() {
 
         {result && (
           <div className={`mt-6 rounded-xl border p-4 text-center text-sm ${
-            result.startsWith('✓') ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-400' : 'border-rose-400/30 bg-rose-500/10 text-rose-400'
+            result.startsWith('✓') ? 'border-ckc-gold/30 bg-ckc-gold/10 text-ckc-gold' : 'border-rose-400/30 bg-rose-500/10 text-rose-400'
           }`}>
             {result}
           </div>

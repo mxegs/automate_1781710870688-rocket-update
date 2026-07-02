@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
               we sent a link to choose a new password.
             </p>
             {demoLink && (
-              <p className="text-xs text-amber-400/90">
+              <p className="text-xs text-ckc-gold/90">
                 Demo mode:{' '}
                 <Link href={demoLink} className="underline">
                   use this test link

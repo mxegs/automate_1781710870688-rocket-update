@@ -54,7 +54,7 @@ function ResetPasswordForm() {
       <CkcCard>
         {done ? (
           <div className="space-y-4 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ckc-gold/20">
               <span className="text-xl">✓</span>
             </div>
             <h2 className="text-base font-semibold text-ckc-white">Password updated</h2>

@@ -86,12 +86,12 @@ We believe that church is not just a Sunday experience — it is a family, a com
 };
 
 const colorMap: Record<string, string> = {
-  sky: 'bg-sky/10 border-sky/20 text-sky',
-  amber: 'bg-amber-500/10 border-amber-400/20 text-amber-400',
-  emerald: 'bg-emerald-500/10 border-emerald-400/20 text-emerald-400',
+  sky: 'bg-ckc-gold/10 border-ckc-gold/20 text-ckc-gold',
+  amber: 'bg-ckc-gold/10 border-ckc-gold/20 text-ckc-gold',
+  emerald: 'bg-ckc-gold/10 border-ckc-gold/20 text-ckc-gold',
   green: 'bg-green-500/10 border-green-400/20 text-green-400',
   yellow: 'bg-yellow-500/10 border-yellow-400/20 text-yellow-400',
-  purple: 'bg-purple-500/10 border-purple-400/20 text-purple-400',
+  purple: 'bg-ckc-gold/10 border-ckc-gold/20 text-ckc-gold',
   rose: 'bg-rose-500/10 border-rose-400/20 text-rose-400',
   indigo: 'bg-indigo-500/10 border-indigo-400/20 text-indigo-400',
 };
@@ -113,15 +113,15 @@ export default function ChurchInfoPage() {
     <AppShell access="shared">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Hero */}
-        <div className="relative bg-gradient-to-br from-sky/10 via-white/5 to-purple-500/5 border border-white/10 rounded-2xl p-8 overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-sky/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative bg-gradient-to-br from-ckc-gold/10 via-neutral-100 to-ckc-gold/5 bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-8 overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-ckc-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-sky/10 border border-sky/20 flex items-center justify-center mb-4">
-              <Icon name="BuildingLibraryIcon" size={28} variant="outline" className="text-sky" />
+            <div className="w-16 h-16 rounded-2xl bg-ckc-gold/10 border border-ckc-gold/20 flex items-center justify-center mb-4">
+              <Icon name="BuildingLibraryIcon" size={28} variant="outline" className="text-ckc-gold" />
             </div>
-            <h1 className="text-2xl font-bold text-cloud">{churchInfo.name}</h1>
-            <p className="text-cloud/50 text-sm mt-1">{churchInfo.tagline}</p>
-            <div className="flex flex-wrap gap-4 mt-4 text-xs text-cloud/40">
+            <h1 className="text-2xl font-bold text-ckc-black">{churchInfo.name}</h1>
+            <p className="text-ckc-muted text-sm mt-1">{churchInfo.tagline}</p>
+            <div className="flex flex-wrap gap-4 mt-4 text-xs text-ckc-muted">
               <span className="flex items-center gap-1.5"><Icon name="MapPinIcon" size={12} variant="outline" />{churchInfo.location}</span>
               <span className="flex items-center gap-1.5"><Icon name="CalendarDaysIcon" size={12} variant="outline" />Founded {churchInfo.founded}</span>
               <span className="flex items-center gap-1.5"><Icon name="ClockIcon" size={12} variant="outline" />{churchInfo.serviceTime}</span>
@@ -130,13 +130,13 @@ export default function ChurchInfoPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 overflow-x-auto">
+        <div className="flex gap-1 bg-neutral-50 border border-[#E5E5E5] rounded-xl p-1 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
-                activeTab === tab.id ? 'bg-sky/10 text-sky border border-sky/20' : 'text-cloud/50 hover:text-cloud'
+                activeTab === tab.id ? 'bg-ckc-gold/10 text-ckc-gold border border-ckc-gold/20' : 'text-ckc-muted hover:text-ckc-black'
               }`}
             >
               <Icon name={tab.icon} size={12} variant="outline" />
@@ -147,14 +147,14 @@ export default function ChurchInfoPage() {
 
         {/* About */}
         {activeTab === 'about' && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-base font-bold text-cloud mb-4 flex items-center gap-2">
-              <Icon name="BuildingLibraryIcon" size={16} variant="outline" className="text-sky" />
+          <div className="bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-6">
+            <h2 className="text-base font-bold text-ckc-black mb-4 flex items-center gap-2">
+              <Icon name="BuildingLibraryIcon" size={16} variant="outline" className="text-ckc-gold" />
               About Our Church
             </h2>
             <div className="space-y-4">
               {churchInfo.about.split('\n\n').map((para, i) => (
-                <p key={i} className="text-cloud/60 text-sm leading-relaxed">{para}</p>
+                <p key={i} className="text-ckc-muted text-sm leading-relaxed">{para}</p>
               ))}
             </div>
           </div>
@@ -163,19 +163,19 @@ export default function ChurchInfoPage() {
         {/* Vision & Mission */}
         {activeTab === 'vision' && (
           <div className="space-y-4">
-            <div className="bg-gradient-to-br from-sky/10 via-white/5 to-transparent border border-sky/20 rounded-2xl p-6">
+            <div className="bg-gradient-to-br from-ckc-gold/10 via-neutral-100 to-transparent border border-ckc-gold/20 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-3">
-                <Icon name="EyeIcon" size={16} variant="outline" className="text-sky" />
-                <span className="text-xs font-semibold text-sky uppercase tracking-wider">Our Vision</span>
+                <Icon name="EyeIcon" size={16} variant="outline" className="text-ckc-gold" />
+                <span className="text-xs font-semibold text-ckc-gold uppercase tracking-wider">Our Vision</span>
               </div>
-              <p className="text-cloud font-semibold text-lg leading-relaxed">{churchInfo.vision}</p>
+              <p className="text-ckc-black font-semibold text-lg leading-relaxed">{churchInfo.vision}</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-500/10 via-white/5 to-transparent border border-emerald-400/20 rounded-2xl p-6">
+            <div className="bg-gradient-to-br from-ckc-gold/10 via-neutral-100 to-transparent border border-ckc-gold/20 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-3">
-                <Icon name="RocketLaunchIcon" size={16} variant="outline" className="text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Our Mission</span>
+                <Icon name="RocketLaunchIcon" size={16} variant="outline" className="text-ckc-gold" />
+                <span className="text-xs font-semibold text-ckc-gold uppercase tracking-wider">Our Mission</span>
               </div>
-              <p className="text-cloud font-semibold text-lg leading-relaxed">{churchInfo.mission}</p>
+              <p className="text-ckc-black font-semibold text-lg leading-relaxed">{churchInfo.mission}</p>
             </div>
           </div>
         )}
@@ -183,10 +183,10 @@ export default function ChurchInfoPage() {
         {/* Values */}
         {activeTab === 'values' && (
           <div>
-            <p className="text-cloud/50 text-sm mb-4">The core values that guide everything we do as a church.</p>
+            <p className="text-ckc-muted text-sm mb-4">The core values that guide everything we do as a church.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {churchInfo.values.map((val) => (
-                <div key={val.title} className={`flex items-start gap-3 p-4 rounded-xl border ${colorMap[val.color] || 'bg-white/5 border-white/10 text-cloud/50'}`}>
+                <div key={val.title} className={`flex items-start gap-3 p-4 rounded-xl border ${colorMap[val.color] || 'bg-neutral-50 border-[#E5E5E5] text-ckc-muted'}`}>
                   <span className="text-2xl flex-shrink-0">{val.icon}</span>
                   <div>
                     <h3 className="font-bold text-sm mb-1">{val.title}</h3>
@@ -201,16 +201,16 @@ export default function ChurchInfoPage() {
         {/* Leadership */}
         {activeTab === 'leadership' && (
           <div>
-            <p className="text-cloud/50 text-sm mb-4">Meet the leaders who serve and shepherd our church family.</p>
+            <p className="text-ckc-muted text-sm mb-4">Meet the leaders who serve and shepherd our church family.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {churchInfo.leadership.map((leader) => (
-                <div key={leader.name} className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 hover:border-sky/20 transition-all">
-                  <div className="w-14 h-14 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                <div key={leader.name} className="flex items-center gap-4 bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-4 hover:border-ckc-gold/20 transition-all">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
                     <img src={leader.image} alt={leader.alt} className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <p className="text-cloud font-semibold text-sm">{leader.name}</p>
-                    <p className="text-cloud/40 text-xs mt-0.5">{leader.role}</p>
+                    <p className="text-ckc-black font-semibold text-sm">{leader.name}</p>
+                    <p className="text-ckc-muted text-xs mt-0.5">{leader.role}</p>
                   </div>
                 </div>
               ))}
@@ -221,66 +221,66 @@ export default function ChurchInfoPage() {
         {/* Contact */}
         {activeTab === 'contact' && (
           <div className="space-y-4">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-base font-bold text-cloud mb-4">Get in Touch</h2>
+            <div className="bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-6">
+              <h2 className="text-base font-bold text-ckc-black mb-4">Get in Touch</h2>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-sky/10 border border-sky/20 flex items-center justify-center flex-shrink-0">
-                    <Icon name="MapPinIcon" size={14} variant="outline" className="text-sky" />
+                  <div className="w-8 h-8 rounded-lg bg-ckc-gold/10 border border-ckc-gold/20 flex items-center justify-center flex-shrink-0">
+                    <Icon name="MapPinIcon" size={14} variant="outline" className="text-ckc-gold" />
                   </div>
                   <div>
-                    <p className="text-cloud/40 text-xs">Location</p>
-                    <p className="text-cloud">{churchInfo.location}</p>
+                    <p className="text-ckc-muted text-xs">Location</p>
+                    <p className="text-ckc-black">{churchInfo.location}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center flex-shrink-0">
-                    <Icon name="PhoneIcon" size={14} variant="outline" className="text-emerald-400" />
+                  <div className="w-8 h-8 rounded-lg bg-ckc-gold/10 border border-ckc-gold/20 flex items-center justify-center flex-shrink-0">
+                    <Icon name="PhoneIcon" size={14} variant="outline" className="text-ckc-gold" />
                   </div>
                   <div>
-                    <p className="text-cloud/40 text-xs">Phone</p>
-                    <p className="text-cloud">{churchInfo.phone}</p>
+                    <p className="text-ckc-muted text-xs">Phone</p>
+                    <p className="text-ckc-black">{churchInfo.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-400/20 flex items-center justify-center flex-shrink-0">
-                    <Icon name="EnvelopeIcon" size={14} variant="outline" className="text-amber-400" />
+                  <div className="w-8 h-8 rounded-lg bg-ckc-gold/10 border border-ckc-gold/20 flex items-center justify-center flex-shrink-0">
+                    <Icon name="EnvelopeIcon" size={14} variant="outline" className="text-ckc-gold" />
                   </div>
                   <div>
-                    <p className="text-cloud/40 text-xs">Email</p>
-                    <p className="text-cloud">{churchInfo.email}</p>
+                    <p className="text-ckc-muted text-xs">Email</p>
+                    <p className="text-ckc-black">{churchInfo.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-400/20 flex items-center justify-center flex-shrink-0">
-                    <Icon name="ClockIcon" size={14} variant="outline" className="text-purple-400" />
+                  <div className="w-8 h-8 rounded-lg bg-ckc-gold/10 border border-ckc-gold/20 flex items-center justify-center flex-shrink-0">
+                    <Icon name="ClockIcon" size={14} variant="outline" className="text-ckc-gold" />
                   </div>
                   <div>
-                    <p className="text-cloud/40 text-xs">Service Times</p>
-                    <p className="text-cloud">{churchInfo.serviceTime}</p>
+                    <p className="text-ckc-muted text-xs">Service Times</p>
+                    <p className="text-ckc-black">{churchInfo.serviceTime}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Social Media */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-sm font-bold text-cloud mb-4">Follow Us</h2>
+            <div className="bg-neutral-50 border border-[#E5E5E5] rounded-2xl p-6">
+              <h2 className="text-sm font-bold text-ckc-black mb-4">Follow Us</h2>
               <div className="grid grid-cols-2 gap-3">
                 <a href={churchInfo.socialMedia.facebook} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-400/20 hover:bg-blue-500/20 transition-all">
-                  <Icon name="GlobeAltIcon" size={18} variant="outline" className="text-blue-400" />
+                  className="flex items-center gap-3 p-3 rounded-xl bg-ckc-gold/10 border border-ckc-gold/20 hover:bg-ckc-gold/20 transition-all">
+                  <Icon name="GlobeAltIcon" size={18} variant="outline" className="text-ckc-gold" />
                   <div>
-                    <p className="text-blue-400 text-xs font-semibold">Facebook</p>
-                    <p className="text-cloud/30 text-[10px]">@churchconnect</p>
+                    <p className="text-ckc-gold text-xs font-semibold">Facebook</p>
+                    <p className="text-ckc-muted/80 text-[10px]">@churchconnect</p>
                   </div>
                 </a>
                 <a href={churchInfo.socialMedia.instagram} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-xl bg-pink-500/10 border border-pink-400/20 hover:bg-pink-500/20 transition-all">
-                  <Icon name="CameraIcon" size={18} variant="outline" className="text-pink-400" />
+                  className="flex items-center gap-3 p-3 rounded-xl bg-ckc-gold/10 border border-ckc-gold/20 hover:bg-ckc-gold/20 transition-all">
+                  <Icon name="CameraIcon" size={18} variant="outline" className="text-ckc-gold" />
                   <div>
-                    <p className="text-pink-400 text-xs font-semibold">Instagram</p>
-                    <p className="text-cloud/30 text-[10px]">@churchconnect</p>
+                    <p className="text-ckc-gold text-xs font-semibold">Instagram</p>
+                    <p className="text-ckc-muted/80 text-[10px]">@churchconnect</p>
                   </div>
                 </a>
                 <a href={churchInfo.socialMedia.youtube} target="_blank" rel="noopener noreferrer"
@@ -288,7 +288,7 @@ export default function ChurchInfoPage() {
                   <Icon name="PlayCircleIcon" size={18} variant="outline" className="text-red-400" />
                   <div>
                     <p className="text-red-400 text-xs font-semibold">YouTube</p>
-                    <p className="text-cloud/30 text-[10px]">@churchconnect</p>
+                    <p className="text-ckc-muted/80 text-[10px]">@churchconnect</p>
                   </div>
                 </a>
                 <a href={churchInfo.socialMedia.whatsapp} target="_blank" rel="noopener noreferrer"
@@ -296,7 +296,7 @@ export default function ChurchInfoPage() {
                   <Icon name="ChatBubbleLeftRightIcon" size={18} variant="outline" className="text-green-400" />
                   <div>
                     <p className="text-green-400 text-xs font-semibold">WhatsApp</p>
-                    <p className="text-cloud/30 text-[10px]">Chat with us</p>
+                    <p className="text-ckc-muted/80 text-[10px]">Chat with us</p>
                   </div>
                 </a>
               </div>

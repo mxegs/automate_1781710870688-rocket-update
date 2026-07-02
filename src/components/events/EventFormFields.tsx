@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { CAMPUSES } from '@/lib/church/constants';
+import { uploadEventImage } from '@/lib/events/service';
 import { EVENT_CATEGORIES, EVENT_VISIBILITY_OPTIONS, type EventInput } from '@/lib/events/types';
 import type { CampusId } from '@/lib/church/constants';
 import type { ContentVisibility } from '@/lib/sermons/types';
@@ -9,10 +10,31 @@ import type { ContentVisibility } from '@/lib/sermons/types';
 interface EventFormFieldsProps {
   form: EventInput;
   onChange: (form: EventInput) => void;
+  eventId?: string;
 }
 
-export default function EventFormFields({ form, onChange }: EventFormFieldsProps) {
+export default function EventFormFields({ form, onChange, eventId }: EventFormFieldsProps) {
   const set = (patch: Partial<EventInput>) => onChange({ ...form, ...patch });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setUploadError('');
+    setUploading(true);
+    try {
+      const { url } = await uploadEventImage(file, eventId);
+      set({ imageUrl: url });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -24,12 +46,52 @@ export default function EventFormFields({ form, onChange }: EventFormFieldsProps
           onChange={(e) => set({ title: e.target.value })}
           className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cloud"
         />
-        <input
-          placeholder="Image URL (16:9 recommended)"
-          value={form.imageUrl ?? ''}
-          onChange={(e) => set({ imageUrl: e.target.value })}
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cloud"
-        />
+
+        <div className="space-y-2">
+          <p className="text-xs text-cloud/50">Event poster (16:9 recommended)</p>
+          {form.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={form.imageUrl}
+              alt="Event poster preview"
+              className="h-32 w-full rounded-lg object-cover border border-white/10"
+            />
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleImagePick}
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-lg border border-ckc-gold/30 bg-ckc-gold/10 px-3 py-2 text-xs font-semibold text-ckc-gold disabled:opacity-50"
+            >
+              {uploading ? 'Uploading…' : form.imageUrl ? 'Replace image' : 'Upload image'}
+            </button>
+            {form.imageUrl ? (
+              <button
+                type="button"
+                onClick={() => set({ imageUrl: '' })}
+                className="rounded-lg border border-white/10 px-3 py-2 text-xs text-cloud/50 hover:text-cloud"
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+          {uploadError ? <p className="text-xs text-red-400">{uploadError}</p> : null}
+          <input
+            placeholder="Or paste image URL"
+            value={form.imageUrl ?? ''}
+            onChange={(e) => set({ imageUrl: e.target.value })}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cloud"
+          />
+        </div>
+
         <div className="grid grid-cols-2 gap-2">
           <select
             value={form.campus}
