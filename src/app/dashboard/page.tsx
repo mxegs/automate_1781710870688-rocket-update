@@ -13,14 +13,14 @@ const recentVisitors: { name: string; date: string; status: string; source: stri
 const prayerRequests: { name: string; category: string; status: string; date: string }[] = [];
 
 const statusColors: Record<string, string> = {
-  'New Visitor': 'bg-sky/10 text-sky border-sky/20',
-  Contacted: 'bg-amber/10 text-amber-400 border-amber-400/20',
-  'Follow-Up Scheduled': 'bg-purple-500/10 text-purple-400 border-purple-400/20',
-  'Attending Regularly': 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
-  New: 'bg-sky/10 text-sky border-sky/20',
-  Assigned: 'bg-amber/10 text-amber-400 border-amber-400/20',
-  'In Prayer': 'bg-purple-500/10 text-purple-400 border-purple-400/20',
-  Answered: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
+  'New Visitor': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Contacted: 'bg-amber/10 text-ckc-gold border-ckc-gold/20',
+  'Follow-Up Scheduled': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  'Attending Regularly': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  New: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Assigned: 'bg-amber/10 text-ckc-gold border-ckc-gold/20',
+  'In Prayer': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Answered: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
 };
 
 export default function DashboardPage() {
@@ -134,7 +134,7 @@ export default function DashboardPage() {
               <p className="text-xs text-cloud/50">
                 {ev.date} at {ev.time}
               </p>
-              <p className="mt-1.5 text-xs font-medium text-emerald-400">{ev.rsvpCount} attending</p>
+              <p className="mt-1.5 text-xs font-medium text-ckc-gold">{ev.rsvpCount} attending</p>
             </div>
           ))}
           {upcomingEvents.length === 0 && (

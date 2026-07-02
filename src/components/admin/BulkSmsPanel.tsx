@@ -52,7 +52,7 @@ export default function BulkSmsPanel({ onClose }: BulkSmsPanelProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-ckc-card p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h2 className="text-lg font-bold text-cloud">Bulk SMS</h2>
@@ -120,7 +120,7 @@ export default function BulkSmsPanel({ onClose }: BulkSmsPanelProps) {
         <p className="text-[10px] text-cloud/30 mb-4">{message.length}/160 characters</p>
 
         {result && (
-          <p className={`mb-3 text-xs ${result.includes('failed') && !result.includes('demo') ? 'text-rose-400' : 'text-emerald-400'}`}>
+          <p className={`mb-3 text-xs ${result.includes('failed') && !result.includes('demo') ? 'text-rose-400' : 'text-ckc-gold'}`}>
             {result}
           </p>
         )}

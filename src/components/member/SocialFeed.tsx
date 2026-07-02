@@ -8,8 +8,6 @@ import type { CampusId } from '@/lib/church/constants';
 
 /**
  * Campus social links — not a live Instagram API feed yet.
- * Full post grid requires Instagram Graph API (Business account + Meta app).
- * Update handles in src/lib/church/constants.ts → CAMPUS_SOCIAL
  */
 export default function SocialFeed() {
   const [campus, setCampus] = useState<CampusId>('midrand');
@@ -23,22 +21,19 @@ export default function SocialFeed() {
   const social = getCampusSocial(campus);
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-cloud flex items-center gap-2">
-          <Icon name="PhotoIcon" size={15} variant="outline" className="text-pink-400" />
+    <div className="rounded-2xl border border-[#E5E5E5] bg-neutral-50 p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-ckc-black">
+          <Icon name="PhotoIcon" size={15} variant="outline" className="text-ckc-gold" />
           Social Feed
         </h2>
-        <span className="text-[10px] text-cloud/30">{social.instagramLabel}</span>
+        <span className="text-[10px] text-ckc-muted">{social.instagramLabel}</span>
       </div>
 
-      <div className="rounded-xl border border-pink-400/20 bg-gradient-to-br from-pink-500/5 to-purple-500/5 p-6 text-center mb-3">
-        <Icon name="CameraIcon" size={32} variant="outline" className="mx-auto text-pink-400 mb-3" />
-        <p className="text-sm text-cloud/70 leading-relaxed">
+      <div className="mb-3 rounded-xl border border-ckc-gold/20 bg-ckc-gold/5 p-6 text-center">
+        <Icon name="CameraIcon" size={32} variant="outline" className="mx-auto mb-3 text-ckc-gold" />
+        <p className="text-sm leading-relaxed text-ckc-black/70">
           Follow us on Instagram for photos, reels &amp; updates from your campus.
-        </p>
-        <p className="text-[10px] text-cloud/30 mt-2">
-          Live post grid needs Instagram Business API — links below open your campus pages.
         </p>
       </div>
 
@@ -47,7 +42,7 @@ export default function SocialFeed() {
           href={social.instagram}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-400/20 text-xs text-pink-400 hover:from-pink-500/20 hover:to-purple-500/20 transition-all"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-ckc-gold/20 bg-ckc-gold/10 py-2.5 text-xs text-ckc-gold transition-all hover:bg-ckc-gold/20"
         >
           <Icon name="CameraIcon" size={12} variant="outline" />
           Instagram
@@ -56,7 +51,7 @@ export default function SocialFeed() {
           href={social.facebook}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-blue-500/10 border border-blue-400/20 text-xs text-blue-400 hover:bg-blue-500/20 transition-all"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-ckc-gold/20 bg-ckc-gold/10 py-2.5 text-xs text-ckc-gold transition-all hover:bg-ckc-gold/20"
         >
           <Icon name="GlobeAltIcon" size={12} variant="outline" />
           Facebook

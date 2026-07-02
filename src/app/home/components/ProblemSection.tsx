@@ -74,7 +74,7 @@ export default function ProblemSection() {
   }, []);
 
   return (
-    <section id="problem" ref={sectionRef} className="py-28 px-6" style={{ background: '#0F172A' }}>
+    <section id="problem" ref={sectionRef} className="py-28 px-6" style={{ background: '#0A0A0A' }}>
       <div className="max-w-7xl mx-auto">
 
         {/* Section header */}
@@ -130,7 +130,7 @@ export default function ProblemSection() {
               className="scroll-reveal problem-card rounded-lg p-7"
               style={{ transitionDelay: `${i * 0.12}s` }}
             >
-              <Icon name="ChatBubbleLeftRightIcon" size={20} variant="outline" className="text-sky mb-4 opacity-60" />
+              <Icon name="ChatBubbleLeftRightIcon" size={20} variant="outline" className="text-ckc-gold mb-4 opacity-60" />
               <p className="text-cloud text-base leading-relaxed font-light italic mb-5">
                 "{q?.quote}"
               </p>

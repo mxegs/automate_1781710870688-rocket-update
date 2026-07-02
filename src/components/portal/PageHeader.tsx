@@ -40,7 +40,7 @@ export default function PageHeader({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-cloud/50 text-sm">{greeting}</p>
-          <h1 className="text-2xl font-bold text-cloud">{userName || title} 👋</h1>
+          <h1 className="text-2xl font-bold text-cloud">{userName || title}</h1>
           {subtitle && <p className="text-cloud/40 text-sm mt-1">{subtitle}</p>}
         </div>
         {actions}
@@ -111,7 +111,7 @@ export function StatCard({
       <p className="font-mono text-2xl font-bold text-cloud">{value}</p>
       <p className="mt-0.5 text-xs text-cloud/50">{label}</p>
       {change && (
-        <p className={`mt-1.5 text-xs font-medium ${positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+        <p className={`mt-1.5 text-xs font-medium ${positive ? 'text-ckc-gold' : 'text-rose-400'}`}>
           {change}
         </p>
       )}

@@ -19,21 +19,21 @@ interface Ministry {
 const mockMinistries: Ministry[] = [];
 
 const colorMap: Record<string, string> = {
-  sky: 'bg-sky/10 text-sky border-sky/20',
-  purple: 'bg-purple-500/10 text-purple-400 border-purple-400/20',
-  amber: 'bg-amber-500/10 text-amber-400 border-amber-400/20',
-  rose: 'bg-rose-500/10 text-rose-400 border-rose-400/20',
-  pink: 'bg-pink-500/10 text-pink-400 border-pink-400/20',
-  emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
+  sky: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  purple: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  amber: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  rose: 'bg-ckc-gold/10 text-ckc-muted border-ckc-gold/20',
+  pink: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  emerald: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
 };
 
 const iconBg: Record<string, string> = {
-  sky: 'bg-sky/10 text-sky',
-  purple: 'bg-purple-500/10 text-purple-400',
-  amber: 'bg-amber-500/10 text-amber-400',
+  sky: 'bg-ckc-gold/10 text-ckc-gold',
+  purple: 'bg-ckc-gold/10 text-ckc-gold',
+  amber: 'bg-ckc-gold/10 text-ckc-gold',
   rose: 'bg-rose-500/10 text-rose-400',
-  pink: 'bg-pink-500/10 text-pink-400',
-  emerald: 'bg-emerald-500/10 text-emerald-400',
+  pink: 'bg-ckc-gold/10 text-ckc-gold',
+  emerald: 'bg-ckc-gold/10 text-ckc-gold',
 };
 
 export default function MinistriesPage() {
@@ -49,7 +49,7 @@ export default function MinistriesPage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-sky text-slate-dark font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-sky/90 transition-colors"
+          className="flex items-center gap-2 bg-ckc-gold text-ckc-black font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors"
         >
           <Icon name="PlusIcon" size={16} variant="outline" />
           Add Ministry
@@ -77,7 +77,7 @@ export default function MinistriesPage() {
         {mockMinistries.map((ministry) => (
           <div
             key={ministry.id}
-            className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-sky/20 transition-colors cursor-pointer"
+            className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-ckc-gold/20 transition-colors cursor-pointer"
             onClick={() => setSelectedMinistry(ministry)}
           >
             <div className="flex items-start gap-3 mb-3">
@@ -107,7 +107,7 @@ export default function MinistriesPage() {
       {/* Ministry Detail Modal */}
       {selectedMinistry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E293B] border border-white/10 rounded-2xl w-full max-w-md p-6">
+          <div className="bg-ckc-card border border-white/10 rounded-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg[selectedMinistry.color]}`}>
                 <Icon name={selectedMinistry.icon} size={20} variant="outline" />
@@ -136,7 +136,7 @@ export default function MinistriesPage() {
                 <Icon name="EnvelopeIcon" size={14} variant="outline" />
                 Message Team
               </button>
-              <button onClick={() => setSelectedMinistry(null)} className="flex-1 bg-sky text-slate-dark text-sm font-bold py-2.5 rounded-lg hover:bg-sky/90 transition-colors">Close</button>
+              <button onClick={() => setSelectedMinistry(null)} className="flex-1 bg-ckc-gold text-ckc-black text-sm font-bold py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors">Close</button>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function MinistriesPage() {
       {/* Add Ministry Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E293B] border border-white/10 rounded-2xl w-full max-w-lg p-6">
+          <div className="bg-ckc-card border border-white/10 rounded-2xl w-full max-w-lg p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-cloud">Add Ministry</h2>
               <button onClick={() => setShowAddModal(false)} className="text-cloud/40 hover:text-cloud">
@@ -159,27 +159,27 @@ export default function MinistriesPage() {
               ].map((field) => (
                 <div key={field.label}>
                   <label className="block text-xs font-semibold text-cloud/50 mb-1.5">{field.label}</label>
-                  <input type="text" placeholder={field.placeholder} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors" />
+                  <input type="text" placeholder={field.placeholder} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors" />
                 </div>
               ))}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Meeting Day</label>
-                  <input type="text" placeholder="e.g. Friday" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors" />
+                  <input type="text" placeholder="e.g. Friday" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Meeting Time</label>
-                  <input type="time" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-sky/50 transition-colors" />
+                  <input type="time" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-ckc-gold/50 transition-colors" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Description</label>
-                <textarea rows={3} placeholder="Ministry description..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors resize-none" />
+                <textarea rows={3} placeholder="Ministry description..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors resize-none" />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowAddModal(false)} className="flex-1 bg-white/5 border border-white/10 text-cloud/70 text-sm font-semibold py-2.5 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
-              <button onClick={() => setShowAddModal(false)} className="flex-1 bg-sky text-slate-dark text-sm font-bold py-2.5 rounded-lg hover:bg-sky/90 transition-colors">Add Ministry</button>
+              <button onClick={() => setShowAddModal(false)} className="flex-1 bg-ckc-gold text-ckc-black text-sm font-bold py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors">Add Ministry</button>
             </div>
           </div>
         </div>

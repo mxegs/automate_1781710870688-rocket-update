@@ -221,7 +221,7 @@ export default function GroupLeaderPage() {
                 <ContentCard key={b.id}>
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm text-cloud leading-relaxed">{b.message}</p>
-                    <span className="shrink-0 rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">
+                    <span className="shrink-0 rounded-full border border-ckc-gold/20 bg-ckc-gold/10 px-2 py-0.5 text-[10px] text-ckc-gold">
                       {b.status}
                     </span>
                   </div>
@@ -238,7 +238,7 @@ export default function GroupLeaderPage() {
       {tab === 'songs' && group.enableSongLibrary && (
         <>
           {songNotice && (
-            <p className="rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+            <p className="rounded-lg border border-ckc-gold/20 bg-ckc-gold/10 px-3 py-2 text-xs text-ckc-gold">
               {songNotice}
             </p>
           )}

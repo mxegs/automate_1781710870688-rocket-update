@@ -11,8 +11,8 @@ import { useBackend } from '@/lib/api/client';
 
 const stageColors: Record<FollowUpStageId, string> = {
   cold: 'bg-white/5 text-cloud/50 border-white/10',
-  engaging: 'bg-amber-500/10 text-amber-400 border-amber-400/20',
-  committed: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
+  engaging: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  committed: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
 };
 
 export default function FollowUpsPage() {
@@ -81,11 +81,11 @@ export default function FollowUpsPage() {
       />
 
       {!backend && (
-        <p className="text-sm text-amber-400 mb-4">Connect Supabase — demo follow-up contacts are seeded in migration.</p>
+        <p className="text-sm text-ckc-gold mb-4">Connect Supabase — demo follow-up contacts are seeded in migration.</p>
       )}
 
       {sentResult && (
-        <p className="mb-4 text-sm text-emerald-400">{sentResult}</p>
+        <p className="mb-4 text-sm text-ckc-gold">{sentResult}</p>
       )}
 
       <ContentCard>
@@ -149,7 +149,7 @@ export default function FollowUpsPage() {
 
       {showMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-ckc-card p-6">
             <h2 className="text-lg font-bold text-cloud mb-4">
               Message {filtered.length} contact(s)
             </h2>

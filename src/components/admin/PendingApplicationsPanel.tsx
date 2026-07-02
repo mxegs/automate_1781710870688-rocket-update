@@ -103,7 +103,7 @@ export default function PendingApplicationsPanel() {
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-white/10 bg-[#1E293B]">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-white/10 bg-ckc-card">
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <div>
                 <h2 className="text-lg font-bold text-cloud">Membership application</h2>
@@ -135,7 +135,7 @@ export default function PendingApplicationsPanel() {
                 type="button"
                 disabled={reviewing}
                 onClick={() => handleReview(selected.id, 'approved')}
-                className="flex-1 rounded-xl bg-emerald-500/20 py-2.5 text-sm font-bold text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50"
+                className="flex-1 rounded-xl bg-ckc-gold/20 py-2.5 text-sm font-bold text-ckc-gold hover:bg-ckc-gold/30 disabled:opacity-50"
               >
                 Approve
               </button>

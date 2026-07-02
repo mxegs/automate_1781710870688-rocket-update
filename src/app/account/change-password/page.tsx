@@ -57,8 +57,8 @@ export default function ChangePasswordPage() {
       <CkcCard>
         {success ? (
           <div className="space-y-4 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20">
-              <span className="text-xl text-emerald-400">✓</span>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ckc-gold/20">
+              <span className="text-xl text-ckc-gold">✓</span>
             </div>
             <h2 className="text-base font-semibold text-ckc-white">Password updated</h2>
             <p className="text-xs text-ckc-muted">Use your new password next time you sign in.</p>

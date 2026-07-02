@@ -9,10 +9,10 @@ import { getCampusLabel } from '@/lib/church/constants';
 import { useBackend } from '@/lib/api/client';
 
 const statusColors: Record<string, string> = {
-  new: 'bg-sky/10 text-sky border-sky/20',
-  assigned: 'bg-amber-500/10 text-amber-400 border-amber-400/20',
-  in_prayer: 'bg-purple-500/10 text-purple-400 border-purple-400/20',
-  answered: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
+  new: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  assigned: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  in_prayer: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  answered: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
   closed: 'bg-white/5 text-cloud/40 border-white/10',
 };
 
@@ -57,7 +57,7 @@ export default function PrayerRequestsPage() {
       </div>
 
       {!backend && (
-        <p className="text-sm text-amber-400 mb-4">Connect Supabase to receive prayer requests from members.</p>
+        <p className="text-sm text-ckc-gold mb-4">Connect Supabase to receive prayer requests from members.</p>
       )}
 
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
@@ -116,7 +116,7 @@ export default function PrayerRequestsPage() {
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-ckc-card p-6">
             <h2 className="text-lg font-bold text-cloud">{selected.title}</h2>
             <p className="text-xs text-cloud/40 mt-1">
               {selected.isConfidential ? 'Confidential request' : selected.submitterName} · {getCampusLabel(selected.campus)}

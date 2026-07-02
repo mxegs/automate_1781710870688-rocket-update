@@ -33,10 +33,10 @@ const ministryData = [
 ];
 
 const prayerStats = [
-  { name: 'New', value: 8, color: '#0EA5E9' },
-  { name: 'Assigned', value: 6, color: '#F59E0B' },
-  { name: 'In Prayer', value: 9, color: '#A855F7' },
-  { name: 'Answered', value: 4, color: '#10B981' },
+  { name: 'New', value: 8, color: '#C5A073' },
+  { name: 'Assigned', value: 6, color: '#D9B985' },
+  { name: 'In Prayer', value: 9, color: '#8A7340' },
+  { name: 'Answered', value: 4, color: '#D4BC94' },
 ];
 
 const visitorConversionData = [
@@ -58,18 +58,18 @@ const kpiCards = [
 ];
 
 const colorMap: Record<string, string> = {
-  sky: 'bg-sky/10 text-sky',
-  emerald: 'bg-emerald-500/10 text-emerald-400',
-  amber: 'bg-amber-500/10 text-amber-400',
-  purple: 'bg-purple-500/10 text-purple-400',
-  rose: 'bg-rose-500/10 text-rose-400',
-  teal: 'bg-teal-500/10 text-teal-400',
+  sky: 'bg-ckc-gold/10 text-ckc-gold',
+  emerald: 'bg-ckc-gold/10 text-ckc-gold',
+  amber: 'bg-ckc-gold/10 text-ckc-gold',
+  purple: 'bg-ckc-gold/10 text-ckc-gold',
+  rose: 'bg-ckc-gold/10 text-ckc-gold',
+  teal: 'bg-ckc-gold/10 text-ckc-gold',
 };
 
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-dark border border-white/15 rounded-lg px-3 py-2 text-xs">
+      <div className="bg-ckc-black border border-white/15 rounded-lg px-3 py-2 text-xs">
         <p className="text-cloud/60 mb-1">{label}</p>
         {payload.map((p) => (
           <p key={p.name} style={{ color: p.color }} className="font-semibold">{p.name}: {p.value}</p>
@@ -91,7 +91,7 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold text-cloud tracking-tight">Reports & Analytics</h1>
           <p className="text-cloud/40 text-sm mt-1">Church health metrics and activity overview</p>
         </div>
-        <button className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-sky/30 text-cloud/70 hover:text-cloud text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+        <button className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-ckc-gold/30 text-cloud/70 hover:text-cloud text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
           <Icon name="ArrowDownTrayIcon" size={15} variant="outline" />
           Export
         </button>
@@ -104,7 +104,7 @@ export default function ReportsPage() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-              activeTab === tab ? 'bg-sky text-white' : 'text-cloud/50 hover:text-cloud'
+              activeTab === tab ? 'bg-ckc-gold text-white' : 'text-cloud/50 hover:text-cloud'
             }`}
           >
             {tab}
@@ -115,13 +115,13 @@ export default function ReportsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         {kpiCards.map((kpi) => (
-          <div key={kpi.label} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-sky/20 transition-colors">
+          <div key={kpi.label} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-ckc-gold/20 transition-colors">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${colorMap[kpi.color]}`}>
               <Icon name={kpi.icon} size={15} variant="outline" />
             </div>
             <p className="text-xl font-bold text-cloud font-mono">{kpi.value}</p>
             <p className="text-xs text-cloud/40 mt-0.5 leading-tight">{kpi.label}</p>
-            <p className="text-xs text-emerald-400 mt-1 font-medium">{kpi.sub}</p>
+            <p className="text-xs text-ckc-gold mt-1 font-medium">{kpi.sub}</p>
           </div>
         ))}
       </div>
@@ -136,7 +136,7 @@ export default function ReportsPage() {
               <XAxis dataKey="month" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="members" stroke="#0EA5E9" strokeWidth={2} dot={{ fill: '#0EA5E9', r: 3 }} name="Members" />
+              <Line type="monotone" dataKey="members" stroke="#C5A073" strokeWidth={2} dot={{ fill: '#C5A073', r: 3 }} name="Members" />
               <Line type="monotone" dataKey="visitors" stroke="#F59E0B" strokeWidth={2} dot={{ fill: '#F59E0B', r: 3 }} name="Visitors" />
             </LineChart>
           </ResponsiveContainer>
@@ -150,7 +150,7 @@ export default function ReportsPage() {
               <XAxis dataKey="week" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="attendance" fill="#0EA5E9" radius={[4, 4, 0, 0]} name="Attendance" />
+              <Bar dataKey="attendance" fill="#C5A073" radius={[4, 4, 0, 0]} name="Attendance" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -212,7 +212,7 @@ export default function ReportsPage() {
                   className="w-full rounded-t-md transition-all"
                   style={{
                     height: `${heightPct}%`,
-                    backgroundColor: `rgba(14, 165, 233, ${0.3 + (i / visitorConversionData.length) * 0.7})`,
+                    backgroundColor: `rgba(197, 160, 115, ${0.3 + (i / visitorConversionData.length) * 0.7})`,
                   }}
                 />
                 <span className="text-xs text-cloud/40 text-center leading-tight" style={{ fontSize: '10px' }}>{stage.stage}</span>

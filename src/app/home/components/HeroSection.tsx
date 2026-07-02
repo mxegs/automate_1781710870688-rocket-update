@@ -101,7 +101,7 @@ export default function HeroSection() {
     <section
       ref={heroRef}
       className="relative min-h-screen flex flex-col justify-center pt-28 pb-20 px-6 noise-overlay overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #0A0A0A 0%, #1A1A1A 50%, #0A0A0A 100%)' }}
     >
       {/* Background grid */}
       <div
@@ -125,7 +125,7 @@ export default function HeroSection() {
         {/* Report badge */}
         <div className="mb-8">
           <span className="report-badge">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky inline-block animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-ckc-gold inline-block animate-pulse" />
             2026 State of Church Operations Report
           </span>
         </div>
@@ -163,7 +163,7 @@ export default function HeroSection() {
         >
           <a
             href="#problem"
-            className="inline-flex items-center gap-2 text-sky text-sm font-semibold uppercase tracking-widest border-b border-sky/40 pb-1 hover:border-sky transition-all"
+            className="inline-flex items-center gap-2 text-ckc-gold text-sm font-semibold uppercase tracking-widest border-b border-ckc-gold/40 pb-1 hover:border-ckc-gold transition-all"
           >
             Read the Full Report
             <Icon name="ArrowDownIcon" size={14} variant="outline" />
@@ -184,7 +184,7 @@ export default function HeroSection() {
         <div className="flex items-center justify-between mt-6 text-admin text-xs font-mono uppercase tracking-widest">
           <span>Automate v3.2 · Live</span>
           <span className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky inline-block sky-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-ckc-gold inline-block sky-pulse" />
             847 pipelines running now
           </span>
         </div>

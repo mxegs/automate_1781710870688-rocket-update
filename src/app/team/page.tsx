@@ -253,7 +253,7 @@ export default function TeamPage() {
                   <button
                     type="button"
                     onClick={() => handleDemote(person)}
-                    className="text-xs text-rose-400 hover:text-rose-300"
+                    className="text-xs text-rose-400 hover:text-ckc-gold"
                   >
                     Remove staff access
                   </button>

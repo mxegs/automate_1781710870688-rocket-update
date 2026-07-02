@@ -87,7 +87,7 @@ export default function MemberManageMenu({ member, onUpdated }: MemberManageMenu
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full z-50 mt-1 min-w-[11rem] rounded-xl border border-white/10 bg-[#1E293B] py-1 shadow-xl">
+          <div className="absolute right-0 top-full z-50 mt-1 min-w-[11rem] rounded-xl border border-white/10 bg-ckc-card py-1 shadow-xl">
             <button
               type="button"
               disabled={loading}
@@ -104,7 +104,7 @@ export default function MemberManageMenu({ member, onUpdated }: MemberManageMenu
                   setOpen(false);
                   setConfirmAction('reactivate');
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-emerald-400 hover:bg-white/5"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-ckc-gold hover:bg-white/5"
               >
                 <Icon name="ArrowPathIcon" size={14} variant="outline" />
                 Reactivate
@@ -116,7 +116,7 @@ export default function MemberManageMenu({ member, onUpdated }: MemberManageMenu
                   setOpen(false);
                   setConfirmAction('suspend');
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-amber-400 hover:bg-white/5"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-ckc-gold hover:bg-white/5"
               >
                 <Icon name="PauseCircleIcon" size={14} variant="outline" />
                 Suspend
@@ -139,7 +139,7 @@ export default function MemberManageMenu({ member, onUpdated }: MemberManageMenu
 
       {viewOpen && detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-white/10 bg-[#1E293B]">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-white/10 bg-ckc-card">
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <div>
                 <h2 className="text-lg font-bold text-cloud">{member.name}</h2>
@@ -184,7 +184,7 @@ export default function MemberManageMenu({ member, onUpdated }: MemberManageMenu
 
       {confirmAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-ckc-card p-6">
             <h3 className="text-lg font-bold text-cloud">
               {confirmAction === 'suspend' && 'Suspend member?'}
               {confirmAction === 'reactivate' && 'Reactivate member?'}
@@ -218,8 +218,8 @@ export default function MemberManageMenu({ member, onUpdated }: MemberManageMenu
                   confirmAction === 'terminate'
                     ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
                     : confirmAction === 'reactivate'
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-amber-500/20 text-amber-400'
+                      ? 'bg-ckc-gold/20 text-ckc-gold'
+                      : 'bg-ckc-gold/20 text-ckc-gold'
                 }`}
               >
                 {loading ? 'Working…' : 'Confirm'}

@@ -180,7 +180,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-slate-dark border-b border-white/10">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-ckc-black border-b border-white/10">
         <AppLogo size={24} text={BRAND.abbreviation} className="text-cloud font-bold text-base tracking-tight" />
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -196,7 +196,7 @@ export default function Sidebar() {
       )}
 
       <div
-        className={`md:hidden fixed top-0 left-0 h-full z-50 w-64 bg-slate-dark border-r border-white/10 transition-transform duration-300 ${
+        className={`md:hidden fixed top-0 left-0 h-full z-50 w-64 bg-ckc-black border-r border-white/10 transition-transform duration-300 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -228,7 +228,7 @@ export default function Sidebar() {
           </Link>
           <button
             onClick={handleLogout}
-            className="mt-1 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-cloud/40 hover:text-rose-400 hover:bg-rose-500/5 transition-colors"
+            className="mt-1 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-cloud/40 hover:text-rose-400 hover:bg-ckc-gold/5 transition-colors"
           >
             <Icon name="ArrowLeftOnRectangleIcon" size={14} variant="outline" />
             <span>Sign Out</span>
@@ -237,7 +237,7 @@ export default function Sidebar() {
       </div>
 
       <aside
-        className={`hidden md:flex flex-col fixed top-0 left-0 h-full z-30 bg-slate-dark border-r border-white/10 transition-all duration-300 ${
+        className={`hidden md:flex flex-col fixed top-0 left-0 h-full z-30 bg-ckc-black border-r border-white/10 transition-all duration-300 ${
           collapsed ? 'w-16' : 'w-60'
         }`}
       >
@@ -281,7 +281,7 @@ export default function Sidebar() {
           {!collapsed && (
             <button
               onClick={handleLogout}
-              className="mt-1 w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-cloud/40 hover:text-rose-400 hover:bg-rose-500/5 transition-colors"
+              className="mt-1 w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-cloud/40 hover:text-rose-400 hover:bg-ckc-gold/5 transition-colors"
             >
               <Icon name="ArrowLeftOnRectangleIcon" size={13} variant="outline" />
               <span>Sign Out</span>

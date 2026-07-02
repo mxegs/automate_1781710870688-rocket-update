@@ -19,18 +19,18 @@ interface CareRecord {
 const mockCareRecords: CareRecord[] = [];
 
 const statusColors: Record<string, string> = {
-  Open: 'bg-sky/10 text-sky border-sky/20',
-  Scheduled: 'bg-amber-500/10 text-amber-400 border-amber-400/20',
-  'In Progress': 'bg-purple-500/10 text-purple-400 border-purple-400/20',
-  Completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
+  Open: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Scheduled: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  'In Progress': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Completed: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
   Closed: 'bg-white/5 text-cloud/40 border-white/10',
 };
 
 const typeColors: Record<string, string> = {
   'Hospital Visit': 'bg-rose-500/10 text-rose-400',
-  'Counseling': 'bg-purple-500/10 text-purple-400',
-  'Home Visit': 'bg-sky/10 text-sky',
-  'Follow-up': 'bg-amber-500/10 text-amber-400',
+  'Counseling': 'bg-ckc-gold/10 text-ckc-gold',
+  'Home Visit': 'bg-ckc-gold/10 text-ckc-gold',
+  'Follow-up': 'bg-ckc-gold/10 text-ckc-gold',
 };
 
 const statuses = ['Open', 'Scheduled', 'In Progress', 'Completed', 'Closed'];
@@ -63,7 +63,7 @@ export default function PastoralCarePage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-sky text-slate-dark font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-sky/90 transition-colors"
+          className="flex items-center gap-2 bg-ckc-gold text-ckc-black font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors"
         >
           <Icon name="PlusIcon" size={16} variant="outline" />
           New Care Record
@@ -77,7 +77,7 @@ export default function PastoralCarePage() {
             key={s}
             onClick={() => setStatusFilter(statusFilter === s ? 'All' : s)}
             className={`p-3 rounded-lg border text-left transition-all ${
-              statusFilter === s ? 'border-sky/40 bg-sky/5' : 'border-white/10 bg-white/5 hover:border-white/20'
+              statusFilter === s ? 'border-ckc-gold/40 bg-ckc-gold/5' : 'border-white/10 bg-white/5 hover:border-white/20'
             }`}
           >
             <p className="text-xl font-bold text-cloud font-mono">{counts[s] || 0}</p>
@@ -94,7 +94,7 @@ export default function PastoralCarePage() {
           placeholder="Search care records..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-cloud placeholder-cloud/30 focus:outline-none focus:border-sky/50 transition-colors"
+          className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-cloud placeholder-cloud/30 focus:outline-none focus:border-ckc-gold/50 transition-colors"
         />
       </div>
 
@@ -103,13 +103,13 @@ export default function PastoralCarePage() {
         {filtered.map((record) => (
           <div
             key={record.id}
-            className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-sky/20 transition-colors cursor-pointer"
+            className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-ckc-gold/20 transition-colors cursor-pointer"
             onClick={() => setSelectedRecord(record)}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-sky/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-sm font-bold text-sky">{record.memberName.charAt(0)}</span>
+                <div className="w-9 h-9 rounded-full bg-ckc-gold/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-sm font-bold text-ckc-gold">{record.memberName.charAt(0)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -123,7 +123,7 @@ export default function PastoralCarePage() {
                     <span className="text-xs text-cloud/30">{record.date}</span>
                     <span className="text-xs text-cloud/40">→ {record.assignedTo}</span>
                     {record.scheduledDate && (
-                      <span className="text-xs text-amber-400">Scheduled: {record.scheduledDate}</span>
+                      <span className="text-xs text-ckc-gold">Scheduled: {record.scheduledDate}</span>
                     )}
                   </div>
                 </div>
@@ -146,7 +146,7 @@ export default function PastoralCarePage() {
       {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E293B] border border-white/10 rounded-2xl w-full max-w-lg p-6">
+          <div className="bg-ckc-card border border-white/10 rounded-2xl w-full max-w-lg p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-cloud">New Care Record</h2>
               <button onClick={() => setShowAddModal(false)} className="text-cloud/40 hover:text-cloud">
@@ -156,12 +156,12 @@ export default function PastoralCarePage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Member Name</label>
-                <input type="text" placeholder="Search member..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors" />
+                <input type="text" placeholder="Search member..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Care Type</label>
-                  <select className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-sky/50 transition-colors">
+                  <select className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-ckc-gold/50 transition-colors">
                     <option>Hospital Visit</option>
                     <option>Counseling</option>
                     <option>Home Visit</option>
@@ -170,21 +170,21 @@ export default function PastoralCarePage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Assigned To</label>
-                  <input type="text" placeholder="Pastor / Elder" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors" />
+                  <input type="text" placeholder="Pastor / Elder" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Scheduled Date</label>
-                <input type="date" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-sky/50 transition-colors" />
+                <input type="date" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-ckc-gold/50 transition-colors" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Description</label>
-                <textarea rows={3} placeholder="Describe the care need..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors resize-none" />
+                <textarea rows={3} placeholder="Describe the care need..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors resize-none" />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowAddModal(false)} className="flex-1 bg-white/5 border border-white/10 text-cloud/70 text-sm font-semibold py-2.5 rounded-lg hover:bg-white/10 transition-colors">Cancel</button>
-              <button onClick={() => setShowAddModal(false)} className="flex-1 bg-sky text-slate-dark text-sm font-bold py-2.5 rounded-lg hover:bg-sky/90 transition-colors">Create Record</button>
+              <button onClick={() => setShowAddModal(false)} className="flex-1 bg-ckc-gold text-ckc-black text-sm font-bold py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors">Create Record</button>
             </div>
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function PastoralCarePage() {
       {/* Detail Modal */}
       {selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E293B] border border-white/10 rounded-2xl w-full max-w-md p-6">
+          <div className="bg-ckc-card border border-white/10 rounded-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
               <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${typeColors[selectedRecord.type] || 'bg-white/10 text-cloud/50'}`}>
                 {selectedRecord.type}
@@ -203,8 +203,8 @@ export default function PastoralCarePage() {
               </button>
             </div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-sky/10 flex items-center justify-center">
-                <span className="text-base font-bold text-sky">{selectedRecord.memberName.charAt(0)}</span>
+              <div className="w-10 h-10 rounded-full bg-ckc-gold/10 flex items-center justify-center">
+                <span className="text-base font-bold text-ckc-gold">{selectedRecord.memberName.charAt(0)}</span>
               </div>
               <div>
                 <p className="text-base font-bold text-cloud">{selectedRecord.memberName}</p>
@@ -245,7 +245,7 @@ export default function PastoralCarePage() {
                 ))}
               </div>
             </div>
-            <button onClick={() => setSelectedRecord(null)} className="w-full bg-sky text-slate-dark text-sm font-bold py-2.5 rounded-lg hover:bg-sky/90 transition-colors">Close</button>
+            <button onClick={() => setSelectedRecord(null)} className="w-full bg-ckc-gold text-ckc-black text-sm font-bold py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors">Close</button>
           </div>
         </div>
       )}

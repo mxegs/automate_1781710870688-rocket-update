@@ -19,12 +19,12 @@ interface Visitor {
 const mockVisitors: Visitor[] = [];
 
 const statusColors: Record<string, string> = {
-  'New Visitor': 'bg-sky/10 text-sky border-sky/20',
-  'Contacted': 'bg-amber-500/10 text-amber-400 border-amber-400/20',
-  'Follow-Up Scheduled': 'bg-purple-500/10 text-purple-400 border-purple-400/20',
-  'Attending Regularly': 'bg-blue-500/10 text-blue-400 border-blue-400/20',
+  'New Visitor': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  'Contacted': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  'Follow-Up Scheduled': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  'Attending Regularly': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
   'Membership Candidate': 'bg-orange-500/10 text-orange-400 border-orange-400/20',
-  'Became Member': 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
+  'Became Member': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
 };
 
 const statusOrder = ['New Visitor', 'Contacted', 'Follow-Up Scheduled', 'Attending Regularly', 'Membership Candidate', 'Became Member'];
@@ -56,7 +56,7 @@ export default function VisitorsPage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-sky text-slate-dark font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-sky/90 transition-colors"
+          className="flex items-center gap-2 bg-ckc-gold text-ckc-black font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors"
         >
           <Icon name="PlusIcon" size={16} variant="outline" />
           Register Visitor
@@ -71,7 +71,7 @@ export default function VisitorsPage() {
             onClick={() => setStatusFilter(statusFilter === s ? 'All' : s)}
             className={`p-3 rounded-lg border text-left transition-all ${
               statusFilter === s
-                ? 'border-sky/40 bg-sky/5' :'border-white/10 bg-white/5 hover:border-white/20'
+                ? 'border-ckc-gold/40 bg-ckc-gold/5' :'border-white/10 bg-white/5 hover:border-white/20'
             }`}
           >
             <p className="text-lg font-bold text-cloud font-mono">{counts[s] || 0}</p>
@@ -88,7 +88,7 @@ export default function VisitorsPage() {
           placeholder="Search visitors..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-cloud placeholder-cloud/30 focus:outline-none focus:border-sky/50 transition-colors"
+          className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-cloud placeholder-cloud/30 focus:outline-none focus:border-ckc-gold/50 transition-colors"
         />
       </div>
 
@@ -97,13 +97,13 @@ export default function VisitorsPage() {
         {filtered.map((visitor) => (
           <div
             key={visitor.id}
-            className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-sky/20 transition-colors cursor-pointer"
+            className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-ckc-gold/20 transition-colors cursor-pointer"
             onClick={() => setSelectedVisitor(visitor)}
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-sky/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-bold text-sky">{visitor.name.charAt(0)}</span>
+                <div className="w-9 h-9 rounded-full bg-ckc-gold/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-bold text-ckc-gold">{visitor.name.charAt(0)}</span>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-cloud">{visitor.name}</p>
@@ -126,7 +126,7 @@ export default function VisitorsPage() {
                 </div>
               )}
               {visitor.followUpDate && (
-                <div className="flex items-center gap-2 text-xs text-amber-400">
+                <div className="flex items-center gap-2 text-xs text-ckc-gold">
                   <Icon name="ClockIcon" size={12} variant="outline" />
                   <span>Follow-up: {visitor.followUpDate}</span>
                 </div>
@@ -149,7 +149,7 @@ export default function VisitorsPage() {
       {/* Add Visitor Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E293B] border border-white/10 rounded-2xl w-full max-w-lg p-6">
+          <div className="bg-ckc-card border border-white/10 rounded-2xl w-full max-w-lg p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-cloud">Register Visitor</h2>
               <button onClick={() => setShowAddModal(false)} className="text-cloud/40 hover:text-cloud">
@@ -167,13 +167,13 @@ export default function VisitorsPage() {
                   <input
                     type="text"
                     placeholder={field.placeholder}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors"
                   />
                 </div>
               ))}
               <div>
                 <label className="block text-xs font-semibold text-cloud/50 mb-1.5">How did they hear about us?</label>
-                <select className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-sky/50 transition-colors">
+                <select className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-ckc-gold/50 transition-colors">
                   <option>Friend</option>
                   <option>Family</option>
                   <option>Social Media</option>
@@ -186,7 +186,7 @@ export default function VisitorsPage() {
                 <label className="block text-xs font-semibold text-cloud/50 mb-1.5">Date of First Visit</label>
                 <input
                   type="date"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-sky/50 transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud focus:outline-none focus:border-ckc-gold/50 transition-colors"
                 />
               </div>
               <div className="col-span-2">
@@ -194,7 +194,7 @@ export default function VisitorsPage() {
                 <textarea
                   rows={3}
                   placeholder="Any notes about this visitor..."
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-sky/50 transition-colors resize-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors resize-none"
                 />
               </div>
             </div>
@@ -207,7 +207,7 @@ export default function VisitorsPage() {
               </button>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 bg-sky text-slate-dark text-sm font-bold py-2.5 rounded-lg hover:bg-sky/90 transition-colors"
+                className="flex-1 bg-ckc-gold text-ckc-black text-sm font-bold py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors"
               >
                 Register Visitor
               </button>
@@ -219,7 +219,7 @@ export default function VisitorsPage() {
       {/* Visitor Detail Modal */}
       {selectedVisitor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E293B] border border-white/10 rounded-2xl w-full max-w-md p-6">
+          <div className="bg-ckc-card border border-white/10 rounded-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-cloud">Visitor Details</h2>
               <button onClick={() => setSelectedVisitor(null)} className="text-cloud/40 hover:text-cloud">
@@ -227,8 +227,8 @@ export default function VisitorsPage() {
               </button>
             </div>
             <div className="flex items-center gap-4 mb-5 pb-5 border-b border-white/10">
-              <div className="w-12 h-12 rounded-full bg-sky/10 flex items-center justify-center">
-                <span className="text-lg font-bold text-sky">{selectedVisitor.name.charAt(0)}</span>
+              <div className="w-12 h-12 rounded-full bg-ckc-gold/10 flex items-center justify-center">
+                <span className="text-lg font-bold text-ckc-gold">{selectedVisitor.name.charAt(0)}</span>
               </div>
               <div>
                 <p className="text-base font-bold text-cloud">{selectedVisitor.name}</p>
@@ -277,7 +277,7 @@ export default function VisitorsPage() {
             </div>
             <button
               onClick={() => setSelectedVisitor(null)}
-              className="w-full bg-sky text-slate-dark text-sm font-bold py-2.5 rounded-lg hover:bg-sky/90 transition-colors"
+              className="w-full bg-ckc-gold text-ckc-black text-sm font-bold py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors"
             >
               Close
             </button>

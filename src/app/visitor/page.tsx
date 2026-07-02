@@ -1,50 +1,67 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
-import { BRAND } from '@/lib/assets';
+import GetInvolvedFooter from '@/components/church-life/GetInvolvedFooter';
+import LifeHero from '@/components/church-life/LifeHero';
+import { type LifeHomeTile } from '@/lib/church-life/nav';
+import { getMemberMediaFeed } from '@/lib/sermons/service';
+import { getThumbnailUrl } from '@/lib/sermons/utils';
 
-const visitorLinks = [
-  { label: 'Sermons & Messages', href: '/member/sermons', icon: 'PlayCircleIcon', desc: 'Watch recent messages' },
-  { label: 'Upcoming Events', href: '/member/events', icon: 'CalendarDaysIcon', desc: 'See what is happening' },
-  { label: 'Church Info', href: '/member/church-info', icon: 'BuildingLibraryIcon', desc: 'Service times & location' },
-  { label: 'Daily Word', href: '/member/bible-study', icon: 'BookOpenIcon', desc: "Today's devotional" },
+const visitorTiles: LifeHomeTile[] = [
+  { label: 'Daily', accent: 'Word', href: '/member/bible-study', icon: 'BookOpenIcon', accentGold: true },
+  { label: 'Events', href: '/member/events', icon: 'CalendarDaysIcon', accentGold: false },
+  { label: 'Sermons', href: '/member/sermons', icon: 'PlayCircleIcon', accentGold: false },
+  { label: 'Church', accent: 'Info', href: '/member/church-info', icon: 'BuildingLibraryIcon', accentGold: true },
 ];
 
 export default function VisitorHomePage() {
+  const [heroImage, setHeroImage] = useState<string | undefined>();
+
+  useEffect(() => {
+    getMemberMediaFeed({ isVisitor: true }).then((sermons) => {
+      setHeroImage(getThumbnailUrl(sermons[0]) ?? undefined);
+    });
+  }, []);
+
   return (
     <AppShell access="visitor">
-      <div>
+      <div className="space-y-5">
         <span className="inline-block rounded px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-ckc-gold border border-ckc-gold/30 bg-ckc-gold/5">
           Visitor Access
         </span>
-        <h1 className="mt-2 text-2xl font-bold text-cloud tracking-tight">{BRAND.name}</h1>
-        <p className="text-cloud/40 text-sm mt-1">Welcome — explore our church resources</p>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {visitorLinks.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex items-start gap-3 p-4 rounded-2xl border border-white/10 bg-white/5 hover:border-ckc-gold/30 hover:bg-ckc-gold/5 transition-all group"
-          >
-            <div className="p-2 rounded-lg bg-ckc-gold/10 border border-ckc-gold/20">
-              <Icon name={item.icon} size={20} variant="outline" className="text-ckc-gold" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-cloud group-hover:text-ckc-gold transition-colors">{item.label}</p>
-              <p className="text-xs text-cloud/40 mt-0.5">{item.desc}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+        <LifeHero
+          imageUrl={heroImage}
+          titleLead="Latest"
+          titleRest="Messages"
+          href="/member/sermons"
+        />
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
-        <p className="text-xs text-cloud/40 mb-3">Want full member access?</p>
-        <p className="text-xs text-cloud/60">Ask your church admin for an invite, or call {BRAND.supportPhone}</p>
+        <div className="grid grid-cols-2 gap-3">
+          {visitorTiles.map((tile) => (
+            <Link key={tile.href} href={tile.href} className="life-grid-tile">
+              <Icon name={tile.icon} size={28} variant="outline" className="text-white" />
+              <p className="text-center text-sm font-semibold leading-tight">
+                {tile.accentGold && tile.label ? (
+                  <>
+                    <span className="text-ckc-gold">{tile.label}</span>
+                    {tile.accent ? <span className="text-white"> {tile.accent}</span> : null}
+                  </>
+                ) : (
+                  <span className="text-white">
+                    {tile.label}
+                    {tile.accent ? ` ${tile.accent}` : ''}
+                  </span>
+                )}
+              </p>
+            </Link>
+          ))}
+        </div>
+
+        <GetInvolvedFooter />
       </div>
     </AppShell>
   );

@@ -93,7 +93,7 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-ckc-card p-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-cloud">Send Invite</h2>
@@ -110,8 +110,8 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
 
         {sent ? (
           <div className="space-y-4">
-            <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 space-y-2">
-              <p className="text-sm font-semibold text-emerald-400">
+            <div className="rounded-xl border border-ckc-gold/20 bg-ckc-gold/10 p-4 space-y-2">
+              <p className="text-sm font-semibold text-ckc-gold">
                 {sent.emailError ? 'Invite created — copy link below' : 'Invite email sent'}
               </p>
               <p className="text-xs text-cloud/60">
@@ -119,8 +119,8 @@ export default function SendInvitePanel({ onClose, prefill }: SendInvitePanelPro
                 {sent.emailDemo ? ' (demo)' : ''}
               </p>
               {sent.emailError && (
-                <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200/90 space-y-1">
-                  <p className="font-semibold text-amber-300">Email not delivered (Resend test mode)</p>
+                <div className="rounded-lg border border-ckc-gold/30 bg-ckc-gold/10 p-3 text-xs text-ckc-gold/90 space-y-1">
+                  <p className="font-semibold text-ckc-gold">Email not delivered (Resend test mode)</p>
                   <p>{sent.emailError}</p>
                   <p>
                     Until you verify your church domain at{' '}

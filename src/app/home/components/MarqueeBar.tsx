@@ -19,12 +19,12 @@ export default function MarqueeBar() {
   const doubled = [...ITEMS, ...ITEMS];
 
   return (
-    <div className="border-y border-[rgba(100,116,139,0.2)] bg-slate-dark overflow-hidden py-4 relative z-20">
+    <div className="border-y border-[rgba(100,116,139,0.2)] bg-ckc-black overflow-hidden py-4 relative z-20">
       <div className="inline-flex animate-marquee whitespace-nowrap">
         {doubled?.map((item, i) => (
           <React.Fragment key={i}>
             <span className="font-mono text-[11px] uppercase tracking-widest text-admin px-6">{item}</span>
-            <span className="text-sky/40 text-xs">·</span>
+            <span className="text-ckc-gold/40 text-xs">·</span>
           </React.Fragment>
         ))}
       </div>

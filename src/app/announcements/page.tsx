@@ -84,7 +84,7 @@ export default function AnnouncementsPage() {
         </button>
       </div>
 
-      {!backend && <p className="text-amber-400 text-sm mb-4">Connect Supabase to manage announcements.</p>}
+      {!backend && <p className="text-ckc-gold text-sm mb-4">Connect Supabase to manage announcements.</p>}
 
       <div className="space-y-3">
         {items.map((a) => (
@@ -94,7 +94,7 @@ export default function AnnouncementsPage() {
                 <div className="flex gap-2 items-center">
                   <span className="text-[10px] uppercase text-ckc-gold">{a.category}</span>
                   <span className="text-[10px] text-cloud/30">· {getCampusLabel(a.campus)}</span>
-                  {a.visibility === 'church_wide' && <span className="text-[10px] text-sky">All campuses</span>}
+                  {a.visibility === 'church_wide' && <span className="text-[10px] text-ckc-gold">All campuses</span>}
                 </div>
                 <h3 className="font-bold text-cloud mt-1">{a.title}</h3>
                 <p className="text-xs text-cloud/40 mt-1 line-clamp-2">{a.content}</p>
@@ -105,7 +105,7 @@ export default function AnnouncementsPage() {
               </div>
               <div className="flex flex-col gap-1 shrink-0">
                 {a.status !== 'published' && (
-                  <button onClick={() => handlePublish(a.id)} className="text-xs text-emerald-400">Publish</button>
+                  <button onClick={() => handlePublish(a.id)} className="text-xs text-ckc-gold">Publish</button>
                 )}
                 <button onClick={() => handleDelete(a.id)} className="text-xs text-rose-400">Delete</button>
               </div>
@@ -119,7 +119,7 @@ export default function AnnouncementsPage() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-ckc-card p-6">
             <h2 className="text-lg font-bold text-cloud mb-4">New Announcement</h2>
             <div className="space-y-3">
               <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cloud" />

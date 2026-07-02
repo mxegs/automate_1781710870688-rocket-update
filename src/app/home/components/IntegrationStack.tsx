@@ -14,7 +14,7 @@ interface Integration {
 const INTEGRATIONS: Integration[] = [
   { name: 'Planning Center', category: 'ChMS', icon: '🗓', color: '#4F46E5', description: 'Scheduling, people, check-ins' },
   { name: 'Tithe.ly', category: 'Giving', icon: '💳', color: '#10B981', description: 'Online giving platform' },
-  { name: 'Breeze', category: 'ChMS', icon: '🌬', color: '#0EA5E9', description: 'Member management & giving' },
+  { name: 'Breeze', category: 'ChMS', icon: '🌬', color: '#C5A073', description: 'Member management & giving' },
   { name: 'Mailchimp', category: 'Email', icon: '📧', color: '#FFE01B', description: 'Email sequences & campaigns' },
   { name: 'Slack', category: 'Alerts', icon: '💬', color: '#4A154B', description: 'Staff notifications & alerts' },
   { name: 'Rock RMS', category: 'ChMS', icon: '🪨', color: '#EF4444', description: 'Full church management suite' },
@@ -53,7 +53,7 @@ export default function IntegrationStack() {
   }, []);
 
   return (
-    <section id="integrations" ref={sectionRef} className="py-28 px-6" style={{ background: '#0F172A' }}>
+    <section id="integrations" ref={sectionRef} className="py-28 px-6" style={{ background: '#0A0A0A' }}>
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -99,8 +99,8 @@ export default function IntegrationStack() {
               </div>
               <p className="text-admin text-xs leading-relaxed font-light">{integration.description}</p>
               <div className="flex items-center gap-1.5 mt-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-sky node-pulse" />
-                <span className="text-sky text-[10px] font-mono uppercase tracking-widest">Connected</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-ckc-gold node-pulse" />
+                <span className="text-ckc-gold text-[10px] font-mono uppercase tracking-widest">Connected</span>
               </div>
             </div>
           ))}
@@ -115,16 +115,16 @@ export default function IntegrationStack() {
               <div className="flex items-center gap-3">
                 <div className="flex gap-1.5">
                   <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-amber-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-ckc-gold/60" />
+                  <div className="w-3 h-3 rounded-full bg-ckc-gold-light/60" />
                 </div>
                 <span className="font-mono text-xs text-admin uppercase tracking-widest">
                   automate.pipeline — live
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-sky animate-pulse" />
-                <span className="font-mono text-[10px] text-sky uppercase tracking-widest">847 pipelines active</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-ckc-gold animate-pulse" />
+                <span className="font-mono text-[10px] text-ckc-gold uppercase tracking-widest">847 pipelines active</span>
               </div>
             </div>
 
@@ -136,7 +136,7 @@ export default function IntegrationStack() {
                   <React.Fragment key={i}>
                     <div className="flex-1 rounded-lg p-5 border border-[rgba(100,116,139,0.2)] relative"
                       style={{ background: 'rgba(30,41,59,0.5)' }}>
-                      <Icon name={step.icon} size={20} variant="outline" className="text-sky mb-3" />
+                      <Icon name={step.icon} size={20} variant="outline" className="text-ckc-gold mb-3" />
                       <div className="text-cloud font-semibold text-sm mb-1">{step.label}</div>
                       <div className="text-admin text-xs font-light leading-relaxed">{step.detail}</div>
                       <div className="absolute top-3 right-3">
@@ -146,11 +146,11 @@ export default function IntegrationStack() {
                     {i < FLOW_STEPS.length - 1 && (
                       <div className="flex items-center justify-center px-1 md:px-2 py-2 md:py-0">
                         <div className="hidden md:flex items-center">
-                          <div className="w-4 h-[1px] bg-sky/40" />
+                          <div className="w-4 h-[1px] bg-ckc-gold/40" />
                           <div className="w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-sky/60" />
                         </div>
                         <div className="md:hidden flex flex-col items-center">
-                          <div className="h-3 w-[1px] bg-sky/40" />
+                          <div className="h-3 w-[1px] bg-ckc-gold/40" />
                           <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-sky/60" />
                         </div>
                       </div>
@@ -164,7 +164,7 @@ export default function IntegrationStack() {
                 <div className="px-4 py-3 border-b border-[rgba(100,116,139,0.15)] flex items-center justify-between"
                   style={{ background: 'rgba(30,41,59,0.4)' }}>
                   <span className="font-mono text-[11px] text-admin uppercase tracking-widest">Recent Pipeline Triggers</span>
-                  <span className="font-mono text-[10px] text-sky">Live feed</span>
+                  <span className="font-mono text-[10px] text-ckc-gold">Live feed</span>
                 </div>
                 <div className="divide-y divide-[rgba(100,116,139,0.1)]">
                   {[
@@ -176,7 +176,7 @@ export default function IntegrationStack() {
                   ].map((log, i) => (
                     <div key={i} className="px-4 py-3 flex items-start gap-4 hover:bg-[rgba(100,116,139,0.04)] transition-colors">
                       <span className="font-mono text-[10px] text-admin/50 whitespace-nowrap mt-0.5">{log.time}</span>
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${log.status === 'success' ? 'bg-sky' : 'bg-amber-400'}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${log.status === 'success' ? 'bg-ckc-gold' : 'bg-ckc-gold-dim'}`} />
                       <div className="flex-1 min-w-0">
                         <span className="text-cloud text-xs font-semibold block">{log.event}</span>
                         <span className="text-admin text-[11px] font-light">{log.detail}</span>
@@ -196,7 +196,7 @@ export default function IntegrationStack() {
             <span className="text-cloud">Elvanto, ServiceU, Church Online Platform, Subsplash, Kindrid, Realm</span>
             {' '}and 30+ more.
           </p>
-          <a href="#demo" className="inline-flex items-center gap-2 text-sky text-sm font-semibold uppercase tracking-widest border-b border-sky/40 pb-1 hover:border-sky transition-all">
+          <a href="#demo" className="inline-flex items-center gap-2 text-ckc-gold text-sm font-semibold uppercase tracking-widest border-b border-ckc-gold/40 pb-1 hover:border-ckc-gold transition-all">
             See all integrations
             <Icon name="ArrowRightIcon" size={14} variant="outline" />
           </a>

@@ -113,7 +113,7 @@ function StatusCell({ status, note }: { status: StatusType; note: string }) {
 
       {/* Mobile tooltip */}
       {showTooltip && (
-        <div className="absolute bottom-full left-0 mb-2 z-30 bg-slate-dark border border-[rgba(100,116,139,0.4)] rounded p-3 text-xs text-cloud w-48 shadow-xl md:hidden">
+        <div className="absolute bottom-full left-0 mb-2 z-30 bg-ckc-black border border-[rgba(100,116,139,0.4)] rounded p-3 text-xs text-cloud w-48 shadow-xl md:hidden">
           {note}
         </div>
       )}
@@ -122,11 +122,11 @@ function StatusCell({ status, note }: { status: StatusType; note: string }) {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Finance: 'text-emerald-400',
-  Ops: 'text-sky',
+  Finance: 'text-ckc-gold',
+  Ops: 'text-ckc-gold',
   People: 'text-violet-400',
-  Outreach: 'text-amber-400',
-  Admin: 'text-rose-400',
+  Outreach: 'text-ckc-gold',
+  Admin: 'text-ckc-gold',
 };
 
 export default function ComparisonTable() {
@@ -192,7 +192,7 @@ export default function ComparisonTable() {
             { label: 'Integrations connected', value: '42+', icon: 'LinkIcon' as const },
           ].map((item, i) => (
             <div key={i} className="stat-card rounded-lg px-6 py-4 flex items-center gap-4">
-              <Icon name={item.icon} size={20} variant="outline" className="text-sky flex-shrink-0" />
+              <Icon name={item.icon} size={20} variant="outline" className="text-ckc-gold flex-shrink-0" />
               <div>
                 <div className="sky-number text-2xl">{item.value}</div>
                 <div className="text-admin text-xs mt-0.5">{item.label}</div>
@@ -212,10 +212,10 @@ export default function ComparisonTable() {
                 <span className="text-admin/70">Manual Process</span>
               </div>
               <div className="px-5 py-4 border-r border-[rgba(100,116,139,0.15)]">
-                <span className="text-amber-400/80">Zapier Patchwork</span>
+                <span className="text-ckc-gold/80">Zapier Patchwork</span>
               </div>
               <div className="px-5 py-4 border-r border-[rgba(100,116,139,0.15)]">
-                <span className="text-sky">Automate</span>
+                <span className="text-ckc-gold">Automate</span>
               </div>
               <div className="px-5 py-4 border-r border-[rgba(100,116,139,0.15)] whitespace-nowrap">Time Saved</div>
               <div className="px-5 py-4 whitespace-nowrap">Integrations</div>
@@ -265,8 +265,8 @@ export default function ComparisonTable() {
               {/* Integrations */}
               <div className="px-5 py-5 flex items-center">
                 <div className="flex items-center gap-1.5">
-                  <Icon name="LinkIcon" size={13} variant="outline" className="text-sky" />
-                  <span className="text-sky font-mono text-sm font-semibold">{row.integrations}</span>
+                  <Icon name="LinkIcon" size={13} variant="outline" className="text-ckc-gold" />
+                  <span className="text-ckc-gold font-mono text-sm font-semibold">{row.integrations}</span>
                 </div>
               </div>
             </div>
@@ -274,20 +274,20 @@ export default function ComparisonTable() {
 
           {/* Total row */}
           <div
-            className="grid grid-cols-[1.8fr_1.5fr_1.5fr_1.5fr_auto_auto] gap-0 border-t-2 border-sky/30"
+            className="grid grid-cols-[1.8fr_1.5fr_1.5fr_1.5fr_auto_auto] gap-0 border-t-2 border-ckc-gold/30"
             style={{ background: 'rgba(14,165,233,0.06)' }}
           >
             <div className="px-5 py-5 border-r border-[rgba(100,116,139,0.15)]">
-              <span className="text-sky font-bold text-sm uppercase tracking-widest font-mono">Total / week</span>
+              <span className="text-ckc-gold font-bold text-sm uppercase tracking-widest font-mono">Total / week</span>
             </div>
             <div className="px-5 py-5 border-r border-[rgba(100,116,139,0.15)]">
               <span className="text-admin/50 text-xs">~16 hrs lost</span>
             </div>
             <div className="px-5 py-5 border-r border-[rgba(100,116,139,0.15)]">
-              <span className="text-amber-400/70 text-xs">~6 hrs saved</span>
+              <span className="text-ckc-gold/70 text-xs">~6 hrs saved</span>
             </div>
             <div className="px-5 py-5 border-r border-[rgba(100,116,139,0.15)]">
-              <span className="text-sky font-semibold text-sm">All 8 automated</span>
+              <span className="text-ckc-gold font-semibold text-sm">All 8 automated</span>
             </div>
             <div className="px-5 py-5 border-r border-[rgba(100,116,139,0.15)]">
               <span className="sky-number text-lg">{totalTimeSaved} hrs</span>

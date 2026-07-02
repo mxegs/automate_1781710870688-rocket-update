@@ -22,10 +22,10 @@ import {
 import { getThumbnailUrl, getWatchUrl, visibilityLabel } from '@/lib/sermons/utils';
 
 const typeColors: Record<string, string> = {
-  Sermon: 'bg-sky/10 text-sky border-sky/20',
-  Audio: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
-  Book: 'bg-amber-500/10 text-amber-400 border-amber-400/20',
-  'Special Message': 'bg-purple-500/10 text-purple-400 border-purple-400/20',
+  Sermon: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Audio: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Book: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  'Special Message': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
 };
 
 interface SermonForm {
@@ -159,7 +159,7 @@ export default function AdminSermonsPage() {
   return (
     <AppShell access="staff">
       {notification && (
-        <div className="fixed top-4 right-4 z-50 bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 text-sm px-4 py-3 rounded-xl shadow-xl backdrop-blur-sm max-w-sm">
+        <div className="fixed top-4 right-4 z-50 bg-ckc-gold/20 border border-ckc-gold/30 text-ckc-gold text-sm px-4 py-3 rounded-xl shadow-xl backdrop-blur-sm max-w-sm">
           {notification}
         </div>
       )}
@@ -174,7 +174,7 @@ export default function AdminSermonsPage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-sky text-slate-dark font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-sky/90 transition-colors"
+          className="flex items-center gap-2 bg-ckc-gold text-ckc-black font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-ckc-gold/90 transition-colors"
         >
           <Icon name="PlusIcon" size={16} variant="outline" />
           Add Message
@@ -189,7 +189,7 @@ export default function AdminSermonsPage() {
             placeholder="Search sermons..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-cloud placeholder-cloud/30 focus:outline-none focus:border-sky/50 transition-colors"
+            className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2.5 text-sm text-cloud placeholder-cloud/30 focus:outline-none focus:border-ckc-gold/50 transition-colors"
           />
         </div>
         {allCampusAccess && (
@@ -210,7 +210,7 @@ export default function AdminSermonsPage() {
               onClick={() => setTypeFilter(t)}
               className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap ${
                 typeFilter === t
-                  ? 'bg-sky/10 text-sky border-sky/30'
+                  ? 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/30'
                   : 'bg-white/5 text-cloud/50 border-white/10 hover:text-cloud hover:border-white/20'
               }`}
             >
@@ -281,7 +281,7 @@ export default function AdminSermonsPage() {
                         )}
                         <button
                           onClick={() => handleDelete(sermon.id, sermon.title)}
-                          className="p-1.5 rounded-lg text-cloud/40 hover:text-rose-400 hover:bg-rose-500/5 transition-colors"
+                          className="p-1.5 rounded-lg text-cloud/40 hover:text-rose-400 hover:bg-ckc-gold/5 transition-colors"
                           aria-label="Delete"
                         >
                           <Icon name="TrashIcon" size={15} variant="outline" />
@@ -304,7 +304,7 @@ export default function AdminSermonsPage() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1E293B] border border-white/10 rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-ckc-card border border-white/10 rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-cloud">Add Message</h2>
               <button onClick={() => setShowAddModal(false)} className="text-cloud/40 hover:text-cloud">
@@ -321,7 +321,7 @@ export default function AdminSermonsPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud"
                   >
                     {CAMPUSES.map((c) => (
-                      <option key={c.id} value={c.id} className="bg-slate-800">{c.label}</option>
+                      <option key={c.id} value={c.id} className="bg-ckc-card">{c.label}</option>
                     ))}
                   </select>
                 </div>
@@ -333,7 +333,7 @@ export default function AdminSermonsPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud"
                   >
                     {VISIBILITY_OPTIONS.map((v) => (
-                      <option key={v.value} value={v.value} className="bg-slate-800">{v.label}</option>
+                      <option key={v.value} value={v.value} className="bg-ckc-card">{v.label}</option>
                     ))}
                   </select>
                 </div>
@@ -369,7 +369,7 @@ export default function AdminSermonsPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud"
                   >
                     {MEDIA_TYPES.map((t) => (
-                      <option key={t} className="bg-slate-800">{t}</option>
+                      <option key={t} className="bg-ckc-card">{t}</option>
                     ))}
                   </select>
                 </div>
@@ -381,7 +381,7 @@ export default function AdminSermonsPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-cloud"
                   >
                     {SERMON_CATEGORIES.map((c) => (
-                      <option key={c} className="bg-slate-800">{c}</option>
+                      <option key={c} className="bg-ckc-card">{c}</option>
                     ))}
                   </select>
                 </div>
@@ -448,7 +448,7 @@ export default function AdminSermonsPage() {
                 <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-white/5 border border-white/10 text-cloud/70 text-sm font-semibold py-2.5 rounded-lg">
                   Cancel
                 </button>
-                <button type="submit" disabled={saving} className="flex-1 bg-sky text-slate-dark text-sm font-bold py-2.5 rounded-lg disabled:opacity-60">
+                <button type="submit" disabled={saving} className="flex-1 bg-ckc-gold text-ckc-black text-sm font-bold py-2.5 rounded-lg disabled:opacity-60">
                   {saving ? 'Saving…' : 'Add Message'}
                 </button>
               </div>

@@ -35,7 +35,7 @@ export default function DemoCtaSection() {
 
   return (
     <section id="demo" ref={sectionRef} className="py-28 px-6 relative overflow-hidden noise-overlay"
-      style={{ background: 'linear-gradient(160deg, #0F172A 0%, #1E293B 60%, #0F172A 100%)' }}>
+      style={{ background: 'linear-gradient(160deg, #0A0A0A 0%, #1A1A1A 60%, #0A0A0A 100%)' }}>
       {/* Background grid */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -85,9 +85,9 @@ export default function DemoCtaSection() {
               <a
                 key={i}
                 href="#"
-                className="border border-[rgba(100,116,139,0.3)] rounded-lg p-4 text-left hover-lift transition-all duration-200 hover:border-sky/50 hover:bg-[rgba(14,165,233,0.05)] group"
+                className="border border-[rgba(100,116,139,0.3)] rounded-lg p-4 text-left hover-lift transition-all duration-200 hover:border-ckc-gold/50 hover:bg-[rgba(14,165,233,0.05)] group"
               >
-                <div className="text-cloud font-bold text-sm mb-1 group-hover:text-sky transition-colors">{size?.label}</div>
+                <div className="text-cloud font-bold text-sm mb-1 group-hover:text-ckc-gold transition-colors">{size?.label}</div>
                 <div className="text-admin text-[11px] font-light leading-snug">{size?.detail}</div>
               </a>
             ))}
@@ -109,17 +109,17 @@ export default function DemoCtaSection() {
         <div className="scroll-reveal" style={{ transitionDelay: '0.4s' }}>
           <div className="flex flex-wrap items-center justify-center gap-6 text-admin text-xs">
             <div className="flex items-center gap-2">
-              <Icon name="ShieldCheckIcon" size={14} variant="outline" className="text-sky" />
+              <Icon name="ShieldCheckIcon" size={14} variant="outline" className="text-ckc-gold" />
               <span>No credit card required</span>
             </div>
             <span className="text-admin/30">·</span>
             <div className="flex items-center gap-2">
-              <Icon name="ClockIcon" size={14} variant="outline" className="text-sky" />
+              <Icon name="ClockIcon" size={14} variant="outline" className="text-ckc-gold" />
               <span>Live demo in 60 seconds</span>
             </div>
             <span className="text-admin/30">·</span>
             <div className="flex items-center gap-2">
-              <Icon name="UserGroupIcon" size={14} variant="outline" className="text-sky" />
+              <Icon name="UserGroupIcon" size={14} variant="outline" className="text-ckc-gold" />
               <span>847 churches already automated</span>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function DemoCtaSection() {
         {/* Divider with quote */}
         <div className="scroll-reveal mt-20 border border-[rgba(100,116,139,0.2)] rounded-xl p-8"
           style={{ background: 'rgba(15,23,42,0.6)' }}>
-          <Icon name="ChatBubbleLeftRightIcon" size={20} variant="outline" className="text-sky mx-auto mb-4 opacity-60" />
+          <Icon name="ChatBubbleLeftRightIcon" size={20} variant="outline" className="text-ckc-gold mx-auto mb-4 opacity-60" />
           <p className="text-cloud text-lg font-light italic leading-relaxed mb-4">
             "I walked in Monday morning and the report was already in my inbox. 
             The follow-up emails had already gone. The giving was already reconciled. 

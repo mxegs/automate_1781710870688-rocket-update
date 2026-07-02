@@ -4,8 +4,8 @@ import Icon from '@/components/ui/AppIcon';
 
 export default function Footer() {
   const socialLinks = [
-    { href: 'https://facebook.com/churchconnect', label: 'Facebook', icon: 'GlobeAltIcon', color: 'hover:text-blue-400' },
-    { href: 'https://instagram.com/churchconnect', label: 'Instagram', icon: 'CameraIcon', color: 'hover:text-pink-400' },
+    { href: 'https://facebook.com/churchconnect', label: 'Facebook', icon: 'GlobeAltIcon', color: 'hover:text-ckc-gold' },
+    { href: 'https://instagram.com/churchconnect', label: 'Instagram', icon: 'CameraIcon', color: 'hover:text-ckc-gold' },
     { href: 'https://youtube.com/@churchconnect', label: 'YouTube', icon: 'PlayCircleIcon', color: 'hover:text-red-400' },
     { href: 'https://wa.me/27110000000', label: 'WhatsApp', icon: 'ChatBubbleLeftRightIcon', color: 'hover:text-green-400' },
   ];

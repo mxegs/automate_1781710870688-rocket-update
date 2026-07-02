@@ -56,7 +56,7 @@ export default function Header() {
       </nav>
       {/* Mobile menu */}
       <div
-        className={`fixed inset-0 z-40 bg-slate-dark flex flex-col justify-center items-center gap-8 transition-transform duration-500 ${
+        className={`fixed inset-0 z-40 bg-ckc-black flex flex-col justify-center items-center gap-8 transition-transform duration-500 ${
           menuOpen ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
@@ -65,7 +65,7 @@ export default function Header() {
             key={item}
             href={`#${item?.toLowerCase()}`}
             onClick={() => setMenuOpen(false)}
-            className="text-4xl font-bold uppercase tracking-tighter text-cloud hover:text-sky transition-colors"
+            className="text-4xl font-bold uppercase tracking-tighter text-cloud hover:text-ckc-gold transition-colors"
           >
             {item}
           </a>

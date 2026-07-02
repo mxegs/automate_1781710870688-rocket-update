@@ -61,9 +61,9 @@ function mapDbMember(row: {
 }
 
 const statusColors: Record<string, string> = {
-  Active: 'bg-emerald-500/10 text-emerald-400 border-emerald-400/20',
-  Suspended: 'bg-amber-500/10 text-amber-400 border-amber-400/20',
-  New: 'bg-sky/10 text-sky border-sky/20',
+  Active: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  Suspended: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
+  New: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
 };
 
 type Tab = 'members' | 'requests' | 'applications';

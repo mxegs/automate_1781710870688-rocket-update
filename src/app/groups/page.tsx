@@ -190,7 +190,7 @@ export default function GroupsAdminPage() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#1E293B] p-6">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-ckc-card p-6">
             <h2 className="mb-4 text-lg font-bold text-cloud">{editing ? 'Edit Group' : 'Create Group'}</h2>
             <div className="space-y-4">
               <div>

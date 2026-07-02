@@ -272,13 +272,13 @@ export default function BroadcastPage() {
             </Field>
 
             {mailchimpStatus && channel === 'email' && (
-              <p className={`text-xs ${mailchimpStatus.includes('connected') ? 'text-emerald-400' : 'text-cloud/40'}`}>
+              <p className={`text-xs ${mailchimpStatus.includes('connected') ? 'text-ckc-gold' : 'text-cloud/40'}`}>
                 {mailchimpStatus}
               </p>
             )}
 
             {result && (
-              <p className={`text-sm ${result.includes('failed') ? 'text-rose-400' : 'text-emerald-400'}`}>
+              <p className={`text-sm ${result.includes('failed') ? 'text-rose-400' : 'text-ckc-gold'}`}>
                 {result}
               </p>
             )}
