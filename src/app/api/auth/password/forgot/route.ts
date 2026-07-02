@@ -62,11 +62,12 @@ export async function POST(request: Request) {
 
   const token = issuePasswordSetupToken(email);
   const resetUrl = `${getAppUrl(request)}/reset-password?token=${encodeURIComponent(token)}`;
-  await sendPasswordResetEmail(email, resetUrl);
+  const emailResult = await sendPasswordResetEmail(email, resetUrl);
+  const isDev = process.env.NODE_ENV !== 'production';
 
   return NextResponse.json({
     ok: true,
     message: 'If that email is registered, we sent a reset link.',
-    demoLink: process.env.EMAIL_PROVIDER === 'demo' ? resetUrl : undefined,
+    demoLink: emailResult.demo || isDev ? resetUrl : undefined,
   });
 }

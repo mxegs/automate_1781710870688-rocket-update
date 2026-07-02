@@ -26,43 +26,40 @@ export default function EventDetailFooter({
   const isLight = theme === 'light';
 
   return (
-    <div className={`mt-5 pt-5 ${isLight ? 'border-t border-[#E5E5E5]' : 'border-t border-white/10'}`}>
+    <div className={`mt-3 pt-3 ${isLight ? 'border-t border-[#E5E5E5]' : 'border-t border-white/10'}`}>
       {isPaid ? (
-        <>
-          <p className={`text-3xl font-bold ${isLight ? 'text-ckc-black' : 'text-cloud'}`}>
-            {formatPrice(event.priceCents!, event.currency)}
-          </p>
-          <p className={`mt-1 text-xs ${isLight ? 'text-ckc-muted' : 'text-cloud/40'}`}>per person</p>
-        </>
+        <p className={`text-[19px] font-medium ${isLight ? 'text-ckc-black' : 'text-cloud'}`}>
+          {formatPrice(event.priceCents!, event.currency)}
+        </p>
       ) : (
-        <p className={`text-base font-bold ${isLight ? 'text-ckc-black' : 'text-cloud uppercase tracking-[0.25em]'}`}>
+        <p className={`text-base font-medium ${isLight ? 'text-ckc-black' : 'text-cloud uppercase tracking-[0.25em]'}`}>
           Free
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-3 flex items-center gap-1.5">
         <button
           type="button"
           onClick={onAction}
-          className="btn-life-primary flex-1 py-3.5 text-sm"
+          className="btn-life-primary flex-1 py-3 text-[13px]"
         >
           {actionLabel}
         </button>
         <button
           type="button"
           onClick={onSecondary}
-          className="btn-life-secondary flex h-12 w-12 items-center justify-center"
+          className="btn-life-secondary flex h-[38px] w-[38px] items-center justify-center"
           aria-label="Event options"
         >
-          <Icon name="AdjustmentsHorizontalIcon" size={18} variant="outline" />
+          <Icon name="AdjustmentsHorizontalIcon" size={15} variant="outline" />
         </button>
         <button
           type="button"
           onClick={onShare}
-          className="btn-life-secondary flex h-12 w-12 items-center justify-center"
+          className="btn-life-secondary flex h-[38px] w-[38px] items-center justify-center"
           aria-label="Share event"
         >
-          <Icon name="ShareIcon" size={18} variant="outline" />
+          <Icon name="ShareIcon" size={15} variant="outline" />
         </button>
       </div>
     </div>

@@ -25,21 +25,21 @@ export default function EventAccordionSection({
 
   if (isLight) {
     return (
-      <div className="life-event-block">
+      <div className="mb-1.5 rounded-[10px] bg-ckc-block px-3 py-2.5">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="flex w-full items-center justify-between text-left"
         >
-          <span className="text-sm font-semibold capitalize">{title}</span>
+          <span className="text-xs text-white">{title}</span>
           <Icon
-            name="ChevronUpIcon"
-            size={16}
+            name="ChevronDownIcon"
+            size={13}
             variant="outline"
-            className={`text-white/50 transition-transform ${open ? '' : 'rotate-180'}`}
+            className={`text-ckc-gold transition-transform ${open ? 'rotate-180' : ''}`}
           />
         </button>
-        {open && <div className="mt-3 text-sm leading-relaxed text-white/80">{children}</div>}
+        {open && <div className="mt-2 text-xs leading-relaxed text-white/80">{children}</div>}
       </div>
     );
   }

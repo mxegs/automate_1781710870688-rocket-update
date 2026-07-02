@@ -74,12 +74,12 @@ export default function MemberEventDetailPage() {
 
   return (
     <AppShell access="shared">
-      <div className="mx-auto max-w-lg">
+      <div className="life-section">
         <Link
           href="/member/events"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-ckc-muted hover:text-ckc-gold"
+          className="mb-2.5 inline-flex items-center gap-1 text-[11px] text-ckc-muted hover:text-ckc-gold"
         >
-          <Icon name="ArrowLeftIcon" size={14} variant="outline" />
+          <Icon name="ArrowLeftIcon" size={11} variant="outline" />
           Back to events
         </Link>
 

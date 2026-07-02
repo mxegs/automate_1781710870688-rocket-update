@@ -25,28 +25,32 @@ export default function EventDetailCard({
   const isLight = theme === 'light';
 
   return (
-    <article
-      className={
-        isLight
-          ? 'overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white'
-          : 'overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]'
-      }
-    >
+    <article className={isLight ? 'bg-white' : 'overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]'}>
       {event.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={event.imageUrl} alt={event.title} className="aspect-video w-full object-cover" />
+        <div className="px-3.5 pt-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={event.imageUrl}
+            alt={event.title}
+            className={`w-full object-cover ${isLight ? 'h-[130px] rounded-[10px]' : 'aspect-video rounded-none'}`}
+          />
+        </div>
       ) : (
-        <div
-          className={`flex aspect-video w-full items-center justify-center ${isLight ? 'bg-neutral-100' : 'bg-white/5'}`}
-        >
-          <Icon name="CalendarDaysIcon" size={48} variant="outline" className="text-ckc-muted/40" />
+        <div className={`px-3.5 pt-2.5 ${isLight ? '' : ''}`}>
+          <div
+            className={`flex w-full items-center justify-center ${
+              isLight ? 'h-[130px] rounded-[10px] bg-[#3a3a3a]' : 'aspect-video bg-white/5'
+            }`}
+          >
+            <Icon name="CalendarDaysIcon" size={48} variant="outline" className="text-ckc-muted/40" />
+          </div>
         </div>
       )}
 
-      <div className="p-5">
-        <h1 className={`text-2xl font-bold ${isLight ? 'text-ckc-black' : 'text-cloud'}`}>{event.title}</h1>
+      <div className="p-3.5">
+        <h1 className={`text-base font-medium ${isLight ? 'text-ckc-black' : 'text-cloud'}`}>{event.title}</h1>
 
-        <div className="mt-5">
+        <div className="mt-3">
           <EventDetailSections event={event} theme={theme} />
         </div>
 

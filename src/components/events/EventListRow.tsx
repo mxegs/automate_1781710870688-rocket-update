@@ -41,29 +41,29 @@ export default function EventListRow({
   }, [menuOpen]);
 
   const cardClass = isLight
-    ? 'rounded-xl border border-black/5 bg-ckc-card'
+    ? 'rounded-xl bg-ckc-card'
     : 'rounded-2xl border border-white/10 bg-white/[0.04]';
 
-  const dateBorder = isLight ? 'border-white/10' : 'border-white/10';
+  const dateBorder = isLight ? 'border-[#333]' : 'border-white/10';
   const actionButtonClass = isLight
-    ? 'rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-ckc-black hover:bg-ckc-white/90'
+    ? 'rounded-md bg-white px-2.5 py-1.5 text-[10px] font-medium text-ckc-black hover:bg-white/90'
     : 'rounded-full bg-cloud px-4 py-2 text-xs font-bold text-ckc-black hover:bg-white transition-colors';
 
   return (
-    <article className={`flex items-stretch overflow-hidden ${cardClass}`}>
-      <div className={`flex w-[72px] shrink-0 flex-col items-center justify-center border-r ${dateBorder} px-2 py-4`}>
-        <span className="font-serif-display text-2xl font-bold leading-none text-ckc-gold">{day}</span>
-        <span className="mt-1 text-[11px] font-bold tracking-wider text-white">{month}</span>
+    <article className={`flex items-center gap-2.5 overflow-hidden p-3 ${cardClass}`}>
+      <div className={`flex shrink-0 flex-col items-center border-r pr-2.5 ${dateBorder}`}>
+        <span className="font-serif-display text-xl font-normal leading-none text-ckc-gold">{day}</span>
+        <span className="mt-0.5 text-[9px] font-medium uppercase text-white">{month}</span>
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center px-4 py-3">
-        <h3 className="font-bold leading-snug line-clamp-2">
+      <div className="min-w-0 flex-1">
+        <h3 className="text-xs leading-snug">
           <span className="text-ckc-gold">{lead}</span>
-          {rest ? <span className="text-white"> {rest}</span> : null}
+          {rest ? <span className="font-medium text-white"> {rest}</span> : null}
         </h3>
       </div>
 
-      <div className="relative flex shrink-0 items-center border-l border-white/10 px-3" ref={menuRef}>
+      <div className="relative shrink-0" ref={menuRef}>
         {variant === 'member' ? (
           <Link href={`/member/events/${event.id}`} className={actionButtonClass}>
             Details

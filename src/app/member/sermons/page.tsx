@@ -98,94 +98,64 @@ export default function SermonsPage() {
 
   return (
     <AppShell access="shared">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-xl font-bold text-ckc-black">Messages & Sermons</h1>
-            <p className="text-ckc-muted text-sm mt-0.5">
-              {loading
-                ? 'Loading…'
-                : feedCampus
-                  ? `${getCampusLabel(feedCampus)} + all-church messages`
-                  : 'Church-wide messages for visitors'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg border transition-colors ${viewMode === 'grid' ? 'bg-ckc-gold/10 border-ckc-gold/20 text-ckc-gold' : 'bg-neutral-50 border-[#E5E5E5] text-ckc-muted hover:text-ckc-black'}`}
-            >
-              <Icon name="Squares2X2Icon" size={16} variant="outline" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg border transition-colors ${viewMode === 'list' ? 'bg-ckc-gold/10 border-ckc-gold/20 text-ckc-gold' : 'bg-neutral-50 border-[#E5E5E5] text-ckc-muted hover:text-ckc-black'}`}
-            >
-              <Icon name="ListBulletIcon" size={16} variant="outline" />
-            </button>
-          </div>
-        </div>
+      <div className="life-section space-y-3">
+        <h1 className="text-base font-medium text-ckc-black">Sermons and messages</h1>
 
-        {/* Search */}
-        <div className="relative">
-          <Icon name="MagnifyingGlassIcon" size={16} variant="outline" className="absolute left-3 top-1/2 -translate-y-1/2 text-ckc-muted/80" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title, preacher, series..."
-            className="w-full bg-neutral-50 border border-[#E5E5E5] rounded-xl pl-9 pr-4 py-3 text-sm text-ckc-black placeholder-cloud/20 focus:outline-none focus:border-ckc-gold/50 transition-colors"
-          />
-        </div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search sermons"
+          className="life-input"
+        />
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="bg-neutral-50 border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-ckc-black/70 focus:outline-none focus:border-ckc-gold/50 transition-colors">
-            <option value="All" className="bg-ckc-card">All Types</option>
-            <option value="Sermon" className="bg-ckc-card">Sermons</option>
-            <option value="Audio" className="bg-ckc-card">Audio</option>
-            <option value="Book" className="bg-ckc-card">Books</option>
-            <option value="Special Message" className="bg-ckc-card">Special Messages</option>
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[10px] ${
+              typeFilter !== 'All'
+                ? 'bg-ckc-gold-button text-ckc-gold-text'
+                : 'border border-[#E5E5E5] text-ckc-muted bg-white'
+            }`}
+          >
+            <option value="All">Type</option>
+            <option value="Sermon">Sermon</option>
+            <option value="Audio">Audio</option>
+            <option value="Book">Book</option>
+            <option value="Special Message">Special Message</option>
           </select>
-          <select value={preacherFilter} onChange={(e) => setPreacherFilter(e.target.value)} className="bg-neutral-50 border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-ckc-black/70 focus:outline-none focus:border-ckc-gold/50 transition-colors">
-            {preachers.map((p) => <option key={p} value={p} className="bg-ckc-card">{p === 'All' ? 'All Preachers' : p}</option>)}
+          <select
+            value={preacherFilter}
+            onChange={(e) => setPreacherFilter(e.target.value)}
+            className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[10px] ${
+              preacherFilter !== 'All'
+                ? 'bg-ckc-gold-button text-ckc-gold-text'
+                : 'border border-[#E5E5E5] text-ckc-muted bg-white'
+            }`}
+          >
+            {preachers.map((p) => (
+              <option key={p} value={p}>{p === 'All' ? 'Preacher' : p}</option>
+            ))}
           </select>
-          <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} className="bg-neutral-50 border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-ckc-black/70 focus:outline-none focus:border-ckc-gold/50 transition-colors">
-            {years.map((y) => <option key={y} value={y} className="bg-ckc-card">{y === 'All' ? 'All Years' : y}</option>)}
-          </select>
-          <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className="bg-neutral-50 border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-ckc-black/70 focus:outline-none focus:border-ckc-gold/50 transition-colors">
-            {months.map((m) => <option key={m} value={m} className="bg-ckc-card">{m === 'All' ? 'All Months' : m}</option>)}
-          </select>
-          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="bg-neutral-50 border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-ckc-black/70 focus:outline-none focus:border-ckc-gold/50 transition-colors">
-            {categories.map((c) => <option key={c} value={c} className="bg-ckc-card">{c === 'All' ? 'All Categories' : c}</option>)}
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[10px] ${
+              yearFilter !== 'All'
+                ? 'bg-ckc-gold-button text-ckc-gold-text'
+                : 'border border-[#E5E5E5] text-ckc-muted bg-white'
+            }`}
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y === 'All' ? 'Year' : y}</option>
+            ))}
           </select>
           {hasFilters && (
-            <button onClick={clearFilters} className="text-xs text-ckc-muted hover:text-rose-400 flex items-center gap-1 px-2 py-2 rounded-lg hover:bg-ckc-gold/5 transition-colors">
-              <Icon name="XMarkIcon" size={12} variant="outline" />
+            <button type="button" onClick={clearFilters} className="text-[10px] text-ckc-muted">
               Clear
             </button>
           )}
-          <span className="text-xs text-ckc-muted/80 ml-auto">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
-        </div>
-
-        {/* Type filter quick pills */}
-        <div className="flex gap-2 flex-wrap">
-          {['All', 'Sermon', 'Audio', 'Book', 'Special Message'].map((t) => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
-                typeFilter === t
-                  ? t === 'All' ? 'bg-ckc-gold/20 text-ckc-gold border-ckc-gold/30' :
-                    t === 'Sermon' ? 'bg-ckc-gold/20 text-ckc-gold border-ckc-gold/30' :
-                    t === 'Audio' ? 'bg-ckc-gold/20 text-ckc-gold border-ckc-gold/30' :
-                    t === 'Book'? 'bg-ckc-gold/20 text-ckc-gold border-ckc-gold/30' : 'bg-ckc-gold/20 text-ckc-gold border-ckc-gold/30' :'bg-neutral-50 text-ckc-muted border-[#E5E5E5] hover:border-ckc-gold/30 hover:text-ckc-muted'
-              }`}
-            >
-              {t === 'All' ? `All (${sermons.length})` : `${t} (${sermons.filter((s) => s.type === t).length})`}
-            </button>
-          ))}
         </div>
 
         {/* Results */}
@@ -199,9 +169,9 @@ export default function SermonsPage() {
           </div>
         ) : hasFilters ? (
           // Flat grid when filtering
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+          <div className="grid grid-cols-2 gap-2">
             {filtered.map((sermon) => (
-              <SermonCard key={sermon.id} sermon={sermon} viewMode={viewMode} onClick={() => setSelectedSermon(sermon)} />
+              <SermonCard key={sermon.id} sermon={sermon} viewMode="grid" onClick={() => setSelectedSermon(sermon)} />
             ))}
           </div>
         ) : (
@@ -326,34 +296,14 @@ function SermonCard({ sermon, viewMode, onClick }: { sermon: MediaItem; viewMode
   }
 
   return (
-    <button onClick={onClick} className="w-full bg-neutral-50 hover:bg-white/8 bg-neutral-50 border border-[#E5E5E5] hover:border-ckc-gold/20 rounded-xl overflow-hidden transition-all text-left group hover:scale-[1.01]">
-      <div className="relative aspect-video bg-black">
+    <button onClick={onClick} className="w-full text-left">
+      <div className="mb-1 h-[60px] rounded-lg bg-[#2a2a2a] overflow-hidden">
         {thumb ? (
-          <img src={thumb} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-neutral-50">
-            <Icon name="MusicalNoteIcon" size={32} variant="outline" className="text-ckc-black/20" />
-          </div>
-        )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
-          <div className="w-10 h-10 rounded-full bg-red-600/80 group-hover:bg-red-600 flex items-center justify-center transition-all group-hover:scale-110">
-            <Icon name="PlayIcon" size={16} variant="solid" className="text-white ml-0.5" />
-          </div>
-        </div>
-        <div className="absolute top-2 left-2">
-          <span className={`text-xs px-2 py-0.5 rounded-full border backdrop-blur-sm ${cfg?.color}`}>{sermon.type}</span>
-        </div>
-        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded font-mono">{sermon.duration}</div>
+          <img src={thumb} alt="" className="h-full w-full object-cover" />
+        ) : null}
       </div>
-      <div className="p-3">
-        <h3 className="text-ckc-black text-sm font-semibold leading-snug line-clamp-2 mb-1">{sermon.title}</h3>
-        {sermon.series && <p className="text-ckc-gold text-xs mb-1 truncate">{sermon.series}</p>}
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-ckc-muted text-xs truncate">{sermon.preacher}</p>
-          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${catColor}`}>{sermon.category}</span>
-        </div>
-        <p className="text-ckc-muted/80 text-xs mt-1">{sermon.date}</p>
-      </div>
+      <p className="text-[11px] text-ckc-black line-clamp-2">{sermon.title}</p>
+      <p className="text-[9px] text-ckc-muted">{sermon.preacher}</p>
     </button>
   );
 }

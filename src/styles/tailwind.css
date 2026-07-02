@@ -29,7 +29,9 @@
   --life-bg: #FFFFFF;
   --life-text: #0A0A0A;
   --life-border: #E5E5E5;
-  --life-page: #E8E8E8;
+  --life-page: #F4F4F2;
+  --life-content: #F7F7F5;
+  --ckc-gold-text: #412402;
 }
 
 html {
@@ -282,35 +284,140 @@ body {
 }
 
 /* Church Life — mobile-first light portal */
+.life-section {
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+}
+
 .life-hero {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
-  aspect-ratio: 16 / 10;
+  height: 130px;
+  background: #3a3a3a;
+}
+
+.life-home .life-hero {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+
+.life-home {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Latest Messages hero — 16:9 widescreen frame */
+.life-home-hero {
+  flex-shrink: 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.life-home-grid {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px;
+}
+
+.life-home-now-playing {
+  flex-shrink: 0;
+  padding: 0 16px 16px;
+}
+
+.life-now-playing-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  background: #f5f3ef;
+  padding: 12px 14px;
+}
+
+.life-home-footer {
+  display: flex;
+  margin-top: auto;
+  flex-shrink: 0;
+  flex-direction: column;
+  justify-content: center;
+  border-top: 0.5px solid var(--life-border);
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.life-home .life-grid-tile {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
 }
 
 .life-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.25));
 }
 
 .life-grid-tile {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  min-height: 7.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0;
+  height: 78px;
+  padding: 16px;
   border-radius: 12px;
   background: var(--ckc-card);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .life-grid-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+}
+
+.ckc-logo-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--ckc-gold);
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--ckc-gold);
+}
+
+.ckc-logo-circle-lg {
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 11px;
+}
+
+.life-input {
+  width: 100%;
+  font-size: 12px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: 0.5px solid var(--life-border);
+  background: var(--ckc-white);
+  color: var(--ckc-black);
+}
+
+.life-input:focus {
+  outline: none;
+  border-color: var(--ckc-gold);
+}
+
+.life-input::placeholder {
+  color: var(--ckc-muted);
 }
 
 .life-month-heading {
@@ -334,9 +441,9 @@ body {
 
 .btn-life-primary {
   background: var(--ckc-gold-button);
-  color: var(--ckc-black);
-  font-weight: 700;
-  border-radius: 12px;
+  color: var(--ckc-gold-text);
+  font-weight: 500;
+  border-radius: 8px;
   transition: opacity 0.2s ease;
 }
 
@@ -346,9 +453,19 @@ body {
 
 .btn-life-secondary {
   background: var(--ckc-white);
-  border: 1px solid var(--life-border);
+  border: 0.5px solid var(--life-border);
   color: var(--ckc-black);
-  border-radius: 12px;
+  border-radius: 7px;
+}
+
+.visitor-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--ckc-gold-text);
+  background: var(--ckc-gold-button);
+  padding: 3px 9px;
+  border-radius: 5px;
 }
 
 /* CKC auth & signup */
@@ -369,9 +486,10 @@ body {
 }
 
 .btn-ckc-gold {
-  background: linear-gradient(180deg, var(--ckc-gold-light) 0%, var(--ckc-gold) 100%);
-  color: var(--ckc-black);
-  font-weight: 700;
+  background: var(--ckc-gold-button);
+  color: var(--ckc-gold-text);
+  font-weight: 500;
+  border-radius: 8px;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 

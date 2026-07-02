@@ -6,7 +6,8 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import GetInvolvedFooter from '@/components/church-life/GetInvolvedFooter';
 import LifeHero from '@/components/church-life/LifeHero';
-import { lifeHomeTiles, type LifeHomeTile } from '@/lib/church-life/nav';
+import LifeNowPlaying from '@/components/church-life/LifeNowPlaying';
+import { lifeHomeTiles } from '@/lib/church-life/nav';
 import { getMemberEventsFeed } from '@/lib/events/service';
 import { getMemberMediaFeed } from '@/lib/sermons/service';
 import { resolveMemberCampus } from '@/lib/member/campus';
@@ -34,41 +35,50 @@ export default function MemberHomePage() {
 
   return (
     <AppShell>
-      <div className="space-y-5">
-        <LifeHero
-          imageUrl={heroImage}
-          titleLead="Latest"
-          titleRest="Messages"
-          href="/member/sermons"
-        />
+      <div className="life-home">
+        <div className="life-home-hero">
+          <LifeHero
+            imageUrl={heroImage}
+            titleLead="Latest"
+            titleRest="Messages"
+            href="/member/sermons"
+          />
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="life-home-grid">
           {lifeHomeTiles.map((tile) => (
             <Link key={tile.href} href={tile.href} className="life-grid-tile">
-              <Icon name={tile.icon} size={28} variant="outline" className="text-white" />
-              <p className="text-center text-sm font-semibold leading-tight">
+              <Icon name={tile.icon} size={18} variant="outline" className="text-ckc-gold" />
+              <p className="text-[13px] leading-tight">
                 {tile.accentGold && tile.label ? (
                   <>
                     <span className="text-ckc-gold">{tile.label}</span>
                     {tile.accent ? <span className="text-white"> {tile.accent}</span> : null}
                   </>
+                ) : tile.accentGold ? (
+                  <span className="text-ckc-gold">{tile.label}</span>
                 ) : (
-                  <span className="text-white">{tile.label}{tile.accent ? ` ${tile.accent}` : ''}</span>
+                  <span className="text-white">
+                    {tile.label}
+                    {tile.accent ? ` ${tile.accent}` : ''}
+                  </span>
                 )}
               </p>
             </Link>
           ))}
         </div>
 
-        {latestSermon && (
-          <div className="rounded-xl border border-[#E5E5E5] bg-neutral-50 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-ckc-gold">Now playing</p>
-            <p className="mt-1 font-bold text-ckc-black">{latestSermon.title}</p>
-            <p className="text-xs text-ckc-muted">{latestSermon.preacher} · {latestSermon.date}</p>
+        {latestSermon ? (
+          <div className="life-home-now-playing">
+            <LifeNowPlaying
+              title={latestSermon.title}
+              preacher={latestSermon.preacher}
+              href="/member/sermons"
+            />
           </div>
-        )}
+        ) : null}
 
-        <GetInvolvedFooter />
+        <GetInvolvedFooter fill />
       </div>
     </AppShell>
   );

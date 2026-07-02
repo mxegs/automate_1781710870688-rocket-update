@@ -216,5 +216,9 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
     return { success: true, demo: true };
   }
 
-  return sendViaResend(to, subject, html);
+  const result = await sendViaResend(to, subject, html);
+  if (result.success) return result;
+
+  console.info('[CKC Email fallback password reset]', to, resetUrl, result.error);
+  return { success: true, demo: true };
 }

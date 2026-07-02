@@ -32,31 +32,33 @@ export default function MemberEventsPage() {
 
   return (
     <AppShell access="shared">
-      <div className="space-y-6">
-        <LifeHero imageUrl={heroImage} titleLead="Upcoming" titleRest="Events" />
+      <div className="space-y-0">
+        <LifeHero imageUrl={heroImage} titleLead="Upcoming" titleRest="events" />
 
-        {!backend && (
-          <p className="text-sm text-ckc-muted">No events to show — your campus admin will add events soon.</p>
-        )}
+        <div className="bg-life-content px-3.5 py-3.5">
+          {!backend && (
+            <p className="text-sm text-ckc-muted">No events to show — your campus admin will add events soon.</p>
+          )}
 
-        {monthGroups.length > 0 ? (
-          <div className="space-y-8">
-            {monthGroups.map((group) => (
-              <section key={group.monthKey}>
-                <h2 className="life-month-heading">{group.monthLabel}</h2>
-                <div className="mt-4 space-y-3">
-                  {group.events.map((event) => (
-                    <EventListRow key={event.id} event={event} theme="light" />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        ) : (
-          backend && (
-            <p className="py-12 text-center text-ckc-muted">No upcoming events for your campus.</p>
-          )
-        )}
+          {monthGroups.length > 0 ? (
+            <div className="space-y-6">
+              {monthGroups.map((group) => (
+                <section key={group.monthKey}>
+                  <h2 className="life-month-heading">{group.monthLabel}</h2>
+                  <div className="mt-2.5 space-y-2">
+                    {group.events.map((event) => (
+                      <EventListRow key={event.id} event={event} theme="light" />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            backend && (
+              <p className="py-12 text-center text-ckc-muted">No upcoming events for your campus.</p>
+            )
+          )}
+        </div>
       </div>
     </AppShell>
   );

@@ -108,7 +108,7 @@ function LoginForm() {
   };
 
   return (
-    <AuthShell subtitle={isVisitor ? 'Visitor sign in' : 'Sign in'}>
+    <AuthShell title="Sign in" showLogo>
       <CkcCard>
         {sent ? (
           <div className="space-y-4 text-center">
