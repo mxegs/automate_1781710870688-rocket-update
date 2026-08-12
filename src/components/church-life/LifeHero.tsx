@@ -12,7 +12,7 @@ interface LifeHeroProps {
 
 export default function LifeHero({ imageUrl, titleLead, titleRest, href }: LifeHeroProps) {
   const inner = (
-    <div className="life-hero w-full">
+    <div className="life-hero h-full min-h-0 w-full">
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover grayscale" />
@@ -21,9 +21,9 @@ export default function LifeHero({ imageUrl, titleLead, titleRest, href }: LifeH
       )}
       <div className="life-hero-overlay" />
       <div className="absolute inset-0 flex items-center justify-center px-4 text-center">
-        <h2 className="text-2xl font-bold leading-tight sm:text-3xl">
-          <span className="text-ckc-gold">{titleLead}</span>
-          {titleRest ? <span className="text-white"> {titleRest}</span> : null}
+        <h2 className="text-[22px] font-medium leading-tight">
+          <span className="block text-ckc-gold">{titleLead}</span>
+          {titleRest ? <span className="block text-white">{titleRest}</span> : null}
         </h2>
       </div>
     </div>
@@ -31,7 +31,7 @@ export default function LifeHero({ imageUrl, titleLead, titleRest, href }: LifeH
 
   if (href) {
     return (
-      <Link href={href} className="block">
+      <Link href={href} className="block h-full min-h-0">
         {inner}
       </Link>
     );

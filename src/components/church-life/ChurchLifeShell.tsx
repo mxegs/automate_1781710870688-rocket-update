@@ -24,10 +24,10 @@ export default function ChurchLifeShell({
   return (
     <RouteGuard portal={portal} access={access}>
       {/* Desktop/tablet: centered phone-width column; always mobile layout */}
-      <div className="min-h-screen bg-[#E8E8E8]">
+      <div className="min-h-screen bg-life-page">
         <div
           data-portal="church-life"
-          className="relative mx-auto min-h-screen w-full max-w-life bg-white shadow-[0_0_40px_rgba(0,0,0,0.08)]"
+          className="relative mx-auto flex min-h-dvh w-full max-w-life flex-col bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_0_0_1px_#E5E5E5]"
         >
           <ChurchLifeHeader onMenuOpen={() => setMenuOpen(true)} homeHref={homeHref} />
           <ChurchLifeNavDrawer
@@ -36,7 +36,7 @@ export default function ChurchLifeShell({
             navItems={navItems}
             portalLabel={portalLabel}
           />
-          <main className="px-4 py-5 text-ckc-black">{children}</main>
+          <main className="flex min-h-0 flex-1 flex-col text-ckc-black">{children}</main>
         </div>
       </div>
     </RouteGuard>

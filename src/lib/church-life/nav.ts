@@ -39,8 +39,8 @@ export const lifeHomeTiles: LifeHomeTile[] = [
 ];
 
 export const lifeSocialLinks = [
-  { label: 'Facebook', href: 'https://facebook.com', icon: 'GlobeAltIcon' },
-  { label: 'Instagram', href: 'https://instagram.com', icon: 'CameraIcon' },
-  { label: 'YouTube', href: 'https://youtube.com', icon: 'PlayCircleIcon' },
-  { label: 'TikTok', href: 'https://tiktok.com', icon: 'MusicalNoteIcon' },
+  { label: 'Facebook', href: 'https://facebook.com', brand: 'facebook' as const },
+  { label: 'Instagram', href: 'https://instagram.com', brand: 'instagram' as const },
+  { label: 'YouTube', href: 'https://youtube.com', brand: 'youtube' as const },
+  { label: 'TikTok', href: 'https://tiktok.com', brand: 'tiktok' as const },
 ] as const;

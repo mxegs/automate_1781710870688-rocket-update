@@ -13,7 +13,7 @@ interface CkcFieldProps {
 export function CkcField({ label, required, optional, error, children }: CkcFieldProps) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-ckc-muted">
+      <label className="mb-1.5 block text-[10px] text-ckc-gold">
         {label}
         {required && <span className="text-ckc-gold"> *</span>}
         {optional && <span className="text-ckc-dim"> (optional)</span>}
