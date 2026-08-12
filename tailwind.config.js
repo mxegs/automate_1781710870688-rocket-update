@@ -21,6 +21,11 @@ module.exports = {
           'gold-button': '#D9B985',
           'gold-light': '#D4BC94',
           'gold-dim': '#8A7340',
+          'gold-text': '#412402',
+        },
+        life: {
+          page: '#F4F4F2',
+          content: '#F7F7F5',
         },
         slate: {
           DEFAULT: '#1A1A1A',

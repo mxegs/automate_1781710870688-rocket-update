@@ -28,40 +28,42 @@ export default function VisitorHomePage() {
 
   return (
     <AppShell access="visitor">
-      <div className="space-y-5">
-        <span className="inline-block rounded px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-ckc-gold border border-ckc-gold/30 bg-ckc-gold/5">
-          Visitor Access
-        </span>
+      <div className="life-home">
+        <div className="life-section shrink-0 pb-1 pt-2.5">
+          <span className="visitor-badge">Visitor access</span>
+        </div>
 
-        <LifeHero
-          imageUrl={heroImage}
-          titleLead="Latest"
-          titleRest="Messages"
-          href="/member/sermons"
-        />
+        <div className="life-home-hero">
+          <LifeHero
+            imageUrl={heroImage}
+            titleLead="Latest"
+            titleRest="Messages"
+            href="/member/sermons"
+          />
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="life-home-grid">
           {visitorTiles.map((tile) => (
             <Link key={tile.href} href={tile.href} className="life-grid-tile">
-              <Icon name={tile.icon} size={28} variant="outline" className="text-white" />
-              <p className="text-center text-sm font-semibold leading-tight">
+              <Icon name={tile.icon} size={18} variant="outline" className="text-ckc-gold" />
+              <p className="text-[13px] leading-tight text-white">
                 {tile.accentGold && tile.label ? (
                   <>
                     <span className="text-ckc-gold">{tile.label}</span>
-                    {tile.accent ? <span className="text-white"> {tile.accent}</span> : null}
+                    {tile.accent ? ` ${tile.accent}` : ''}
                   </>
                 ) : (
-                  <span className="text-white">
+                  <>
                     {tile.label}
                     {tile.accent ? ` ${tile.accent}` : ''}
-                  </span>
+                  </>
                 )}
               </p>
             </Link>
           ))}
         </div>
 
-        <GetInvolvedFooter />
+        <GetInvolvedFooter fill />
       </div>
     </AppShell>
   );

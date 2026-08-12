@@ -37,8 +37,15 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
     const viewMode = getViewMode(session);
 
     (async () => {
-      const led = await getGroupsLedBy(session.phone);
-      const leadsGroups = led.length > 0;
+      let leadsGroups = false;
+      if (access === 'group-leader') {
+        try {
+          const led = await getGroupsLedBy(session.phone);
+          leadsGroups = led.length > 0;
+        } catch {
+          leadsGroups = false;
+        }
+      }
 
       if (!canAccessRoute(session.role, pathname, viewMode, session.isSuperAdmin)) {
         router.replace(getPostLoginRoute(session.role, viewMode));
