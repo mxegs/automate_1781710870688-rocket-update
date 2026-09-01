@@ -16,6 +16,7 @@ export default function PendingApplicationsPanel() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SubmittedApplication | null>(null);
   const [reviewing, setReviewing] = useState(false);
+  const [error, setError] = useState('');
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -32,10 +33,13 @@ export default function PendingApplicationsPanel() {
 
   const handleReview = async (id: string, status: 'approved' | 'rejected') => {
     setReviewing(true);
+    setError('');
     try {
       await reviewApplication(id, status);
       setSelected(null);
       refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update application.');
     } finally {
       setReviewing(false);
     }
@@ -130,7 +134,9 @@ export default function PendingApplicationsPanel() {
               />
             </div>
 
-            <div className="flex flex-wrap gap-2 border-t border-white/10 px-5 py-4">
+            <div className="flex flex-col gap-2 border-t border-white/10 px-5 py-4">
+              {error && <p className="text-sm text-rose-400">{error}</p>}
+              <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 disabled={reviewing}
@@ -149,11 +155,15 @@ export default function PendingApplicationsPanel() {
               </button>
               <button
                 type="button"
-                onClick={() => setSelected(null)}
+                onClick={() => {
+                  setError('');
+                  setSelected(null);
+                }}
                 className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-cloud/50 hover:text-cloud"
               >
                 Close
               </button>
+              </div>
             </div>
           </div>
         </div>

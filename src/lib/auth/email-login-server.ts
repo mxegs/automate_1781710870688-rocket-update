@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { normalizeEmail } from '@/lib/auth/super-admin';
+import { getMemberStatusForEmail, isLoginBlockedMemberStatus } from '@/lib/members/status-server';
 
 export type EmailOtpPurpose = 'login' | 'invite';
 
@@ -42,6 +43,13 @@ export async function resolveEmailOtpPurpose(
     .maybeSingle();
 
   if (profile?.email && profile.role !== 'visitor') {
+    const memberStatus = await getMemberStatusForEmail(db, normalized);
+    if (isLoginBlockedMemberStatus(memberStatus)) {
+      return {
+        ok: false,
+        error: 'Your membership is suspended. Contact your campus admin.',
+      };
+    }
     return { ok: true, purpose: 'login' };
   }
 

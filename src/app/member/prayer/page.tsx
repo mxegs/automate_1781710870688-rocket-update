@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { submitPrayerRequest } from '@/lib/prayer/service';
-import { PRAYER_AUTO_REPLY, PRAYER_CATEGORIES } from '@/lib/prayer/types';
+import { PRAYER_CATEGORIES } from '@/lib/prayer/types';
 import { getDisplayName, getSession } from '@/lib/auth/session';
 import { resolveMemberCampus } from '@/lib/member/campus';
 import { useBackend } from '@/lib/api/client';
@@ -48,21 +48,22 @@ export default function MemberPrayerPage() {
 
     setLoading(true);
     try {
-      if (backend) {
-        const result = await submitPrayerRequest({
-          campus,
-          submitterName: getDisplayName(session),
-          contactPhone: form.contactPhone.trim() || undefined,
-          contactEmail: form.contactEmail.trim() || undefined,
-          title: form.title.trim(),
-          description: form.description.trim(),
-          category: form.category,
-          isConfidential: form.isConfidential,
-        });
-        setAutoReply(result.autoReply);
-      } else {
-        setAutoReply(PRAYER_AUTO_REPLY);
+      if (!backend) {
+        setError('Prayer requests are unavailable right now. Please try again later.');
+        return;
       }
+
+      const result = await submitPrayerRequest({
+        campus,
+        submitterName: getDisplayName(session),
+        contactPhone: form.contactPhone.trim() || undefined,
+        contactEmail: form.contactEmail.trim() || undefined,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category: form.category,
+        isConfidential: form.isConfidential,
+      });
+      setAutoReply(result.autoReply);
       setSubmitted(true);
       setForm({
         title: '',
@@ -80,7 +81,7 @@ export default function MemberPrayerPage() {
   };
 
   return (
-    <AppShell access="shared">
+    <AppShell access="member">
       <div className="life-section">
         <h1 className="mb-3 text-base font-medium text-ckc-black">Submit a prayer request</h1>
 

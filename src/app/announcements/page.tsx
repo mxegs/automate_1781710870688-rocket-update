@@ -39,10 +39,17 @@ export default function AnnouncementsPage() {
   const [items, setItems] = useState<Announcement[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<AnnouncementInput>(emptyForm);
+  const [actionError, setActionError] = useState('');
+  const [saving, setSaving] = useState(false);
   const backend = useBackend();
 
   const load = async () => {
-    setItems(await getAdminAnnouncements({ allCampuses: true }));
+    try {
+      setItems(await getAdminAnnouncements({ allCampuses: true }));
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not load announcements.');
+      setItems([]);
+    }
   };
 
   useEffect(() => {
@@ -51,21 +58,39 @@ export default function AnnouncementsPage() {
 
   const handleSave = async (status: AnnouncementStatus) => {
     if (!form.title.trim() || !form.content.trim()) return;
-    await createAnnouncement({ ...form, status, publishAt: form.publishAt || undefined });
-    setShowModal(false);
-    setForm(emptyForm);
-    load();
+    setSaving(true);
+    setActionError('');
+    try {
+      await createAnnouncement({ ...form, status, publishAt: form.publishAt || undefined });
+      setShowModal(false);
+      setForm(emptyForm);
+      load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not save announcement.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handlePublish = async (id: string) => {
-    await updateAnnouncement(id, { status: 'published' });
-    load();
+    setActionError('');
+    try {
+      await updateAnnouncement(id, { status: 'published' });
+      load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not publish announcement.');
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete announcement?')) return;
-    await deleteAnnouncement(id);
-    load();
+    setActionError('');
+    try {
+      await deleteAnnouncement(id);
+      load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not delete announcement.');
+    }
   };
 
   return (
@@ -85,6 +110,7 @@ export default function AnnouncementsPage() {
       </div>
 
       {!backend && <p className="text-ckc-gold text-sm mb-4">Connect Supabase to manage announcements.</p>}
+      {actionError && <p className="mb-4 text-sm text-rose-400">{actionError}</p>}
 
       <div className="space-y-3">
         {items.map((a) => (
@@ -159,10 +185,28 @@ export default function AnnouncementsPage() {
               </label>
             </div>
             <div className="mt-6 flex gap-2">
-              <button onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm text-cloud/60">Cancel</button>
-              <button onClick={() => handleSave('draft')} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm text-cloud/60">Save Draft</button>
-              <button onClick={() => handleSave(form.publishAt ? 'scheduled' : 'published')} className="flex-1 rounded-lg bg-ckc-gold py-2.5 text-sm font-bold text-ckc-black">
-                {form.publishAt ? 'Schedule' : 'Publish'}
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setActionError('');
+                }}
+                className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm text-cloud/60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSave('draft')}
+                disabled={saving}
+                className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm text-cloud/60 disabled:opacity-50"
+              >
+                Save Draft
+              </button>
+              <button
+                onClick={() => handleSave(form.publishAt ? 'scheduled' : 'published')}
+                disabled={saving}
+                className="flex-1 rounded-lg bg-ckc-gold py-2.5 text-sm font-bold text-ckc-black disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : form.publishAt ? 'Schedule' : 'Publish'}
               </button>
             </div>
           </div>

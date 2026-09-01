@@ -351,7 +351,7 @@ export function clearInviteSession(): void {
 }
 
 export function getPostLoginRoute(role: UserRole, viewMode?: ViewMode): string {
-  if (role === 'visitor') return '/visitor';
+  if (role === 'visitor') return '/member/church-info';
   if (viewMode === 'member') return '/member';
   if (role === 'member') return '/member';
   if (role === 'leader') return '/my-groups';

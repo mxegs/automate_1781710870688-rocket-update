@@ -19,14 +19,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Enter a valid email address.' }, { status: 400 });
   }
 
-  // Never expose whether super-admin exists — same response as unknown email
-  if (isSuperAdminEmail(email)) {
-    return NextResponse.json({
-      ok: true,
-      message: 'If that email is registered, we sent a reset link.',
-    });
-  }
-
   const { data: profile } = await db
     .from('profiles')
     .select('id, email, password_hash, role')
@@ -46,28 +38,30 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!resolved?.email) {
+  // Same public message whether the account exists or is super-admin.
+  // Super-admin still gets a real reset token (email + local demo link).
+  if (!resolved?.email && !isSuperAdminEmail(email)) {
     return NextResponse.json({
       ok: true,
       message: 'If that email is registered, we sent a reset link.',
     });
   }
 
-  if (resolved.role === 'super_admin') {
+  try {
+    const token = await issuePasswordSetupToken(db, email);
+    const resetUrl = `${getAppUrl(request)}/reset-password?token=${encodeURIComponent(token)}`;
+    const emailResult = await sendPasswordResetEmail(email, resetUrl);
+    const isDev = process.env.NODE_ENV !== 'production';
+
     return NextResponse.json({
       ok: true,
       message: 'If that email is registered, we sent a reset link.',
+      demoLink: emailResult.demo || isDev ? resetUrl : undefined,
     });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Could not create reset link' },
+      { status: 500 },
+    );
   }
-
-  const token = issuePasswordSetupToken(email);
-  const resetUrl = `${getAppUrl(request)}/reset-password?token=${encodeURIComponent(token)}`;
-  const emailResult = await sendPasswordResetEmail(email, resetUrl);
-  const isDev = process.env.NODE_ENV !== 'production';
-
-  return NextResponse.json({
-    ok: true,
-    message: 'If that email is registered, we sent a reset link.',
-    demoLink: emailResult.demo || isDev ? resetUrl : undefined,
-  });
 }

@@ -54,6 +54,7 @@ export default function EventsPage() {
   const [rsvps, setRsvps] = useState<EventRsvp[]>([]);
   const [campusFilter, setCampusFilter] = useState<CampusId | 'all'>('all');
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const backend = useBackend();
 
   const session = getSession();
@@ -77,12 +78,14 @@ export default function EventsPage() {
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setFormError('');
     setShowFormModal(true);
   };
 
   const openEdit = (event: ChurchEvent) => {
     setEditingId(event.id);
     setForm(churchEventToInput(event));
+    setFormError('');
     setShowFormModal(true);
   };
 
@@ -90,11 +93,13 @@ export default function EventsPage() {
     setShowFormModal(false);
     setEditingId(null);
     setForm(emptyForm);
+    setFormError('');
   };
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.startsAt) return;
     setSaving(true);
+    setFormError('');
     try {
       if (editingId) {
         await updateEvent(editingId, form);
@@ -103,6 +108,8 @@ export default function EventsPage() {
       }
       closeFormModal();
       load();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not save event.');
     } finally {
       setSaving(false);
     }
@@ -110,10 +117,14 @@ export default function EventsPage() {
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
-    await deleteEvent(id);
-    if (selected?.id === id) setSelected(null);
-    if (editingId === id) closeFormModal();
-    load();
+    try {
+      await deleteEvent(id);
+      if (selected?.id === id) setSelected(null);
+      if (editingId === id) closeFormModal();
+      load();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Could not delete event.');
+    }
   };
 
   const openRsvps = async (event: ChurchEvent) => {
@@ -279,6 +290,7 @@ export default function EventsPage() {
               {editingId ? 'Edit Event' : 'Create Event'}
             </h2>
             <EventFormFields form={form} onChange={setForm} eventId={editingId ?? undefined} />
+            {formError && <p className="mt-3 text-sm text-rose-400">{formError}</p>}
             <div className="mt-6 flex gap-3">
               <button
                 onClick={closeFormModal}

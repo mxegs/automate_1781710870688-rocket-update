@@ -41,18 +41,30 @@ export default function SermonsPage() {
 
   useEffect(() => {
     const session = getSession();
-    if (!session) return;
-    const isVisitor = session.role === 'visitor';
-    fetchProfileByPhone(session.phone).then(async (profile) => {
-      const campus = (profile?.campusId as CampusId) ?? 'midrand';
-      setFeedCampus(isVisitor ? null : campus);
-      const items = await getMemberMediaFeed({
-        memberCampus: isVisitor ? undefined : campus,
-        isVisitor,
-      });
-      setSermons(items);
-      setLoading(false);
-    });
+    const isGuest = !session || session.role === 'visitor';
+
+    if (isGuest) {
+      getMemberMediaFeed({ isVisitor: true })
+        .then((items) => {
+          setFeedCampus(null);
+          setSermons(items);
+        })
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    fetchProfileByPhone(session.phone)
+      .then(async (profile) => {
+        const campus = (profile?.campusId as CampusId) ?? 'midrand';
+        setFeedCampus(campus);
+        const items = await getMemberMediaFeed({
+          memberCampus: campus,
+          isVisitor: false,
+        });
+        setSermons(items);
+      })
+      .catch(() => setSermons([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const preachers = ['All', ...Array.from(new Set(sermons.map((s) => s.preacher)))];
@@ -199,7 +211,9 @@ export default function SermonsPage() {
       </div>
 
       {/* Sermon Detail Modal */}
-      {selectedSermon && (
+      {selectedSermon && (() => {
+        const watchUrl = getWatchUrl(selectedSermon);
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedSermon(null)}>
           <div className="bg-ckc-black bg-neutral-50 border border-[#E5E5E5] rounded-2xl w-full max-w-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* YouTube Thumbnail */}
@@ -215,16 +229,18 @@ export default function SermonsPage() {
                   <Icon name="MusicalNoteIcon" size={48} variant="outline" className="text-ckc-black/20" />
                 </div>
               )}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <a
-                  href={getWatchUrl(selectedSermon) ?? '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-16 h-16 rounded-full bg-red-600/90 hover:bg-red-600 flex items-center justify-center transition-all hover:scale-110 shadow-2xl"
-                >
-                  <Icon name="PlayIcon" size={24} variant="solid" className="text-white ml-1" />
-                </a>
-              </div>
+              {watchUrl ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <a
+                    href={watchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-16 h-16 rounded-full bg-red-600/90 hover:bg-red-600 flex items-center justify-center transition-all hover:scale-110 shadow-2xl"
+                  >
+                    <Icon name="PlayIcon" size={24} variant="solid" className="text-white ml-1" />
+                  </a>
+                </div>
+              ) : null}
               <button onClick={() => setSelectedSermon(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white/70 hover:text-white">
                 <Icon name="XMarkIcon" size={16} variant="outline" />
               </button>
@@ -246,19 +262,24 @@ export default function SermonsPage() {
                 <span className="flex items-center gap-1"><Icon name="ClockIcon" size={12} variant="outline" />{selectedSermon.duration}</span>
                 <span className={`px-2 py-0.5 rounded-full ${categoryColors[selectedSermon.category] || 'bg-neutral-50 text-ckc-muted'}`}>{selectedSermon.category}</span>
               </div>
-              <a
-                href={getWatchUrl(selectedSermon) ?? '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 w-full flex items-center justify-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 font-semibold text-sm py-2.5 rounded-xl transition-all"
-              >
-                <Icon name="PlayCircleIcon" size={16} variant="outline" />
-                {selectedSermon.youtubeId ? 'Watch on YouTube' : 'Open link'}
-              </a>
+              {watchUrl ? (
+                <a
+                  href={watchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 w-full flex items-center justify-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 font-semibold text-sm py-2.5 rounded-xl transition-all"
+                >
+                  <Icon name="PlayCircleIcon" size={16} variant="outline" />
+                  {selectedSermon.youtubeId ? 'Watch on YouTube' : 'Open link'}
+                </a>
+              ) : (
+                <p className="mt-4 text-center text-xs text-ckc-muted">No video link available for this message yet.</p>
+              )}
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </AppShell>
   );
 }

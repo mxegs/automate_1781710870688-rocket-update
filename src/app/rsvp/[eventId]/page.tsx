@@ -21,12 +21,40 @@ export default function RsvpPortalPage() {
   const params = useParams();
   const eventId = params.eventId as string;
   const [event, setEvent] = useState<ChurchEvent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [visitorProfile, setVisitorProfile] = useState<VisitorEventProfile | null>(null);
   const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
-    getEventById(eventId).then(setEvent);
+    let cancelled = false;
+    setLoading(true);
+    setLoadError('');
+    setEvent(null);
     setVisitorProfile(getVisitorEventProfile());
+
+    getEventById(eventId)
+      .then((found) => {
+        if (cancelled) return;
+        if (!found) {
+          setLoadError('This event link is invalid or the event is no longer available.');
+          setEvent(null);
+          return;
+        }
+        setEvent(found);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError('Could not load this event. Please try again later.');
+        setEvent(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [eventId]);
 
   const visitorReady = hasCompleteVisitorEventProfile(visitorProfile);
@@ -52,11 +80,25 @@ export default function RsvpPortalPage() {
         </header>
 
         <main className="px-4 py-5 text-ckc-black">
-          {!event ? (
+          {loading ? (
             <p className="text-center text-ckc-muted">Loading…</p>
+          ) : loadError || !event ? (
+            <div className="py-10 text-center space-y-3">
+              <Icon name="ExclamationCircleIcon" size={28} variant="outline" className="mx-auto text-ckc-gold" />
+              <p className="text-sm text-ckc-black font-medium">Event not found</p>
+              <p className="text-xs text-ckc-muted leading-relaxed px-4">
+                {loadError || 'This event link is invalid or the event is no longer available.'}
+              </p>
+              <Link href="/member/church-info" className="inline-block text-sm text-ckc-gold hover:underline">
+                Back to church info
+              </Link>
+            </div>
           ) : (
             <>
-              <Link href="/login" className="mb-4 inline-flex items-center gap-1 text-sm text-ckc-muted hover:text-ckc-gold">
+              <Link
+                href="/member/church-info"
+                className="mb-4 inline-flex items-center gap-1 text-sm text-ckc-muted hover:text-ckc-gold"
+              >
                 <Icon name="ArrowLeftIcon" size={14} variant="outline" />
                 Church app home
               </Link>
@@ -74,7 +116,7 @@ export default function RsvpPortalPage() {
 
       {showRegister && event && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
-          <div className="max-h-[85vh] w-full max-w-life overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-6">
+          <div className="rsvp-light max-h-[85vh] w-full max-w-life overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-6">
             <div className="mb-4 flex items-start justify-between">
               <h2 className="text-lg font-bold text-ckc-black">
                 {!visitorReady ? 'Visitor sign-up' : 'RSVP'}

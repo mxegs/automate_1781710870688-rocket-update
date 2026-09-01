@@ -26,16 +26,27 @@ export default function MemberEventDetailPage() {
   const [showRegister, setShowRegister] = useState(false);
   const [visitorProfile, setVisitorProfile] = useState<VisitorEventProfile | null>(null);
   const session = getSession();
-  const isVisitor = session?.role === 'visitor';
+  const isVisitor = !session || session.role === 'visitor';
 
   useEffect(() => {
-    getEventById(eventId).then((e) => {
-      setEvent(e);
-      setLoading(false);
-    });
+    let cancelled = false;
+    setLoading(true);
+    getEventById(eventId)
+      .then((e) => {
+        if (!cancelled) setEvent(e);
+      })
+      .catch(() => {
+        if (!cancelled) setEvent(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     if (isVisitor) {
       setVisitorProfile(getVisitorEventProfile());
     }
+    return () => {
+      cancelled = true;
+    };
   }, [eventId, isVisitor]);
 
   const handleShare = async () => {
@@ -93,7 +104,7 @@ export default function MemberEventDetailPage() {
 
       {showRegister && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
-          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-xl">
+          <div className="rsvp-light max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-start justify-between">
               <h2 className="text-lg font-bold text-ckc-black">
                 {isVisitor && !visitorReady ? 'Visitor sign-up' : registerLabel}

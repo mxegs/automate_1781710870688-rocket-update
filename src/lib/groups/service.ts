@@ -90,12 +90,18 @@ export async function getGroupById(id: string): Promise<ChurchGroup | null> {
 
 export async function getGroupsLedBy(phone: string): Promise<ChurchGroup[]> {
   const normalized = normalizePhone(phone);
+  // Empty / incomplete phone must never match (endsWith('') matches every leader)
+  if (!normalized || normalized.length < 9) {
+    return [];
+  }
+
   const all = await getAllGroups();
-  return all.filter(
-    (g) =>
-      normalizePhone(g.leaderPhone) === normalized ||
-      g.leaderPhone.endsWith(normalized.slice(-9)),
-  );
+  const tail = normalized.slice(-9);
+  return all.filter((g) => {
+    const leader = normalizePhone(g.leaderPhone);
+    if (!leader) return false;
+    return leader === normalized || leader.endsWith(tail);
+  });
 }
 
 export function canManageGroups(role: string): boolean {

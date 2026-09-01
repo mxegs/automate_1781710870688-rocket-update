@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
@@ -20,6 +20,13 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isVisitor = searchParams.get('mode') === 'visitor';
+
+  // Old visitor sign-in URL → public church info (no login)
+  useEffect(() => {
+    if (isVisitor) {
+      router.replace('/member/church-info');
+    }
+  }, [isVisitor, router]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,9 +66,28 @@ function LoginForm() {
       return;
     }
 
-    if (!isVisitor && !(await isRegisteredMemberEmail(normalizedEmail))) {
-      setError('This email is not registered yet. Request a membership invite first.');
-      return;
+    if (!isVisitor) {
+      try {
+        const opts = await checkEmailLoginOptions(normalizedEmail);
+        if (opts.suspended) {
+          setError(opts.message || 'This membership is suspended. Contact your campus admin.');
+          return;
+        }
+        if (!opts.registered) {
+          setError(
+            opts.message ||
+              (opts.pendingInvite
+                ? 'You have a pending invite. Open the invite link from your email to finish joining — then you can sign in here.'
+                : 'This email is not registered yet. Request a membership invite first.'),
+          );
+          return;
+        }
+      } catch {
+        if (!(await isRegisteredMemberEmail(normalizedEmail))) {
+          setError('This email is not registered yet. Request a membership invite first.');
+          return;
+        }
+      }
     }
 
     setError('');
@@ -247,11 +273,10 @@ function LoginForm() {
             New here? Request membership →
           </Link>
         )}
-        {!isVisitor ? (
-          <Link href="/login?mode=visitor" className="block text-ckc-muted hover:text-ckc-gold">
-            Just visiting? Continue as visitor →
-          </Link>
-        ) : (
+        <Link href="/member/church-info" className="block text-ckc-muted hover:text-ckc-gold">
+          Just visiting? Learn about CKC →
+        </Link>
+        {isVisitor && (
           <Link href="/login" className="block text-ckc-muted hover:text-ckc-gold">
             Member or staff? Sign in here →
           </Link>

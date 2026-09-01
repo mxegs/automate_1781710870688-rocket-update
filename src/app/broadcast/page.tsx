@@ -40,6 +40,7 @@ export default function BroadcastPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [mailchimpStatus, setMailchimpStatus] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState('');
 
   const campusLocked = Boolean(campusScope) && !isLeader && !churchWide;
 
@@ -88,15 +89,17 @@ export default function BroadcastPage() {
   );
 
   const refreshCount = async () => {
+    setPreviewError('');
     try {
       const preview = await previewBroadcast(filters);
       setCount(preview.count);
       setSmsCount(preview.smsCount);
       setEmailCount(preview.emailCount);
-    } catch {
+    } catch (err) {
       setCount(0);
       setSmsCount(0);
       setEmailCount(0);
+      setPreviewError(err instanceof Error ? err.message : 'Could not load audience preview.');
     }
   };
 
@@ -225,6 +228,7 @@ export default function BroadcastPage() {
             <div className="rounded-lg border border-ckc-gold/20 bg-ckc-gold/10 px-3 py-2 text-xs text-ckc-gold">
               <p>{count} people in audience</p>
               <p className="mt-1 text-ckc-gold/80">{smsCount} with phone · {emailCount} with email</p>
+              {previewError && <p className="mt-2 text-rose-400">{previewError}</p>}
             </div>
           </div>
         </ContentCard>

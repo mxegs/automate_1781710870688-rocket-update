@@ -28,10 +28,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Setup token is required' }, { status: 400 });
     }
 
-    const email = consumePasswordSetupToken(setupToken);
+    const email = await consumePasswordSetupToken(db, setupToken);
     if (!email) {
       return NextResponse.json(
-        { error: 'This reset link has expired. Request a new one from the forgot password page.' },
+        { error: 'This reset link has expired or was already used. Request a new one from the forgot password page.' },
         { status: 401 },
       );
     }

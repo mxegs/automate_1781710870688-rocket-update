@@ -56,7 +56,12 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (invite) {
-    return NextResponse.json({ registered: true, source: 'invite' });
+    return NextResponse.json({
+      registered: false,
+      pendingInvite: true,
+      message:
+        'You have a pending invite. Open the invite link from your email to finish joining — then you can sign in here.',
+    });
   }
 
   return NextResponse.json({ registered: false });

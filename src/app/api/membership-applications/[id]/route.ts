@@ -20,6 +20,10 @@ export async function PATCH(
   const body = await request.json();
   const status = body.status as 'approved' | 'rejected';
 
+  if (status !== 'approved' && status !== 'rejected') {
+    return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+  }
+
   const { data: app, error: fetchError } = await db
     .from('membership_applications')
     .select('*')
@@ -27,11 +31,109 @@ export async function PATCH(
     .single();
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  if (!app) return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+
+  // Reject: update status only
+  if (status === 'rejected') {
+    const { data, error } = await db
+      .from('membership_applications')
+      .update({
+        status: 'rejected',
+        review_notes: body.reviewNotes ?? null,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data);
+  }
+
+  // Approve: create member + login profile FIRST, then mark approved, then notify
+  const personal = (app.application_data as { personal?: Record<string, string> })?.personal ?? {};
+  const covenant = (app.application_data as { covenant?: { dateSigned?: string } })?.covenant;
+  const appRow = app as { password_hash?: string | null };
+  const memberPhone = normalizePhone(app.phone ?? '');
+  const memberEmail = personal.email ? normalizeEmail(personal.email) : '';
+
+  if (!memberPhone) {
+    return NextResponse.json(
+      { error: 'Cannot approve: application has no valid phone number for the member record.' },
+      { status: 400 },
+    );
+  }
+
+  const { error: memberError } = await db.from('members').insert({
+    application_id: id,
+    campus_id: app.campus_id,
+    surname: personal.surname ?? '',
+    full_name: personal.fullName ?? '',
+    username: personal.username ?? null,
+    phone: memberPhone,
+    email: memberEmail.includes('@') ? memberEmail : null,
+    gender: (personal.gender as 'Male' | 'Female') ?? null,
+    date_of_birth: personal.dateOfBirth || null,
+    age: typeof personal.age === 'number' ? personal.age : null,
+    marital_status: personal.maritalStatus ?? null,
+    covenant_signed_at: covenant?.dateSigned ?? new Date().toISOString(),
+    status: 'active',
+  });
+
+  if (memberError) {
+    // Unique conflict: member may already exist from a partial prior attempt
+    const isDuplicate =
+      memberError.code === '23505' ||
+      /duplicate|unique/i.test(memberError.message);
+
+    if (!isDuplicate) {
+      return NextResponse.json(
+        { error: `Could not create member record: ${memberError.message}` },
+        { status: 500 },
+      );
+    }
+  }
+
+  if (memberEmail.includes('@')) {
+    const profile = await ensureProfileForEmail(db, memberEmail);
+    if (!profile?.email) {
+      return NextResponse.json(
+        {
+          error:
+            'Member row was created but login profile failed. Fix the profile for this email, then try approve again if still pending.',
+        },
+        { status: 500 },
+      );
+    }
+  } else {
+    const { error: profileError } = await db.from('profiles').upsert(
+      {
+        phone: memberPhone,
+        role: 'member',
+        campus_id: app.campus_id,
+        official_name: personal.fullName ?? null,
+        username: personal.username ?? null,
+        display_name: personal.username ?? personal.fullName ?? null,
+        gender: (personal.gender as 'Male' | 'Female') ?? null,
+        date_of_birth: personal.dateOfBirth || null,
+        email: null,
+        password_hash: appRow.password_hash ?? null,
+      },
+      { onConflict: 'phone' },
+    );
+
+    if (profileError) {
+      return NextResponse.json(
+        { error: `Could not create login profile: ${profileError.message}` },
+        { status: 500 },
+      );
+    }
+  }
 
   const { data, error } = await db
     .from('membership_applications')
     .update({
-      status,
+      status: 'approved',
       review_notes: body.reviewNotes ?? null,
       reviewed_at: new Date().toISOString(),
     })
@@ -39,68 +141,27 @@ export async function PATCH(
     .select('*')
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json(
+      {
+        error: `Member was created but application status update failed: ${error.message}`,
+      },
+      { status: 500 },
+    );
+  }
 
-  if (status === 'approved' && app) {
-    const personal = (app.application_data as { personal?: Record<string, string> })?.personal ?? {};
-    const covenant = (app.application_data as { covenant?: { dateSigned?: string } })?.covenant;
-    const appRow = app as { password_hash?: string | null };
+  const firstName = personal.fullName?.trim().split(/\s+/)[0] || 'Friend';
+  const loginUrl = `${getAppUrl(request)}/login`;
 
-    const memberPhone = normalizePhone(app.phone ?? '');
+  if (memberEmail.includes('@')) {
+    await sendMembershipApprovedEmail(memberEmail, firstName, loginUrl);
+  }
 
-    await db.from('members').insert({
-      application_id: id,
-      campus_id: app.campus_id,
-      surname: personal.surname ?? '',
-      full_name: personal.fullName ?? '',
-      username: personal.username ?? null,
-      phone: memberPhone,
-      email: personal.email ? normalizeEmail(personal.email) : null,
-      gender: (personal.gender as 'Male' | 'Female') ?? null,
-      date_of_birth: personal.dateOfBirth || null,
-      age: typeof personal.age === 'number' ? personal.age : null,
-      marital_status: personal.maritalStatus ?? null,
-      covenant_signed_at: covenant?.dateSigned ?? new Date().toISOString(),
-      status: 'active',
-    });
-
-    const memberEmail = personal.email ? normalizeEmail(personal.email) : '';
-    if (memberEmail.includes('@')) {
-      const profile = await ensureProfileForEmail(db, memberEmail);
-      if (!profile?.email) {
-        console.error('[approval] failed to create login profile for', memberEmail);
-      }
-    } else {
-      await db.from('profiles').upsert(
-        {
-          phone: memberPhone,
-          role: 'member',
-          campus_id: app.campus_id,
-          official_name: personal.fullName ?? null,
-          username: personal.username ?? null,
-          display_name: personal.username ?? personal.fullName ?? null,
-          gender: (personal.gender as 'Male' | 'Female') ?? null,
-          date_of_birth: personal.dateOfBirth || null,
-          email: null,
-          password_hash: appRow.password_hash ?? null,
-        },
-        { onConflict: 'phone' },
-      );
-    }
-
-    const firstName = personal.fullName?.trim().split(/\s+/)[0] || 'Friend';
-    const loginUrl = `${getAppUrl(request)}/login`;
-
-    if (memberEmail?.includes('@')) {
-      await sendMembershipApprovedEmail(memberEmail, firstName, loginUrl);
-    }
-
-    if (app.phone) {
-      await sendSms(
-        app.phone,
-        `Hi ${firstName}, your CKC membership is approved! Sign in at ${loginUrl} with your email and password.`,
-      );
-    }
+  if (app.phone) {
+    await sendSms(
+      app.phone,
+      `Hi ${firstName}, your CKC membership is approved! Sign in at ${loginUrl} with your email and password.`,
+    );
   }
 
   return NextResponse.json(data);

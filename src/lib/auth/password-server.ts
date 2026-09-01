@@ -1,5 +1,6 @@
-import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, randomBytes, scrypt, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const scryptAsync = promisify(scrypt);
 
@@ -28,20 +29,12 @@ export async function verifyPassword(password: string, stored: string): Promise<
   return timingSafeEqual(derived, hashBuf);
 }
 
-interface PasswordSetupEntry {
-  email: string;
-  expiresAt: number;
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 
-const globalForPasswordSetup = globalThis as typeof globalThis & {
-  __ckcPasswordSetupStore?: Map<string, PasswordSetupEntry>;
-};
-
-function getSetupStore(): Map<string, PasswordSetupEntry> {
-  if (!globalForPasswordSetup.__ckcPasswordSetupStore) {
-    globalForPasswordSetup.__ckcPasswordSetupStore = new Map();
-  }
-  return globalForPasswordSetup.__ckcPasswordSetupStore;
+function generateToken(): string {
+  return randomBytes(32).toString('base64url');
 }
 
 function getSigningSecret(): string {
@@ -68,36 +61,63 @@ function verifySignature(payloadB64: string, signature: string): boolean {
   }
 }
 
-function consumeLegacyPasswordSetupToken(token: string): string | null {
-  const entry = getSetupStore().get(token);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    getSetupStore().delete(token);
-    return null;
-  }
-  getSetupStore().delete(token);
-  return entry.email;
-}
-
-/** Signed, stateless token for password reset / first-time password setup. */
-export function issuePasswordSetupToken(email: string): string {
+/** Issue a one-time password setup/reset token stored in Supabase. */
+export async function issuePasswordSetupToken(db: SupabaseClient, email: string): Promise<string> {
   const normalized = email.trim().toLowerCase();
-  const payload = JSON.stringify({
+  const token = generateToken();
+  const tokenHash = hashToken(token);
+  const expiresAt = new Date(Date.now() + SETUP_TTL_MS).toISOString();
+
+  await db.from('password_setup_tokens').delete().ilike('email', normalized);
+
+  const { error } = await db.from('password_setup_tokens').insert({
+    token_hash: tokenHash,
     email: normalized,
-    exp: Date.now() + SETUP_TTL_MS,
+    expires_at: expiresAt,
   });
-  const payloadB64 = Buffer.from(payload, 'utf8').toString('base64url');
-  return `${payloadB64}.${signPayload(payloadB64)}`;
+
+  if (error) {
+    throw new Error(
+      error.message.includes('password_setup_tokens') ||
+        error.code === '42P01' ||
+        error.code === 'PGRST205'
+        ? 'Password reset storage is not set up. Run migration 20250812110000_password_setup_tokens.sql in Supabase.'
+        : error.message,
+    );
+  }
+
+  return token;
 }
 
-export function consumePasswordSetupToken(token: string): string | null {
+/**
+ * Consume a one-time password token.
+ * Supports new DB tokens and marks legacy signed tokens as used (single-use).
+ */
+export async function consumePasswordSetupToken(
+  db: SupabaseClient,
+  token: string,
+): Promise<string | null> {
   const trimmed = token.trim();
   if (!trimmed) return null;
 
-  const dot = trimmed.indexOf('.');
-  if (dot === -1) {
-    return consumeLegacyPasswordSetupToken(trimmed);
+  const tokenHash = hashToken(trimmed);
+
+  // New durable tokens
+  const { data, error } = await db
+    .from('password_setup_tokens')
+    .delete()
+    .eq('token_hash', tokenHash)
+    .gt('expires_at', new Date().toISOString())
+    .select('email')
+    .maybeSingle();
+
+  if (!error && data?.email) {
+    return data.email.trim().toLowerCase();
   }
+
+  // Legacy signed tokens — verify, then burn so they cannot be reused
+  const dot = trimmed.indexOf('.');
+  if (dot === -1) return null;
 
   const payloadB64 = trimmed.slice(0, dot);
   const signature = trimmed.slice(dot + 1);
@@ -112,7 +132,25 @@ export function consumePasswordSetupToken(token: string): string | null {
     };
     if (!payload.email || typeof payload.exp !== 'number') return null;
     if (Date.now() > payload.exp) return null;
-    return payload.email.trim().toLowerCase();
+
+    const email = payload.email.trim().toLowerCase();
+
+    // If this hash was already consumed, reject
+    const { data: already } = await db
+      .from('password_setup_tokens')
+      .select('token_hash')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+    if (already) return null;
+
+    // Burn legacy token (store as already-expired row so reuse fails)
+    await db.from('password_setup_tokens').insert({
+      token_hash: tokenHash,
+      email,
+      expires_at: new Date(0).toISOString(),
+    });
+
+    return email;
   } catch {
     return null;
   }

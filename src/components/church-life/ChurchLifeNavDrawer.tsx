@@ -31,7 +31,7 @@ export default function ChurchLifeNavDrawer({
 }: ChurchLifeNavDrawerProps) {
   const router = useRouter();
   const session = getSession();
-  const displayName = getDisplayName(session);
+  const displayName = session ? getDisplayName(session) : 'Guest';
   const isStaff = session ? isStaffRole(session.role) : false;
   const viewMode = session ? getViewMode(session) : 'member';
 
@@ -53,58 +53,80 @@ export default function ChurchLifeNavDrawer({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} aria-hidden />
-      <aside className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-ckc-black shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+      <aside className="fixed inset-y-0 left-0 z-50 w-[220px] max-w-[85vw] bg-ckc-black shadow-2xl">
+        <div className="flex items-center justify-between px-3.5 py-4">
           <div>
-            <p className="text-sm font-bold text-white">{displayName}</p>
-            <p className="text-xs text-ckc-gold">{portalLabel}</p>
+            <p className="text-xs text-white">{displayName}</p>
+            <p className="text-[9px] text-ckc-gold">{portalLabel}</p>
           </div>
-          <button type="button" onClick={onClose} className="text-white/50 hover:text-white" aria-label="Close menu">
-            <Icon name="XMarkIcon" size={20} variant="outline" />
+          <button type="button" onClick={onClose} className="text-[#999] hover:text-white" aria-label="Close menu">
+            <Icon name="XMarkIcon" size={14} variant="outline" />
           </button>
         </div>
 
-        <nav className="space-y-1 overflow-y-auto p-3" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+        <nav className="space-y-0 overflow-y-auto px-2" style={{ maxHeight: 'calc(100vh - 160px)' }}>
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-ckc-gold"
+              className="flex items-center gap-2 px-1.5 py-2 text-[11px] text-[#ccc] hover:text-white"
             >
-              <Icon name={item.icon} size={18} variant="outline" className="text-ckc-gold" />
+              <Icon name={item.icon} size={13} variant="outline" className="text-ckc-gold" />
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 space-y-1 border-t border-white/10 p-3">
+        <div className="absolute bottom-0 left-0 right-0 space-y-1 border-t border-[#262626] p-3">
           {isStaff && (
             <button
               type="button"
               onClick={toggleViewMode}
-              className="flex w-full items-center gap-2 rounded-lg border border-ckc-gold/30 bg-ckc-gold/10 px-3 py-2 text-xs text-ckc-gold"
+              className="w-full rounded-md border border-ckc-gold py-1.5 text-center text-[10px] text-ckc-gold"
             >
-              <Icon name="ArrowsRightLeftIcon" size={14} variant="outline" />
-              {viewMode === 'staff' ? 'See Church Life' : 'Leadership Desk'}
+              {viewMode === 'staff' ? 'See Church Life' : 'Leadership desk'}
             </button>
           )}
-          <Link
-            href="/account/change-password"
-            onClick={onClose}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-ckc-gold"
-          >
-            <Icon name="KeyIcon" size={14} variant="outline" />
-            Change password
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-rose-400"
-          >
-            <Icon name="ArrowLeftOnRectangleIcon" size={14} variant="outline" />
-            Sign Out
-          </button>
+          {session ? (
+            <>
+              <Link
+                href="/account/change-password"
+                onClick={onClose}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-ckc-gold"
+              >
+                <Icon name="KeyIcon" size={14} variant="outline" />
+                Change password
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-rose-400"
+              >
+                <Icon name="ArrowLeftOnRectangleIcon" size={14} variant="outline" />
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={onClose}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-ckc-gold hover:text-white"
+              >
+                <Icon name="ArrowRightOnRectangleIcon" size={14} variant="outline" />
+                Member / staff sign in
+              </Link>
+              <Link
+                href="/request-invite"
+                onClick={onClose}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-ckc-gold"
+              >
+                <Icon name="UserPlusIcon" size={14} variant="outline" />
+                Request membership
+              </Link>
+            </>
+          )}
         </div>
       </aside>
     </>
