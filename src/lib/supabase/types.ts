@@ -48,6 +48,7 @@ export interface Database {
           phone: string;
           role: UserRole;
           campus_id: string | null;
+          church_id: string | null;
           official_name: string | null;
           username: string | null;
           display_name: string | null;
@@ -64,6 +65,7 @@ export interface Database {
           phone: string;
           role?: UserRole;
           campus_id?: string | null;
+          church_id?: string | null;
           official_name?: string | null;
           username?: string | null;
           display_name?: string | null;
@@ -79,6 +81,7 @@ export interface Database {
           phone?: string;
           role?: UserRole;
           campus_id?: string | null;
+          church_id?: string | null;
           official_name?: string | null;
           username?: string | null;
           display_name?: string | null;

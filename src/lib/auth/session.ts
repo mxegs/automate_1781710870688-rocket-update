@@ -16,6 +16,7 @@ export interface AuthSession {
   email?: string;
   role: UserRole;
   campusId?: string;
+  churchId?: string;
   isSuperAdmin?: boolean;
   dbRole?: string;
   /** Legal/full name from membership form */
@@ -91,6 +92,7 @@ export async function fetchProfileByEmail(email: string): Promise<{
   username?: string;
   displayName?: string;
   campusId?: string;
+  churchId?: string;
 } | null> {
   if (!useBackend()) return null;
   return apiFetch<{
@@ -103,6 +105,7 @@ export async function fetchProfileByEmail(email: string): Promise<{
     username?: string;
     displayName?: string;
     campusId?: string;
+    churchId?: string;
   } | null>(`/api/profiles/lookup-email?email=${encodeURIComponent(email)}`).catch(() => null);
 }
 
@@ -132,6 +135,7 @@ export async function resolveSessionFromEmailAsync(
     email: normalized,
     role: profile.role,
     campusId: profile.campusId,
+    churchId: profile.churchId,
     isSuperAdmin: profile.isSuperAdmin,
     dbRole: profile.dbRole,
     officialName: profile.officialName,
@@ -171,6 +175,7 @@ export async function fetchProfileByPhone(phone: string): Promise<{
   username?: string;
   displayName?: string;
   campusId?: string;
+  churchId?: string;
 } | null> {
   if (!useBackend()) return Promise.resolve(null);
   return apiFetch<{
@@ -182,6 +187,7 @@ export async function fetchProfileByPhone(phone: string): Promise<{
     username?: string;
     displayName?: string;
     campusId?: string;
+    churchId?: string;
   } | null>(`/api/profiles/lookup?phone=${encodeURIComponent(normalizePhone(phone))}`).catch(
     () => null,
   );
@@ -208,6 +214,7 @@ export async function resolveSessionFromPhoneAsync(
       phone: normalized,
       role: profile.role,
       campusId: profile.campusId,
+      churchId: profile.churchId,
       isSuperAdmin: profile.isSuperAdmin,
       dbRole: profile.dbRole,
       officialName: profile.officialName,

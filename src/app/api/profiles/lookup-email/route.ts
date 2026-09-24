@@ -37,5 +37,6 @@ export async function GET(request: Request) {
     username: row.username,
     displayName: row.display_name,
     campusId: row.campus_id,
+    churchId: (row as { church_id?: string | null }).church_id ?? undefined,
   });
 }
