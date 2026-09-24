@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { assignDependantSerials } from '@/lib/membership/family';
 import { getAppUrl } from '@/lib/app-url';
 import { sendApplicationReceivedEmail } from '@/lib/email/service';
+import { churchDisplayName } from '@/lib/church/name-server';
 import { sendSms } from '@/lib/sms/service';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { normalizePhone } from '@/lib/auth/session';
@@ -38,6 +40,7 @@ export async function GET(request: Request) {
   const { data, error } = await db
     .from('membership_applications')
     .select('*')
+    .eq('church_id', churchIdFromUrl(request.url))
     .eq('status', status as 'draft' | 'submitted' | 'approved' | 'rejected')
     .order('submitted_at', { ascending: false });
 
@@ -70,12 +73,18 @@ export async function POST(request: Request) {
     };
   }
 
+  const churchId = body.churchId || churchIdFromUrl(request.url);
+  if (!churchId) {
+    return NextResponse.json({ error: 'Church is required' }, { status: 400 });
+  }
+
   const { data, error } = await db
     .from('membership_applications')
     .insert({
       phone,
       campus_id: body.campusId,
       invite_id: body.inviteId ?? null,
+      church_id: churchId,
       status: 'submitted',
       application_data: applicationData,
       submitted_at: new Date().toISOString(),
@@ -97,13 +106,14 @@ export async function POST(request: Request) {
   const memberEmail = personal?.email?.trim().toLowerCase();
 
   if (memberEmail?.includes('@')) {
-    await sendApplicationReceivedEmail(memberEmail, firstName);
+    await sendApplicationReceivedEmail(memberEmail, firstName, churchId);
   }
 
   if (phone.length >= 9) {
+    const churchName = await churchDisplayName(churchId);
     await sendSms(
       phone,
-      `Hi ${firstName}, CKC received your membership application. We will email and SMS you when it is approved.`,
+      `Hi ${firstName}, ${churchName} received your membership application. We will email and SMS you when it is approved.`,
     );
   }
 

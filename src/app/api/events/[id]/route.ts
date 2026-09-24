@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { mapEventRow } from '@/lib/events/mappers';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function eventUpdatePayload(body: Record<string, unknown>): Record<string, unknown> {
@@ -32,14 +33,20 @@ function eventUpdatePayload(body: Record<string, unknown>): Record<string, unkno
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const { id } = await params;
-  const { data, error } = await db.from('events').select('*').eq('id', id).maybeSingle();
+  const churchId = churchIdFromUrl(request.url);
+  const { data, error } = await db
+    .from('events')
+    .select('*')
+    .eq('id', id)
+    .eq('church_id', churchId)
+    .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
 
@@ -47,6 +54,7 @@ export async function GET(
     .from('event_rsvps')
     .select('*', { count: 'exact', head: true })
     .eq('event_id', id)
+    .eq('church_id', churchId)
     .eq('status', 'going');
 
   return NextResponse.json(mapEventRow(data, count ?? 0));

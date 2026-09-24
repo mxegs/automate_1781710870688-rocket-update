@@ -1,28 +1,38 @@
 'use client';
 
 import React from 'react';
-import Icon from '@/components/ui/AppIcon';
+import { LifeSocialIcon } from '@/components/church-life/LifeSocialIcons';
 import { lifeSocialLinks } from '@/lib/church-life/nav';
 
-export default function GetInvolvedFooter() {
+interface GetInvolvedFooterProps {
+  fill?: boolean;
+}
+
+export default function GetInvolvedFooter({ fill = false }: GetInvolvedFooterProps) {
+  const className = fill
+    ? 'life-home-footer'
+    : 'life-section border-t border-[0.5px] border-[#E5E5E5] py-5 text-center';
+
   return (
-    <footer className="mt-10 pb-4">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="h-px flex-1 bg-ckc-gold/40" />
-        <span className="text-sm font-semibold text-ckc-black">Get Involved</span>
-        <div className="h-px flex-1 bg-ckc-gold/40" />
+    <footer className={className}>
+      <div className="mb-3 flex items-center justify-center gap-2">
+        <div className="h-px w-[30px] bg-ckc-gold" />
+        <span className="text-[11px] font-serif font-semibold tracking-normal text-ckc-gold">
+          Get Involved
+        </span>
+        <div className="h-px w-[30px] bg-ckc-gold" />
       </div>
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-[18px] text-ckc-black">
         {lifeSocialLinks.map((link) => (
           <a
             key={link.label}
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-ckc-black/20 text-ckc-black hover:border-ckc-gold hover:text-ckc-gold transition-colors"
+            className="text-ckc-black hover:text-ckc-gold transition-colors"
             aria-label={link.label}
           >
-            <Icon name={link.icon} size={18} variant="outline" />
+            <LifeSocialIcon brand={link.brand} />
           </a>
         ))}
       </div>

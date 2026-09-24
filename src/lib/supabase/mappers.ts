@@ -60,6 +60,9 @@ export function mapInvite(row: {
   username: string | null;
   sent_at: string;
   status: 'pending' | 'accepted' | 'expired';
+  church_id?: string | null;
+  churchSlug?: string | null;
+  churchName?: string | null;
 }): PendingInvite {
   return {
     id: row.id,
@@ -72,6 +75,9 @@ export function mapInvite(row: {
     username: row.username ?? undefined,
     sentAt: row.sent_at,
     status: row.status === 'accepted' ? 'accepted' : 'pending',
+    churchId: row.church_id ?? undefined,
+    churchSlug: row.churchSlug ?? undefined,
+    churchName: row.churchName ?? undefined,
   };
 }
 

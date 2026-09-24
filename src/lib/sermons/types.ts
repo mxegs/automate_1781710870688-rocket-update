@@ -31,7 +31,7 @@ export const VISIBILITY_OPTIONS: { value: ContentVisibility; label: string; hint
   },
   {
     value: 'church_wide',
-    label: 'All CKC campuses',
+    label: 'All campuses',
     hint: 'Special events — Easter, conferences, joint services',
   },
   {

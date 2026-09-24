@@ -1,3 +1,5 @@
+import { churchDisplayName } from '@/lib/church/name-server';
+
 export interface SendEmailResult {
   success: boolean;
   demo?: boolean;
@@ -10,7 +12,7 @@ async function sendViaResend(to: string, subject: string, html: string): Promise
     return { success: false, error: 'RESEND_API_KEY not configured' };
   }
 
-  const from = process.env.EMAIL_FROM?.trim() ?? 'CKC Church <onboarding@resend.dev>';
+  const from = process.env.EMAIL_FROM?.trim() ?? 'Church <onboarding@resend.dev>';
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -60,13 +62,13 @@ export async function sendAdminNotifyEmail(
   return sendViaResend(to, subject, html);
 }
 
-export function buildInviteEmailHtml(officialName: string, inviteUrl: string): string {
+export function buildInviteEmailHtml(officialName: string, inviteUrl: string, churchName: string): string {
   const firstName = officialName.trim().split(/\s+/)[0] || officialName;
   return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
-      <h2 style="color:#c9a227;">Christ Kingdom Citizens</h2>
+      <h2 style="color:#c9a227;">${churchName}</h2>
       <p>Hi ${firstName},</p>
-      <p>You've been invited to complete your CKC membership registration.</p>
+      <p>You've been invited to complete your membership registration at ${churchName}.</p>
       <p style="margin:24px 0;">
         <a href="${inviteUrl}" style="background:#c9a227;color:#000;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">
           Complete registration
@@ -82,9 +84,11 @@ export async function sendInviteEmail(
   to: string,
   officialName: string,
   inviteUrl: string,
+  churchId: string | null,
 ): Promise<SendEmailResult> {
-  const subject = 'Your CKC membership invite';
-  const html = buildInviteEmailHtml(officialName, inviteUrl);
+  const churchName = await churchDisplayName(churchId);
+  const subject = `Your ${churchName} membership invite`;
+  const html = buildInviteEmailHtml(officialName, inviteUrl, churchName);
   const provider = process.env.EMAIL_PROVIDER ?? 'resend';
 
   if (provider === 'demo') {
@@ -95,10 +99,10 @@ export async function sendInviteEmail(
   return sendViaResend(to, subject, html);
 }
 
-export function buildApplicationReceivedEmailHtml(firstName: string): string {
+export function buildApplicationReceivedEmailHtml(firstName: string, churchName: string): string {
   return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
-      <h2 style="color:#c9a227;">Christ Kingdom Citizens</h2>
+      <h2 style="color:#c9a227;">${churchName}</h2>
       <p>Hi ${firstName},</p>
       <p>We have received your membership registration. Thank you for completing the form.</p>
       <p>Our team will review your application. You will receive an <strong>email and SMS</strong> when you are approved, with instructions to sign in to the member portal.</p>
@@ -110,9 +114,11 @@ export function buildApplicationReceivedEmailHtml(firstName: string): string {
 export async function sendApplicationReceivedEmail(
   to: string,
   firstName: string,
+  churchId: string | null,
 ): Promise<SendEmailResult> {
-  const subject = 'We received your CKC membership application';
-  const html = buildApplicationReceivedEmailHtml(firstName);
+  const churchName = await churchDisplayName(churchId);
+  const subject = `We received your ${churchName} membership application`;
+  const html = buildApplicationReceivedEmailHtml(firstName, churchName);
   const provider = process.env.EMAIL_PROVIDER ?? 'resend';
 
   if (provider === 'demo') {
@@ -123,15 +129,15 @@ export async function sendApplicationReceivedEmail(
   return sendViaResend(to, subject, html);
 }
 
-export function buildMembershipApprovedEmailHtml(firstName: string, loginUrl: string): string {
+export function buildMembershipApprovedEmailHtml(firstName: string, loginUrl: string, churchName: string): string {
   return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
-      <h2 style="color:#c9a227;">Welcome to CKC!</h2>
+      <h2 style="color:#c9a227;">Welcome to ${churchName}</h2>
       <p>Hi ${firstName},</p>
       <p>Your membership application has been <strong>approved</strong>. You can now sign in to the member portal with the email and password you chose during registration.</p>
       <p style="margin:24px 0;">
         <a href="${loginUrl}" style="background:#c9a227;color:#000;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">
-          Sign in to CKC
+          Sign in
         </a>
       </p>
       <p style="font-size:14px;color:#666;">Sign-in page: ${loginUrl}</p>
@@ -143,9 +149,11 @@ export async function sendMembershipApprovedEmail(
   to: string,
   firstName: string,
   loginUrl: string,
+  churchId: string | null,
 ): Promise<SendEmailResult> {
-  const subject = 'Your CKC membership has been approved';
-  const html = buildMembershipApprovedEmailHtml(firstName, loginUrl);
+  const churchName = await churchDisplayName(churchId);
+  const subject = `Your ${churchName} membership has been approved`;
+  const html = buildMembershipApprovedEmailHtml(firstName, loginUrl, churchName);
   const provider = process.env.EMAIL_PROVIDER ?? 'resend';
 
   if (provider === 'demo') {
@@ -156,14 +164,14 @@ export async function sendMembershipApprovedEmail(
   return sendViaResend(to, subject, html);
 }
 
-function buildMagicLinkEmailHtml(signInUrl: string): string {
+function buildMagicLinkEmailHtml(signInUrl: string, churchName: string): string {
   return `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #c9a227;">Christ Kingdom Citizens</h2>
+      <h2 style="color: #c9a227;">${churchName}</h2>
       <p>Tap the button below to sign in. No password needed.</p>
       <p style="margin: 24px 0;">
         <a href="${signInUrl}" style="background:#c9a227;color:#000;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">
-          Sign in to CKC
+          Sign in
         </a>
       </p>
       <p style="font-size:14px;color:#666;">Or copy this link: ${signInUrl}</p>
@@ -173,9 +181,14 @@ function buildMagicLinkEmailHtml(signInUrl: string): string {
 }
 
 /** Send one-click sign-in link (server-side only) */
-export async function sendMagicLinkEmail(to: string, signInUrl: string): Promise<SendEmailResult> {
-  const subject = 'Your CKC sign-in link';
-  const html = buildMagicLinkEmailHtml(signInUrl);
+export async function sendMagicLinkEmail(
+  to: string,
+  signInUrl: string,
+  churchId: string | null,
+): Promise<SendEmailResult> {
+  const churchName = await churchDisplayName(churchId);
+  const subject = `Your ${churchName} sign-in link`;
+  const html = buildMagicLinkEmailHtml(signInUrl, churchName);
   const provider = process.env.EMAIL_PROVIDER ?? 'resend';
 
   if (provider === 'demo') {
@@ -190,11 +203,11 @@ export async function sendMagicLinkEmail(to: string, signInUrl: string): Promise
   return { success: true, demo: true };
 }
 
-export function buildPasswordResetEmailHtml(resetUrl: string): string {
+export function buildPasswordResetEmailHtml(resetUrl: string, churchName: string): string {
   return `
     <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #c9a227;">Christ Kingdom Citizens</h2>
-      <p>You requested a password reset for your CKC account.</p>
+      <h2 style="color: #c9a227;">${churchName}</h2>
+      <p>You requested a password reset for your ${churchName} account.</p>
       <p style="margin: 24px 0;">
         <a href="${resetUrl}" style="background:#c9a227;color:#000;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">
           Reset my password
@@ -206,9 +219,14 @@ export function buildPasswordResetEmailHtml(resetUrl: string): string {
   `;
 }
 
-export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<SendEmailResult> {
-  const subject = 'Reset your CKC password';
-  const html = buildPasswordResetEmailHtml(resetUrl);
+export async function sendPasswordResetEmail(
+  to: string,
+  resetUrl: string,
+  churchId: string | null,
+): Promise<SendEmailResult> {
+  const churchName = await churchDisplayName(churchId);
+  const subject = `Reset your ${churchName} password`;
+  const html = buildPasswordResetEmailHtml(resetUrl, churchName);
   const provider = process.env.EMAIL_PROVIDER ?? 'resend';
 
   if (provider === 'demo') {

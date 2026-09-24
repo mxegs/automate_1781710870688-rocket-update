@@ -1,24 +1,29 @@
 import { apiFetch, useBackend } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 import type { Announcement, AnnouncementInput } from './types';
 
 export async function getAdminAnnouncements(options: {
+  churchId?: string;
   campusId?: CampusId;
   allCampuses?: boolean;
 }): Promise<Announcement[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams({ forAdmin: 'true' });
+  withChurchId(params, options.churchId);
   if (options.allCampuses) params.set('allCampuses', 'true');
   else if (options.campusId) params.set('campusId', options.campusId);
   return apiFetch<Announcement[]>(`/api/announcements?${params}`);
 }
 
 export async function getMemberAnnouncements(options: {
+  churchId?: string;
   memberCampus?: CampusId;
   isVisitor?: boolean;
 }): Promise<Announcement[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams();
+  withChurchId(params, options.churchId);
   if (options.memberCampus) params.set('memberCampus', options.memberCampus);
   if (options.isVisitor) params.set('isVisitor', 'true');
   return apiFetch<Announcement[]>(`/api/announcements?${params}`);

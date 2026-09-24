@@ -12,6 +12,9 @@ export interface PendingInvite {
   username?: string;
   sentAt: string;
   status: 'pending' | 'accepted';
+  churchId?: string;
+  churchSlug?: string;
+  churchName?: string;
   inviteUrl?: string;
   sms?: {
     success: boolean;

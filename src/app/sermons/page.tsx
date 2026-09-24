@@ -6,6 +6,7 @@ import Icon from '@/components/ui/AppIcon';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import { fetchProfileForSession, getSession } from '@/lib/auth/session';
 import { hasAllCampusAccess } from '@/lib/auth/church-wide-staff';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import {
   createMediaItem,
   deleteMediaItem,
@@ -75,6 +76,7 @@ export default function AdminSermonsPage() {
     setLoading(true);
     try {
       const items = await getAdminMediaItems({
+        churchId: resolveMemberChurch(),
         campusId: showAllCampuses ? undefined : adminCampus,
         allCampuses: allCampusAccess && showAllCampuses,
       });

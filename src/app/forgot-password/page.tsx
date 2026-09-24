@@ -41,9 +41,9 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ckc-gold/20">
               <span className="text-xl">✉</span>
             </div>
-            <h2 className="text-base font-semibold text-ckc-white">Check your email</h2>
+            <h2 className="text-base font-semibold text-cloud">Check your email</h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
-              If <strong className="text-ckc-white">{email.trim().toLowerCase()}</strong> is registered,
+              If <strong className="text-cloud">{email.trim().toLowerCase()}</strong> is registered,
               we sent a link to choose a new password.
             </p>
             {demoLink && (
@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="text-base font-semibold text-ckc-white">Forgot password?</h2>
+            <h2 className="text-base font-semibold text-cloud">Forgot password?</h2>
             <p className="text-xs text-ckc-muted">
               Enter your registered email. We&apos;ll send a one-time link to set a new password.
             </p>

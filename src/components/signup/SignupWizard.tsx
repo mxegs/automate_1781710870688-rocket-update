@@ -308,6 +308,7 @@ export default function SignupWizard() {
         campusId: form.personal.campus as 'midrand' | 'verulam',
         applicationData: payload,
         inviteToken: inviteSession?.token,
+        churchId: inviteSession?.churchId,
       });
       sessionStorage.setItem(
         'ckc_password_setup',
@@ -318,7 +319,8 @@ export default function SignupWizard() {
       );
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       clearInviteSession();
-      router.push(`/signup/set-password?id=${result.id}`);
+      const slug = inviteSession?.churchSlug;
+      router.push(slug ? `/${slug}/signup/set-password?id=${result.id}` : `/signup/set-password?id=${result.id}`);
     } catch {
       localStorage.setItem('ckc_submitted_applications', JSON.stringify([
         ...JSON.parse(localStorage.getItem('ckc_submitted_applications') || '[]'),
@@ -605,7 +607,7 @@ export default function SignupWizard() {
                     <CkcField label="Occupation" optional><CkcInput value={form.guardian.occupation} onChange={(e) => updateGuardian({ occupation: e.target.value })} /></CkcField>
                     <CkcField label="Organisation" optional><CkcInput value={form.guardian.organisation} onChange={(e) => updateGuardian({ organisation: e.target.value })} /></CkcField>
                   </div>
-                  <CkcField label="Does spouse/dependants intend to join CKC?" optional>
+                  <CkcField label="Does spouse/dependants intend to join this church?" optional>
                     <CkcRadioGroup options={['Yes', 'No']} value={form.guardian.spouseJoining} onChange={(v) => updateGuardian({ spouseJoining: v })} name="spouseJoining" />
                   </CkcField>
                 </>

@@ -16,7 +16,16 @@ interface Visitor {
   followUpDate?: string;
 }
 
-const mockVisitors: Visitor[] = [];
+const mockVisitors: Visitor[] = [
+  { id: 1, name: 'Lerato Dlamini', phone: '082 000 0201', email: 'lerato.dlamini@ckc-sample.test', firstVisit: '24 Aug 2026', source: 'Sunday service', status: 'New Visitor', notes: 'First-time visitor with a friend from Midrand.' },
+  { id: 2, name: 'Johan van der Merwe', phone: '082 000 0202', email: 'johan.vdm@ckc-sample.test', firstVisit: '17 Aug 2026', source: 'Friend', status: 'Contacted', notes: 'Called Tuesday. Planning to return this Sunday.', followUpDate: '7 Sep 2026' },
+  { id: 3, name: 'Amahle Naidoo', phone: '082 000 0203', email: 'amahle.naidoo@ckc-sample.test', firstVisit: '10 Aug 2026', source: 'Youth gathering', status: 'Follow-Up Scheduled', notes: 'Wants to join the youth connect group.', followUpDate: '5 Sep 2026' },
+  { id: 4, name: 'Sipho Khumalo', phone: '082 000 0204', email: 'sipho.khumalo@ckc-sample.test', firstVisit: '3 Aug 2026', source: 'Walk-in', status: 'Attending Regularly', notes: 'Has attended three Sundays in a row.' },
+  { id: 5, name: 'Naledi Mokoena', phone: '082 000 0205', email: 'naledi.mokoena@ckc-sample.test', firstVisit: '20 Jul 2026', source: 'Social media', status: 'Membership Candidate', notes: 'Requested an invite to complete membership.' },
+  { id: 6, name: 'Thandiwe Pillay', phone: '082 000 0206', email: 'thandiwe.pillay@ckc-sample.test', firstVisit: '6 Jul 2026', source: 'Family', status: 'Became Member', notes: 'Membership approved 18 Aug 2026.' },
+  { id: 7, name: 'David Mabaso', phone: '082 000 0207', email: 'david.mabaso@ckc-sample.test', firstVisit: '31 Aug 2026', source: 'Prayer meeting', status: 'New Visitor', notes: 'Came after a midweek prayer invite.' },
+  { id: 8, name: 'Precious Mahlangu', phone: '082 000 0208', email: 'precious.mahlangu@ckc-sample.test', firstVisit: '13 Jul 2026', source: 'Outreach', status: 'Contacted', notes: 'Met during Glen Austin outreach Saturday.', followUpDate: '4 Sep 2026' },
+];
 
 const statusColors: Record<string, string> = {
   'New Visitor': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',

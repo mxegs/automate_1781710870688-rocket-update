@@ -47,10 +47,10 @@ export default function RequestInvitePage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ckc-gold/20">
               <span className="text-xl">✓</span>
             </div>
-            <h2 className="text-base font-semibold text-ckc-white">Request received</h2>
+            <h2 className="text-base font-semibold text-cloud">Request received</h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
               Thank you, {fullName}. Your {getCampusLabel(campus)} admin will review your request and email
-              you an invite link to <strong className="text-ckc-white">{email.trim().toLowerCase()}</strong>.
+              you an invite link to <strong className="text-cloud">{email.trim().toLowerCase()}</strong>.
             </p>
             <Link href="/login" className="block text-sm text-ckc-gold hover:underline">
               Back to sign in
@@ -59,7 +59,7 @@ export default function RequestInvitePage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <span className="ckc-label-pill">Step 1 of membership</span>
-            <h2 className="text-base font-semibold text-ckc-white">Request an invite</h2>
+            <h2 className="text-base font-semibold text-cloud">Request an invite</h2>
             <p className="text-xs text-ckc-muted">
               Your name, email, and campus — no phone needed here. An admin at your campus will email
               you a link to complete the full membership form.
@@ -81,7 +81,7 @@ export default function RequestInvitePage() {
               <select
                 value={campus}
                 onChange={(e) => setCampus(e.target.value as CampusId)}
-                className="w-full rounded-lg border border-white/10 bg-ckc-elevated px-3 py-2.5 text-sm text-ckc-white focus:border-ckc-gold/50 focus:outline-none"
+                className="w-full rounded-lg border border-white/10 bg-ckc-elevated px-3 py-2.5 text-sm text-cloud focus:border-ckc-gold/50 focus:outline-none"
               >
                 {CAMPUSES.map((c) => (
                   <option key={c.id} value={c.id}>

@@ -69,7 +69,7 @@ const colorMap: Record<string, string> = {
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-ckc-black border border-white/15 rounded-lg px-3 py-2 text-xs">
+      <div className="bg-ckc-elevated border border-white/10 rounded-lg px-3 py-2 text-xs shadow-ckc">
         <p className="text-cloud/60 mb-1">{label}</p>
         {payload.map((p) => (
           <p key={p.name} style={{ color: p.color }} className="font-semibold">{p.name}: {p.value}</p>

@@ -1,3 +1,5 @@
+import { sermonCover } from '@/lib/church-life/imagery';
+
 const YOUTUBE_ID_REGEX = /^[\w-]{11}$/;
 
 export function extractYoutubeId(value: string): string | null {
@@ -23,11 +25,8 @@ export function extractYoutubeId(value: string): string | null {
   return null;
 }
 
-export function getThumbnailUrl(item: { youtubeId?: string; externalUrl?: string }): string | null {
-  if (item.youtubeId) {
-    return `https://img.youtube.com/vi/${item.youtubeId}/mqdefault.jpg`;
-  }
-  return null;
+export function getThumbnailUrl(item: { id?: string; youtubeId?: string; title?: string; externalUrl?: string }): string {
+  return sermonCover(item);
 }
 
 export function getWatchUrl(item: { youtubeId?: string; externalUrl?: string }): string | null {

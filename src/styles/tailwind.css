@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  --ckc-primary: #C5A073;
+  --ckc-secondary: #0A0A0A;
   --ckc-black: #0A0A0A;
   --ckc-card: #1A1A1A;
   --ckc-block: #1E1E1E;
@@ -11,7 +13,7 @@
   --ckc-gold: #C5A073;
   --ckc-gold-button: #D9B985;
   --ckc-gold-light: #D4BC94;
-  --ckc-muted: #666666;
+  --ckc-muted: #888888;
   --ckc-white: #FFFFFF;
   --slate: #1A1A1A;
   --slate-dark: #0A0A0A;
@@ -26,12 +28,12 @@
   --border-dim: rgba(255, 255, 255, 0.12);
   --border-sky: rgba(197, 160, 115, 0.35);
   --border-gold: rgba(197, 160, 115, 0.35);
-  --life-bg: #FFFFFF;
-  --life-text: #0A0A0A;
-  --life-border: #E5E5E5;
-  --life-page: #F4F4F2;
-  --life-content: #F7F7F5;
-  --ckc-gold-text: #412402;
+  --life-bg: #F7F3EE;
+  --life-text: #1A1612;
+  --life-border: #E8DFD4;
+  --life-page: #F7F3EE;
+  --life-content: #F7F3EE;
+  --ckc-gold-text: #000000;
 }
 
 html {
@@ -169,13 +171,13 @@ body {
 
 /* CTA button */
 .btn-sky {
-  background: var(--ckc-gold);
-  color: var(--ckc-black);
+  background: var(--ckc-gold-button);
+  color: var(--ckc-gold-text);
   font-weight: 700;
   transition: background 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
 }
 .btn-sky:hover {
-  background: var(--ckc-gold-light);
+  background: var(--ckc-gold);
   transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(197, 160, 115, 0.35);
 }
@@ -285,15 +287,17 @@ body {
 
 /* Church Life — mobile-first light portal */
 .life-section {
-  padding-left: 0.875rem;
-  padding-right: 0.875rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  padding-top: 1rem;
+  padding-bottom: 1.25rem;
 }
 
 .life-hero {
   position: relative;
   overflow: hidden;
-  height: 130px;
-  background: #3a3a3a;
+  height: 180px;
+  background: var(--ckc-gold);
 }
 
 .life-home .life-hero {
@@ -334,9 +338,11 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-radius: 10px;
-  background: #f5f3ef;
+  border-radius: 12px;
+  background: var(--ckc-gold);
   padding: 12px 14px;
+  color: var(--ckc-gold-text);
+  box-shadow: 0px 4px 20px rgba(197, 160, 115, 0.18);
 }
 
 .life-home-footer {
@@ -360,26 +366,27 @@ body {
 .life-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.25));
+  background: linear-gradient(0deg, rgba(10, 10, 10, 0.72), rgba(10, 10, 10, 0.18));
 }
 
 .life-grid-tile {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   height: 78px;
   padding: 16px;
-  border-radius: 12px;
-  background: var(--ckc-card);
-  border: none;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #E5E5E5;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .life-grid-tile:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  box-shadow: 0px 12px 32px rgba(197, 160, 115, 0.18);
 }
 
 .ckc-logo-circle {
@@ -390,8 +397,9 @@ body {
   height: 26px;
   border-radius: 50%;
   border: 1px solid var(--ckc-gold);
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 9px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--ckc-gold);
 }
 
@@ -403,12 +411,13 @@ body {
 
 .life-input {
   width: 100%;
-  font-size: 12px;
-  padding: 9px 10px;
-  border-radius: 6px;
-  border: 0.5px solid var(--life-border);
+  font-size: 15px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid #D9CFC3;
   background: var(--ckc-white);
-  color: var(--ckc-black);
+  color: var(--life-text);
+  box-shadow: 0 1px 2px rgba(26, 22, 18, 0.04);
 }
 
 .life-input:focus {
@@ -421,11 +430,10 @@ body {
 }
 
 .life-month-heading {
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--ckc-black);
+  color: var(--life-text);
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--life-border);
 }
 
 .life-split-gold {
@@ -433,18 +441,21 @@ body {
 }
 
 .life-event-block {
-  border-radius: 12px;
-  background: var(--ckc-block);
-  color: var(--ckc-white);
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--ckc-black);
   padding: 1rem 1.25rem;
+  border: 1px solid #E5E5E5;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .btn-life-primary {
-  background: var(--ckc-gold-button);
+  background: var(--ckc-gold);
   color: var(--ckc-gold-text);
-  font-weight: 500;
-  border-radius: 8px;
-  transition: opacity 0.2s ease;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 999px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .btn-life-primary:hover {
@@ -453,9 +464,9 @@ body {
 
 .btn-life-secondary {
   background: var(--ckc-white);
-  border: 0.5px solid var(--life-border);
-  color: var(--ckc-black);
-  border-radius: 7px;
+  border: 1px solid var(--life-border);
+  color: var(--life-text);
+  border-radius: 999px;
 }
 
 .visitor-badge {
@@ -486,10 +497,10 @@ body {
 }
 
 .btn-ckc-gold {
-  background: var(--ckc-gold-button);
+  background: var(--ckc-gold);
   color: var(--ckc-gold-text);
-  font-weight: 500;
-  border-radius: 8px;
+  font-weight: 600;
+  border-radius: 999px;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
@@ -507,12 +518,14 @@ body {
   background: var(--ckc-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--white);
-  transition: border-color 0.2s ease;
+  color-scheme: dark;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .ckc-input:focus {
   outline: none;
-  border-color: var(--border-gold);
+  background: var(--ckc-elevated);
+  border-color: var(--ckc-gold);
 }
 
 .ckc-input::placeholder {
@@ -520,29 +533,310 @@ body {
 }
 
 .ckc-input[type='date'] {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .ckc-input[type='date']::-webkit-calendar-picker-indicator {
-  filter: invert(0.85) brightness(1.2);
-  opacity: 0.9;
+  filter: none;
+  opacity: 0.7;
   cursor: pointer;
 }
 
 .ckc-card {
-  background: var(--ckc-surface);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--ckc-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.35);
+  color: var(--cloud);
 }
 
 .ckc-label-pill {
   display: inline-block;
   background: var(--ckc-elevated);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(199, 197, 211, 0.5);
   color: var(--ckc-gold);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 4px 12px;
-  border-radius: 4px;
+  border-radius: 8px;
 }
+
+/* Visitor welcome / church info */
+@keyframes visitor-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.visitor-welcome {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2.5rem;
+}
+
+.visitor-welcome-hero {
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 0.5px solid var(--life-border);
+  animation: visitor-fade-up 0.55s ease both;
+}
+
+.visitor-welcome-kicker {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ckc-gold);
+  margin-bottom: 0.65rem;
+}
+
+.visitor-welcome-brand {
+  font-size: 1.55rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ckc-black);
+  margin-bottom: 1rem;
+}
+
+.visitor-welcome-title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ckc-black);
+  margin-bottom: 0.5rem;
+}
+
+.visitor-welcome-lead {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ckc-muted);
+  max-width: 22rem;
+  margin-bottom: 1.1rem;
+}
+
+.visitor-welcome-links {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  animation: visitor-fade-up 0.65s ease 0.12s both;
+}
+
+.visitor-welcome-link {
+  font-size: 12px;
+  color: var(--ckc-black);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(197, 160, 115, 0.55);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.visitor-welcome-link:hover {
+  color: var(--ckc-gold-dim);
+}
+
+.visitor-welcome-dot {
+  color: var(--ckc-gold);
+  font-size: 12px;
+}
+
+.visitor-welcome-block {
+  padding-top: 1.5rem;
+  padding-bottom: 0.5rem;
+  animation: visitor-fade-up 0.55s ease 0.18s both;
+}
+
+.visitor-welcome-heading {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--life-text);
+  margin-bottom: 0.85rem;
+}
+
+.visitor-welcome-copy {
+  font-size: 15px;
+  line-height: 1.65;
+  color: #3F392F;
+}
+
+.visitor-welcome-vision {
+  background: var(--life-content);
+  padding-top: 1.35rem;
+  padding-bottom: 1.35rem;
+  margin-top: 0.75rem;
+}
+
+.visitor-welcome-vision-text {
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: var(--ckc-black);
+  font-weight: 500;
+}
+
+.visitor-welcome-values {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.visitor-welcome-value-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ckc-black);
+  margin-bottom: 0.2rem;
+}
+
+.visitor-welcome-connect {
+  margin-top: 1.25rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+  border-top: 0.5px solid var(--life-border);
+  text-align: center;
+  animation: visitor-fade-up 0.55s ease 0.24s both;
+}
+
+.visitor-welcome-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.visitor-welcome-contact-link {
+  font-size: 13px;
+  color: var(--ckc-black);
+  text-decoration: none;
+}
+
+.visitor-welcome-contact-link:hover {
+  color: var(--ckc-gold-dim);
+}
+
+.visitor-welcome-socials {
+  display: flex;
+  justify-content: center;
+  gap: 1.1rem;
+  color: var(--ckc-black);
+}
+
+.visitor-welcome-social {
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.visitor-welcome-social:hover {
+  color: var(--ckc-gold);
+}
+
+/* Light RSVP / register modal — override dark-theme text & inputs for readability */
+.rsvp-light {
+  color: var(--ckc-black);
+}
+
+.rsvp-light [class*='text-cloud'] {
+  color: var(--ckc-black) !important;
+}
+
+.rsvp-light [class*='text-cloud/'] {
+  color: #555 !important;
+}
+
+.rsvp-light strong[class*='text-cloud'] {
+  color: var(--ckc-black) !important;
+}
+
+.rsvp-light .ckc-input,
+.rsvp-light select.ckc-input,
+.rsvp-light textarea.ckc-input {
+  background: #fff !important;
+  border: 0.5px solid var(--life-border) !important;
+  color: var(--ckc-black) !important;
+  color-scheme: light;
+}
+
+.rsvp-light .ckc-input::placeholder {
+  color: var(--ckc-muted) !important;
+}
+
+.rsvp-light .ckc-input:focus {
+  border-color: var(--ckc-gold) !important;
+}
+
+.rsvp-light [class*='border-white/'] {
+  border-color: var(--life-border) !important;
+}
+
+.rsvp-light [class*='bg-white/5'] {
+  background: var(--life-content) !important;
+}
+
+.rsvp-light label {
+  color: #444;
+}
+
+.rsvp-light button.border-white\/10,
+.rsvp-light [class*='bg-ckc-elevated'] {
+  background: #fff !important;
+  border-color: var(--life-border) !important;
+  color: #444 !important;
+}
+
+.rsvp-light button.btn-ckc-gold {
+  color: var(--ckc-gold-text) !important;
+}
+
+.ckc-card .text-ckc-white {
+  color: var(--ckc-black) !important;
+}
+
+.life-tile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+}
+
+.life-tile-icon-navy {
+  background: var(--ckc-gold);
+  color: var(--ckc-gold-text);
+}
+
+.life-tile-icon-cyan {
+  background: var(--ckc-gold-button);
+  color: var(--ckc-gold-text);
+}
+
+.life-tile-icon-slate {
+  background: #232628;
+  color: #ffffff;
+}
+
+.life-tile-icon-lilac {
+  background: #e0e0ff;
+  color: var(--ckc-gold);
+}
+
+.life-now-playing-card p,
+.life-now-playing-card .text-ckc-black,
+.life-now-playing-card .text-ckc-muted {
+  color: inherit;
+}
+
+
+
+

@@ -60,7 +60,7 @@ export default function ChangePasswordPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ckc-gold/20">
               <span className="text-xl text-ckc-gold">✓</span>
             </div>
-            <h2 className="text-base font-semibold text-ckc-white">Password updated</h2>
+            <h2 className="text-base font-semibold text-cloud">Password updated</h2>
             <p className="text-xs text-ckc-muted">Use your new password next time you sign in.</p>
             <Link href={backHref} className="text-sm text-ckc-gold hover:underline">
               Back to app
@@ -68,7 +68,7 @@ export default function ChangePasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="text-base font-semibold text-ckc-white">Change password</h2>
+            <h2 className="text-base font-semibold text-cloud">Change password</h2>
             <p className="text-xs text-ckc-muted">
               Available for staff and members who sign in with a password.
             </p>

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import { getAdminPrayerRequests, updatePrayerStatus } from '@/lib/prayer/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { PRAYER_STATUS_LABELS, type PrayerRequest, type PrayerStatus } from '@/lib/prayer/types';
 import { getCampusLabel } from '@/lib/church/constants';
 import { useBackend } from '@/lib/api/client';
@@ -24,7 +25,7 @@ export default function PrayerRequestsPage() {
   const backend = useBackend();
 
   const load = async () => {
-    setRequests(await getAdminPrayerRequests({ allCampuses: true }));
+    setRequests(await getAdminPrayerRequests({ churchId: resolveMemberChurch(), allCampuses: true }));
   };
 
   useEffect(() => {

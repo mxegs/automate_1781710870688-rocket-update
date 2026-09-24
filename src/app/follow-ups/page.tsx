@@ -6,6 +6,7 @@ import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import { CAMPUSES, FOLLOWUP_STAGES, getCampusLabel, type CampusId, type FollowUpStageId } from '@/lib/church/constants';
 import { getFollowUps, sendFollowUpMessage, updateFollowUpStage } from '@/lib/followups/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import type { FollowUpContact } from '@/lib/followups/service';
 import { useBackend } from '@/lib/api/client';
 
@@ -24,14 +25,22 @@ export default function FollowUpsPage() {
   const [channel, setChannel] = useState<'sms' | 'whatsapp' | 'newsletter'>('sms');
   const [sending, setSending] = useState(false);
   const [sentResult, setSentResult] = useState('');
+  const [actionError, setActionError] = useState('');
   const backend = useBackend();
 
   const load = async () => {
-    const list = await getFollowUps({
-      campusId: campusFilter !== 'All' ? (campusFilter as CampusId) : undefined,
-      stage: stageFilter !== 'All' ? (stageFilter as FollowUpStageId) : undefined,
-    });
-    setContacts(list);
+    setActionError('');
+    try {
+      const list = await getFollowUps({
+        churchId: resolveMemberChurch(),
+        campusId: campusFilter !== 'All' ? (campusFilter as CampusId) : undefined,
+        stage: stageFilter !== 'All' ? (stageFilter as FollowUpStageId) : undefined,
+      });
+      setContacts(list);
+    } catch (err) {
+      setContacts([]);
+      setActionError(err instanceof Error ? err.message : 'Could not load follow-ups.');
+    }
   };
 
   useEffect(() => {
@@ -43,6 +52,7 @@ export default function FollowUpsPage() {
   const handleSend = async () => {
     if (!message.trim() || filtered.length === 0) return;
     setSending(true);
+    setActionError('');
     try {
       const result = await sendFollowUpMessage({
         contactIds: filtered.map((c) => c.id),
@@ -53,14 +63,21 @@ export default function FollowUpsPage() {
       setShowMessage(false);
       setMessage('');
       load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not send message.');
     } finally {
       setSending(false);
     }
   };
 
   const handleStageChange = async (id: string, stage: FollowUpStageId) => {
-    await updateFollowUpStage(id, stage);
-    load();
+    setActionError('');
+    try {
+      await updateFollowUpStage(id, stage);
+      load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not update stage.');
+    }
   };
 
   return (
@@ -87,6 +104,7 @@ export default function FollowUpsPage() {
       {sentResult && (
         <p className="mb-4 text-sm text-ckc-gold">{sentResult}</p>
       )}
+      {actionError && <p className="mb-4 text-sm text-rose-400">{actionError}</p>}
 
       <ContentCard>
         <div className="mb-4 flex flex-wrap gap-2">
@@ -173,11 +191,14 @@ export default function FollowUpsPage() {
               placeholder="Your message…"
               className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-cloud"
             />
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-col gap-2">
+              {actionError && <p className="text-sm text-rose-400">{actionError}</p>}
+              <div className="flex gap-3">
               <button onClick={() => setShowMessage(false)} className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm text-cloud/60">Cancel</button>
               <button onClick={handleSend} disabled={sending} className="flex-1 rounded-lg bg-ckc-gold py-2.5 text-sm font-bold text-ckc-black">
                 {sending ? 'Sending…' : 'Send'}
               </button>
+              </div>
             </div>
           </div>
         </div>

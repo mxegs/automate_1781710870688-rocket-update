@@ -90,6 +90,20 @@ union all select
       and column_name = 'phone' and is_nullable = 'YES'
   ) then '✓ RUN' else '✗ MISSING — run simplify_email_signup.sql' end
 
+union all select
+  '20250812100000_magic_link_tokens',
+  case when exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'magic_link_tokens'
+  ) then '✓ RUN' else '✗ MISSING — run magic_link_tokens.sql' end
+
+union all select
+  '20250812110000_password_setup_tokens',
+  case when exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'password_setup_tokens'
+  ) then '✓ RUN' else '✗ MISSING — run password_setup_tokens.sql' end
+
 order by migration;
 
 -- Broadcast email readiness (members with email addresses)

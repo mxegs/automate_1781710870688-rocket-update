@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { canAccessRoute } from '@/lib/auth/permissions';
 import { getGroupsLedBy } from '@/lib/groups/service';
+import type { UserRole } from '@/lib/auth/session';
 import {
   getPostLoginRoute,
   getSession,
   getViewMode,
   isStaffRole,
 } from '@/lib/auth/session';
-import type { UserRole } from '@/lib/auth/session';
+import { extractChurchSlug } from '@/lib/church/resolve-from-url';
 
 type PortalAccess = 'staff' | 'member' | 'shared' | 'visitor' | 'group-leader';
 
@@ -29,7 +30,18 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
     setAllowed(false);
     const session = getSession();
 
+    // Shared Church Life pages (sermons, events, daily word, church info) are public
+    if (access === 'shared' && !session) {
+      setAllowed(true);
+      return;
+    }
+
     if (!session) {
+      router.replace('/login');
+      return;
+    }
+
+    if (!session.churchId && !extractChurchSlug(pathname) && access !== 'shared') {
       router.replace('/login');
       return;
     }
@@ -37,8 +49,15 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
     const viewMode = getViewMode(session);
 
     (async () => {
-      const led = await getGroupsLedBy(session.phone);
-      const leadsGroups = led.length > 0;
+      let leadsGroups = false;
+      if (access === 'group-leader') {
+        try {
+          const led = await getGroupsLedBy(session.phone, session.churchId);
+          leadsGroups = led.length > 0;
+        } catch {
+          leadsGroups = false;
+        }
+      }
 
       if (!canAccessRoute(session.role, pathname, viewMode, session.isSuperAdmin)) {
         router.replace(getPostLoginRoute(session.role, viewMode));
@@ -49,7 +68,9 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
       const staffInMemberView = isStaffRole(session.role) && viewMode === 'member';
 
       if (access === 'visitor') {
-        portalOk = session.role === 'visitor';
+        // Legacy visitor home — send guests to public church info
+        router.replace('/member/church-info');
+        return;
       } else if (access === 'shared') {
         portalOk =
           session.role === 'member' ||
@@ -63,7 +84,8 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
       } else if (portal === 'member') {
         portalOk = session.role === 'member' || staffInMemberView;
       } else if (portal === 'visitor') {
-        portalOk = session.role === 'visitor';
+        router.replace('/member/church-info');
+        return;
       } else if (portal === 'staff') {
         portalOk = isStaffRole(session.role) && viewMode !== 'member';
       }
@@ -79,7 +101,7 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
 
   if (!allowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ckc-black text-ckc-muted">
+      <div className="flex min-h-screen items-center justify-center bg-life-page text-ckc-muted">
         <p className="text-sm">Loading…</p>
       </div>
     );

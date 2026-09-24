@@ -23,5 +23,18 @@ export async function GET(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
 
-  return NextResponse.json(mapInvite(data));
+  let churchSlug: string | null = null;
+  let churchName: string | null = null;
+  const churchId = (data as { church_id?: string | null }).church_id;
+  if (churchId) {
+    const { data: church } = await db
+      .from('churches')
+      .select('slug, name')
+      .eq('id', churchId)
+      .maybeSingle();
+    churchSlug = church?.slug ?? null;
+    churchName = church?.name ?? null;
+  }
+
+  return NextResponse.json(mapInvite({ ...data, churchSlug, churchName }));
 }

@@ -1,5 +1,6 @@
 import { apiFetch, useBackend } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 import type { PrayerRequest, PrayerRequestInput, PrayerStatus } from './types';
 
 export async function submitPrayerRequest(
@@ -12,11 +13,13 @@ export async function submitPrayerRequest(
 }
 
 export async function getAdminPrayerRequests(options: {
+  churchId?: string;
   campusId?: CampusId;
   allCampuses?: boolean;
 }): Promise<PrayerRequest[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams();
+  withChurchId(params, options.churchId);
   if (options.allCampuses) params.set('allCampuses', 'true');
   else if (options.campusId) params.set('campusId', options.campusId);
   return apiFetch<PrayerRequest[]>(`/api/prayer-requests?${params}`);

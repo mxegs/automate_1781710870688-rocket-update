@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import PwaRegister from '@/components/PwaRegister';
+import { APP_NAME } from '@/lib/assets';
 import '../styles/tailwind.css';
 
 export const viewport: Viewport = {
@@ -10,18 +11,18 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Christ Kingdom Citizens — CKC App',
-  description: 'Christ Kingdom Citizens church app for members, visitors, events, sermons, and membership registration.',
-  applicationName: 'CKC',
+  title: APP_NAME,
+  description: 'Church app for members, visitors, events, sermons, and membership registration.',
+  applicationName: APP_NAME,
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'CKC',
+    title: APP_NAME,
   },
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/assets/images/app_logo.png', type: 'image/png' }],
-    apple: [{ url: '/assets/images/app_logo.png' }],
+    icon: [{ url: '/assets/brand/logo-mark-on-dark.png', type: 'image/png' }],
+    apple: [{ url: '/assets/brand/logo-mark-on-dark.png' }],
   },
 };
 
@@ -40,6 +41,12 @@ export default function RootLayout({
         <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fautomate13967back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.19" />
         <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" /></head>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "document.documentElement.style.setProperty('--ckc-primary','#6B7280');document.documentElement.style.setProperty('--ckc-secondary','#F7F3EE');",
+          }}
+        />
         <PwaRegister />
         {children}
       </body>

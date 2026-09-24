@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAppUrl } from '@/lib/app-url';
 import { resolveEmailOtpPurpose } from '@/lib/auth/email-login-server';
-import { issueMagicLink } from '@/lib/auth/magic-link-server';
+import { issueMagicLink, purgeExpiredMagicLinks } from '@/lib/auth/magic-link-server';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import { sendMagicLinkEmail } from '@/lib/email/service';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -25,17 +25,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: allowed.error }, { status: 403 });
   }
 
-  const token = issueMagicLink(email, allowVisitor);
-  const signInUrl = `${getAppUrl(request)}/login/verify?token=${encodeURIComponent(token)}`;
-  const result = await sendMagicLinkEmail(email, signInUrl);
+  try {
+    void purgeExpiredMagicLinks(db);
+    const token = await issueMagicLink(db, email, allowVisitor);
+    const signInUrl = `${getAppUrl(request)}/login/verify?token=${encodeURIComponent(token)}`;
+    const { data: profile } = await db.from('profiles').select('church_id').ilike('email', email).maybeSingle();
+    const result = await sendMagicLinkEmail(email, signInUrl, profile?.church_id ?? null);
 
-  if (!result.success) {
-    return NextResponse.json({ error: result.error ?? 'Could not send email' }, { status: 502 });
+    if (!result.success) {
+      return NextResponse.json({ error: result.error ?? 'Could not send email' }, { status: 502 });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      demo: result.demo ?? false,
+      demoLink: result.demo ? signInUrl : undefined,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Could not create sign-in link' },
+      { status: 500 },
+    );
   }
-
-  return NextResponse.json({
-    ok: true,
-    demo: result.demo ?? false,
-    demoLink: result.demo ? signInUrl : undefined,
-  });
 }

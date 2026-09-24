@@ -6,11 +6,23 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard, StatCard } from '@/components/portal/PageHeader';
 import { getAdminEvents } from '@/lib/events/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import type { ChurchEvent } from '@/lib/events/types';
 
-const recentVisitors: { name: string; date: string; status: string; source: string }[] = [];
+const recentVisitors: { name: string; date: string; status: string; source: string }[] = [
+  { name: 'Lerato Dlamini', date: '24 Aug', status: 'New Visitor', source: 'Sunday service' },
+  { name: 'Johan van der Merwe', date: '17 Aug', status: 'Contacted', source: 'Friend' },
+  { name: 'Amahle Naidoo', date: '10 Aug', status: 'Follow-Up Scheduled', source: 'Youth gathering' },
+  { name: 'Sipho Khumalo', date: '3 Aug', status: 'Attending Regularly', source: 'Walk-in' },
+  { name: 'Naledi Mokoena', date: '20 Jul', status: 'Membership Candidate', source: 'Social media' },
+];
 
-const prayerRequests: { name: string; category: string; status: string; date: string }[] = [];
+const prayerRequests: { name: string; category: string; status: string; date: string }[] = [
+  { name: 'Thabo Molefe', category: 'Health', status: 'In Prayer', date: '1 Sep' },
+  { name: 'Nomsa Khumalo', category: 'Family', status: 'Assigned', date: '30 Aug' },
+  { name: 'Kagiso Mthembu', category: 'Employment', status: 'New', date: '29 Aug' },
+  { name: 'Precious Mahlangu', category: 'Spiritual Growth', status: 'Answered', date: '22 Aug' },
+];
 
 const statusColors: Record<string, string> = {
   'New Visitor': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
@@ -27,7 +39,7 @@ export default function DashboardPage() {
   const [upcomingEvents, setUpcomingEvents] = useState<ChurchEvent[]>([]);
 
   useEffect(() => {
-    getAdminEvents({ allCampuses: true }).then((e) => setUpcomingEvents(e.slice(0, 4)));
+    getAdminEvents({ churchId: resolveMemberChurch(), allCampuses: true }).then((e) => setUpcomingEvents(e.slice(0, 4)));
   }, []);
 
   return (

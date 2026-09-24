@@ -16,7 +16,14 @@ interface CareRecord {
   notes?: string;
 }
 
-const mockCareRecords: CareRecord[] = [];
+const mockCareRecords: CareRecord[] = [
+  { id: 1, memberName: 'Thabo Molefe', type: 'Hospital Visit', description: 'Recovering after surgery. Family asked for pastoral prayer and a short visit this week.', assignedTo: 'Apostle V Mahlaba', status: 'Scheduled', date: '1 Sep 2026', scheduledDate: '4 Sep 2026', notes: 'Confirm visiting hours with spouse Nomsa.' },
+  { id: 2, memberName: 'Lerato Dlamini', type: 'Counseling', description: 'Requested a confidential conversation about family pressure and work stress.', assignedTo: 'Dr T Mahlaba', status: 'In Progress', date: '28 Aug 2026', scheduledDate: '3 Sep 2026' },
+  { id: 3, memberName: 'Sipho Nkosi', type: 'Home Visit', description: 'New member follow-up after approval. Introduce small group options.', assignedTo: 'Campus Pastor', status: 'Open', date: '30 Aug 2026' },
+  { id: 4, memberName: 'Nomsa Khumalo', type: 'Follow-up', description: 'Missed two Sundays. Check in and see if transport is a barrier.', assignedTo: 'Hospitality Lead', status: 'Scheduled', date: '25 Aug 2026', scheduledDate: '6 Sep 2026' },
+  { id: 5, memberName: 'Kagiso Mthembu', type: 'Counseling', description: 'Marriage check-in requested after the couples breakfast.', assignedTo: 'Dr T Mahlaba', status: 'Completed', date: '12 Aug 2026', scheduledDate: '20 Aug 2026', notes: 'Encouraged; will reconnect in a month.' },
+  { id: 6, memberName: 'Johan van der Merwe', type: 'Home Visit', description: 'First-time visitor follow-up in Glen Austin.', assignedTo: 'Follow-up Team', status: 'Closed', date: '18 Aug 2026' },
+];
 
 const statusColors: Record<string, string> = {
   Open: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',

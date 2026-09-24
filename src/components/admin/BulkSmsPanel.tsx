@@ -18,13 +18,16 @@ export default function BulkSmsPanel({ onClose }: BulkSmsPanelProps) {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState('');
 
   const refreshCount = async () => {
+    setPreviewError('');
     try {
       const preview = await previewBulkSms({ campusId, gender, ageCategory });
       setCount(preview.count);
-    } catch {
+    } catch (err) {
       setCount(0);
+      setPreviewError(err instanceof Error ? err.message : 'Could not load recipient count.');
     }
   };
 
@@ -108,6 +111,7 @@ export default function BulkSmsPanel({ onClose }: BulkSmsPanelProps) {
           <Icon name="UsersIcon" size={14} variant="outline" className="inline mr-1" />
           {count} member{count === 1 ? '' : 's'} will receive this SMS
         </p>
+        {previewError && <p className="mb-3 text-xs text-rose-400">{previewError}</p>}
 
         <textarea
           value={message}

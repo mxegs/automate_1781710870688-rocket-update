@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { mapEventRow } from '@/lib/events/mappers';
 import { filterEventsFeed } from '@/lib/events/utils';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function eventInsertPayload(body: Record<string, unknown>) {
@@ -38,10 +39,12 @@ export async function GET(request: Request) {
   const allCampuses = searchParams.get('allCampuses') === 'true';
   const memberCampus = searchParams.get('memberCampus');
   const isVisitor = searchParams.get('isVisitor') === 'true';
+  const churchId = churchIdFromUrl(request.url);
 
   const { data: events, error } = await db
     .from('events')
     .select('*')
+    .eq('church_id', churchId)
     .order('starts_at', { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -53,6 +56,7 @@ export async function GET(request: Request) {
     const { data: rsvps } = await db
       .from('event_rsvps')
       .select('event_id')
+      .eq('church_id', churchId)
       .in('event_id', eventIds)
       .eq('status', 'going');
     for (const r of rsvps ?? []) {

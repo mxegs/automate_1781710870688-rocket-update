@@ -40,6 +40,7 @@ export default function BroadcastPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [mailchimpStatus, setMailchimpStatus] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState('');
 
   const campusLocked = Boolean(campusScope) && !isLeader && !churchWide;
 
@@ -50,12 +51,12 @@ export default function BroadcastPage() {
   useEffect(() => {
     const loadGroups = async () => {
       if (isLeader && session?.phone) {
-        const led = await getGroupsLedBy(session.phone);
+        const led = await getGroupsLedBy(session.phone, session?.churchId);
         setGroups(led);
         if (led[0]) setGroupId((prev) => prev || led[0].id);
         return;
       }
-      const list = await getAllGroups();
+      const list = await getAllGroups(session?.churchId);
       const scoped = allCampuses ? list : campusScope ? list.filter((g) => g.campus === campusScope) : list;
       setGroups(scoped);
       if (scoped[0]) setGroupId((prev) => prev || scoped[0].id);
@@ -88,15 +89,17 @@ export default function BroadcastPage() {
   );
 
   const refreshCount = async () => {
+    setPreviewError('');
     try {
       const preview = await previewBroadcast(filters);
       setCount(preview.count);
       setSmsCount(preview.smsCount);
       setEmailCount(preview.emailCount);
-    } catch {
+    } catch (err) {
       setCount(0);
       setSmsCount(0);
       setEmailCount(0);
+      setPreviewError(err instanceof Error ? err.message : 'Could not load audience preview.');
     }
   };
 
@@ -129,7 +132,7 @@ export default function BroadcastPage() {
         ...filters,
         channel,
         message: message.trim(),
-        subject: subject.trim() || 'Message from CKC',
+        subject: subject.trim() || 'Message from your church',
       });
       const demoNote = res.demo ? ' (demo mode)' : '';
       const warnNote = 'warnings' in res && res.warnings?.length ? ` Note: ${res.warnings.join(' ')}` : '';
@@ -225,6 +228,7 @@ export default function BroadcastPage() {
             <div className="rounded-lg border border-ckc-gold/20 bg-ckc-gold/10 px-3 py-2 text-xs text-ckc-gold">
               <p>{count} people in audience</p>
               <p className="mt-1 text-ckc-gold/80">{smsCount} with phone · {emailCount} with email</p>
+              {previewError && <p className="mt-2 text-rose-400">{previewError}</p>}
             </div>
           </div>
         </ContentCard>

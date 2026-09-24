@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
+import LifeHero from '@/components/church-life/LifeHero';
+import { LIFE_PHOTOS, lifeImageFor } from '@/lib/church-life/imagery';
 
 interface BibleStudyLesson {
   id: number;
@@ -27,45 +29,55 @@ export default function BibleStudyPage() {
   const [activeWeek, setActiveWeek] = useState(CURRENT_WEEK);
   const seriesTitle = lessons[0]?.series ?? 'Foundations of faith';
   const currentLesson = lessons.find((l) => l.week === CURRENT_WEEK);
+  const activeLesson = lessons.find((l) => l.week === activeWeek) ?? currentLesson;
 
   return (
     <AppShell access="shared">
-      <div className="life-section space-y-3">
-        <div>
-          <p className="text-[10px] text-ckc-gold">Series</p>
-          <h1 className="text-base font-medium capitalize text-ckc-black">{seriesTitle}</h1>
-        </div>
+      <div className="px-5 pb-8 pt-5">
+        <LifeHero
+          imageUrl={LIFE_PHOTOS.bible}
+          titleLead={seriesTitle}
+          titleRest={currentLesson ? `Week ${currentLesson.week} · ${currentLesson.title}` : 'Daily Word'}
+          badge="Bible study"
+        />
 
-        {currentLesson && (
-          <div className="rounded-xl bg-ckc-card p-3">
-            <p className="text-[9px] text-ckc-gold">Current week</p>
-            <p className="text-xs font-medium text-white">
-              Week {currentLesson.week} — {currentLesson.title}
+        {activeLesson ? (
+          <div className="mt-5 rounded-[22px] bg-white p-5 shadow-[0_10px_28px_rgba(26,22,18,0.08)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ckc-gold-dim">This week</p>
+            <p className="mt-1 text-lg font-semibold text-ckc-black">
+              Week {activeLesson.week} — {activeLesson.title}
             </p>
-            <p className="text-[10px] text-[#999]">{currentLesson.scripture}</p>
+            <p className="mt-1 text-sm text-ckc-muted">{activeLesson.scripture}</p>
           </div>
-        )}
+        ) : null}
 
-        <div className="space-y-1.5">
+        <div className="mt-5 space-y-3">
           {lessons.map((lesson) => {
             const isActive = lesson.week === activeWeek;
-            const label = `Week ${lesson.week} — ${lesson.title}`;
-
             return (
               <button
                 key={lesson.id}
                 type="button"
                 onClick={() => setActiveWeek(lesson.week)}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-[11px] transition-colors ${
-                  isActive
-                    ? 'border border-ckc-gold text-ckc-black'
-                    : 'border border-[#E5E5E5] text-ckc-black'
+                className={`flex w-full items-center gap-3 overflow-hidden rounded-[20px] bg-white p-2 pr-4 text-left shadow-[0_8px_24px_rgba(26,22,18,0.06)] ${
+                  isActive ? 'ring-2 ring-ckc-gold' : ''
                 }`}
               >
-                <span>{label}</span>
-                {lesson.completed && (
-                  <Icon name="CheckIcon" size={13} variant="outline" className="text-[#639922]" />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={lifeImageFor(`bible-${lesson.week}`)}
+                  alt=""
+                  className="h-16 w-16 shrink-0 rounded-[14px] object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-semibold text-ckc-black">
+                    Week {lesson.week} — {lesson.title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-ckc-muted">{lesson.scripture}</p>
+                </div>
+                {lesson.completed ? (
+                  <Icon name="CheckIcon" size={16} variant="outline" className="shrink-0 text-[#639922]" />
+                ) : null}
               </button>
             );
           })}

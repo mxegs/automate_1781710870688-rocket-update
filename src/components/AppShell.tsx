@@ -18,11 +18,7 @@ export default function AppShell({
     access === 'member' || access === 'visitor' || access === 'shared';
 
   if (isChurchLife) {
-    return (
-      <ChurchLifeShell access={access === 'shared' ? 'member' : access}>
-        {children}
-      </ChurchLifeShell>
-    );
+    return <ChurchLifeShell access={access}>{children}</ChurchLifeShell>;
   }
 
   const portal = access === 'group-leader' ? 'staff' : access;

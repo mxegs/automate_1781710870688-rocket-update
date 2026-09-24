@@ -8,9 +8,14 @@ import Icon from '@/components/ui/AppIcon';
 import EventRegisterPanel from '@/components/events/EventRegisterPanel';
 import VisitorEventSignupForm from '@/components/events/VisitorEventSignupForm';
 import EventDetailCard from '@/components/events/EventDetailCard';
-import { getEventById } from '@/lib/events/service';
+import CheckInPanel from '@/components/events/CheckInPanel';
+import { getEventById, getMyCheckin, type MyCheckIn } from '@/lib/events/service';
 import { eventActionLabel } from '@/lib/events/form';
 import { getDisplayName, getSession } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
+import { resolveMemberIdsFromSession } from '@/lib/member/identity';
+import { getMembershipApplication } from '@/lib/membership/service';
+import type { Dependant } from '@/lib/membership/types';
 import {
   getVisitorEventProfile,
   hasCompleteVisitorEventProfile,
@@ -25,17 +30,51 @@ export default function MemberEventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showRegister, setShowRegister] = useState(false);
   const [visitorProfile, setVisitorProfile] = useState<VisitorEventProfile | null>(null);
+  const [checkin, setCheckin] = useState<MyCheckIn | null>(null);
+  const [dependants, setDependants] = useState<Dependant[]>([]);
+  const [memberIds, setMemberIds] = useState<{ profileId?: string; memberId?: string }>({});
+  const [isEventDay, setIsEventDay] = useState(false);
   const session = getSession();
-  const isVisitor = session?.role === 'visitor';
+  const isVisitor = !session || session.role === 'visitor';
 
   useEffect(() => {
-    getEventById(eventId).then((e) => {
-      setEvent(e);
-      setLoading(false);
-    });
+    let cancelled = false;
+    setLoading(true);
+    const churchId = resolveMemberChurch();
+    getEventById(eventId, churchId)
+      .then(async (loaded) => {
+        if (cancelled) return;
+        setEvent(loaded);
+        if (!loaded || isVisitor) return;
+        const start = new Date(loaded.startsAt).getTime();
+        const end = loaded.endsAt ? new Date(loaded.endsAt).getTime() : start + 2 * 60 * 60 * 1000;
+        const now = Date.now();
+        const open = now >= start && now <= end;
+        setIsEventDay(open);
+        const ids = await resolveMemberIdsFromSession();
+        if (cancelled) return;
+        setMemberIds({ profileId: ids?.profileId, memberId: ids?.memberId ?? undefined });
+        if (ids?.profileId) {
+          const mine = await getMyCheckin(loaded.id, ids.profileId).catch(() => null);
+          if (!cancelled) setCheckin(mine);
+        }
+        if (session?.phone) {
+          const application = await getMembershipApplication(session.phone, churchId).catch(() => null);
+          if (!cancelled) setDependants(application?.guardian?.dependants ?? []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setEvent(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     if (isVisitor) {
       setVisitorProfile(getVisitorEventProfile());
     }
+    return () => {
+      cancelled = true;
+    };
   }, [eventId, isVisitor]);
 
   const handleShare = async () => {
@@ -77,12 +116,21 @@ export default function MemberEventDetailPage() {
       <div className="life-section">
         <Link
           href="/member/events"
-          className="mb-2.5 inline-flex items-center gap-1 text-[11px] text-ckc-muted hover:text-ckc-gold"
+          className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-ckc-muted hover:text-ckc-gold-dim"
         >
           <Icon name="ArrowLeftIcon" size={11} variant="outline" />
           Back to events
         </Link>
 
+        {!isVisitor && isEventDay && !checkin ? (
+          <CheckInPanel
+            event={event}
+            profileId={memberIds.profileId}
+            memberId={memberIds.memberId}
+            dependants={dependants}
+            memberName={getDisplayName(session)}
+          />
+        ) : null}
         <EventDetailCard
           event={event}
           onAction={() => setShowRegister(true)}
@@ -93,7 +141,7 @@ export default function MemberEventDetailPage() {
 
       {showRegister && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
-          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-xl">
+          <div className="rsvp-light max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-start justify-between">
               <h2 className="text-lg font-bold text-ckc-black">
                 {isVisitor && !visitorReady ? 'Visitor sign-up' : registerLabel}

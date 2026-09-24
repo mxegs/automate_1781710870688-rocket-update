@@ -89,7 +89,7 @@ export const EVENT_VISIBILITY_OPTIONS = [
   },
   {
     value: 'church_wide' as ContentVisibility,
-    label: 'All CKC campuses (collective)',
+    label: 'All campuses (collective)',
     hint: 'Joint events — appears on Midrand and Verulam',
   },
   {

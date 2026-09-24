@@ -1,5 +1,6 @@
 import { normalizePhone } from '@/lib/auth/session';
 import { apiFetch, useBackend } from '@/lib/api/client';
+import { withChurchId } from '@/lib/church/tenant';
 import type { ChurchGroup, GroupBroadcast, GroupSong } from './types';
 
 const GROUPS_KEY = 'ckc_groups';
@@ -70,17 +71,19 @@ function ensureSeeded(): ChurchGroup[] {
   return existing;
 }
 
-export async function getAllGroups(): Promise<ChurchGroup[]> {
+export async function getAllGroups(churchId?: string): Promise<ChurchGroup[]> {
   if (useBackend()) {
-    return apiFetch<ChurchGroup[]>('/api/groups');
+    const params = withChurchId(new URLSearchParams(), churchId);
+    return apiFetch<ChurchGroup[]>(`/api/groups?${params}`);
   }
   return ensureSeeded();
 }
 
-export async function getGroupById(id: string): Promise<ChurchGroup | null> {
+export async function getGroupById(id: string, churchId?: string): Promise<ChurchGroup | null> {
   if (useBackend()) {
     try {
-      return await apiFetch<ChurchGroup>(`/api/groups/${id}`);
+      const params = withChurchId(new URLSearchParams(), churchId);
+      return await apiFetch<ChurchGroup>(`/api/groups/${id}?${params}`);
     } catch {
       return null;
     }
@@ -88,14 +91,20 @@ export async function getGroupById(id: string): Promise<ChurchGroup | null> {
   return ensureSeeded().find((g) => g.id === id) ?? null;
 }
 
-export async function getGroupsLedBy(phone: string): Promise<ChurchGroup[]> {
+export async function getGroupsLedBy(phone: string, churchId?: string): Promise<ChurchGroup[]> {
   const normalized = normalizePhone(phone);
-  const all = await getAllGroups();
-  return all.filter(
-    (g) =>
-      normalizePhone(g.leaderPhone) === normalized ||
-      g.leaderPhone.endsWith(normalized.slice(-9)),
-  );
+  // Empty / incomplete phone must never match (endsWith('') matches every leader)
+  if (!normalized || normalized.length < 9) {
+    return [];
+  }
+
+  const all = await getAllGroups(churchId);
+  const tail = normalized.slice(-9);
+  return all.filter((g) => {
+    const leader = normalizePhone(g.leaderPhone);
+    if (!leader) return false;
+    return leader === normalized || leader.endsWith(tail);
+  });
 }
 
 export function canManageGroups(role: string): boolean {
@@ -275,7 +284,7 @@ export async function markSongSent(songId: string, groupId?: string): Promise<Gr
 export async function sendSongToBand(song: GroupSong, group: ChurchGroup): Promise<{ sent: number; demo: boolean }> {
   const { sendSms } = await import('@/lib/sms/service');
   const chart = formatSongChart(song);
-  const message = `CKC Worship — ${song.title} (Key: ${song.key})\n\n${chart}`;
+  const message = `Worship — ${song.title} (Key: ${song.key})\n\n${chart}`;
   let sent = 0;
   for (const phone of group.memberPhones) {
     await sendSms(phone, message);
@@ -295,9 +304,10 @@ export type MemberOption = {
 
 export const DEMO_MEMBER_OPTIONS: MemberOption[] = [];
 
-export async function getMemberOptions(): Promise<MemberOption[]> {
+export async function getMemberOptions(churchId?: string): Promise<MemberOption[]> {
   if (useBackend()) {
     try {
+      const params = withChurchId(new URLSearchParams({ status: 'active' }), churchId);
       const members = await apiFetch<
         {
           full_name: string;
@@ -307,7 +317,7 @@ export async function getMemberOptions(): Promise<MemberOption[]> {
           age: number | null;
           status: string;
         }[]
-      >('/api/members?status=active');
+      >(`/api/members?${params}`);
       if (members.length > 0) {
         return members.map((m) => ({
           phone: m.phone,

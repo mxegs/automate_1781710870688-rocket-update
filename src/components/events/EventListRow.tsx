@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import LifePhoto from '@/components/church-life/LifePhoto';
+import { eventCover } from '@/lib/church-life/imagery';
 import { splitEventTitle } from '@/lib/events/title';
 import { formatEventListDate } from '@/lib/events/utils';
 import type { ChurchEvent } from '@/lib/events/types';
@@ -40,26 +42,44 @@ export default function EventListRow({
     return () => document.removeEventListener('mousedown', close);
   }, [menuOpen]);
 
+  if (variant === 'member' && isLight) {
+    return (
+      <Link
+        href={`/member/events/${event.id}`}
+        className="flex overflow-hidden rounded-[22px] bg-white shadow-[0_10px_28px_rgba(26,22,18,0.08)]"
+      >
+        <LifePhoto src={eventCover(event)} className="h-[104px] w-[104px] shrink-0" />
+        <div className="flex min-w-0 flex-1 flex-col justify-center px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ckc-gold-dim">
+            {day} {month} · {event.time}
+          </p>
+          <p className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-ckc-black">{event.title}</p>
+          <p className="mt-1 truncate text-xs text-ckc-muted">{event.location || event.category}</p>
+        </div>
+      </Link>
+    );
+  }
+
   const cardClass = isLight
-    ? 'rounded-xl bg-ckc-card'
+    ? 'rounded-xl bg-white border border-[#E5E5E5]'
     : 'rounded-2xl border border-white/10 bg-white/[0.04]';
 
-  const dateBorder = isLight ? 'border-[#333]' : 'border-white/10';
+  const dateBorder = isLight ? 'border-[#c7c5d3]/70' : 'border-white/10';
   const actionButtonClass = isLight
-    ? 'rounded-md bg-white px-2.5 py-1.5 text-[10px] font-medium text-ckc-black hover:bg-white/90'
-    : 'rounded-full bg-cloud px-4 py-2 text-xs font-bold text-ckc-black hover:bg-white transition-colors';
+    ? 'rounded-lg bg-ckc-gold-button px-2.5 py-1.5 text-[10px] font-semibold text-ckc-gold-text hover:bg-ckc-gold'
+    : 'rounded-full bg-ckc-gold-button px-4 py-2 text-xs font-bold text-white hover:bg-ckc-gold transition-colors';
 
   return (
     <article className={`flex items-center gap-2.5 overflow-hidden p-3 ${cardClass}`}>
       <div className={`flex shrink-0 flex-col items-center border-r pr-2.5 ${dateBorder}`}>
         <span className="font-serif-display text-xl font-normal leading-none text-ckc-gold">{day}</span>
-        <span className="mt-0.5 text-[9px] font-medium uppercase text-white">{month}</span>
+        <span className="mt-0.5 text-[9px] font-medium uppercase text-ckc-muted">{month}</span>
       </div>
 
       <div className="min-w-0 flex-1">
         <h3 className="text-xs leading-snug">
           <span className="text-ckc-gold">{lead}</span>
-          {rest ? <span className="font-medium text-white"> {rest}</span> : null}
+          {rest ? <span className="font-medium text-ckc-black"> {rest}</span> : null}
         </h3>
       </div>
 
@@ -81,7 +101,7 @@ export default function EventListRow({
                     setMenuOpen(false);
                     onEdit?.(event);
                   }}
-                  className="block w-full px-4 py-2.5 text-left text-xs text-white/80 hover:bg-white/5 hover:text-ckc-gold"
+                  className="block w-full px-4 py-2.5 text-left text-xs text-ckc-muted hover:bg-ckc-surface hover:text-ckc-gold"
                 >
                   Edit
                 </button>
@@ -91,14 +111,14 @@ export default function EventListRow({
                     setMenuOpen(false);
                     onRsvps?.(event);
                   }}
-                  className="block w-full px-4 py-2.5 text-left text-xs text-white/80 hover:bg-white/5 hover:text-ckc-gold"
+                  className="block w-full px-4 py-2.5 text-left text-xs text-ckc-muted hover:bg-ckc-surface hover:text-ckc-gold"
                 >
                   RSVPs
                 </button>
                 <Link
                   href={`/events/${event.id}`}
                   onClick={() => setMenuOpen(false)}
-                  className="block w-full px-4 py-2.5 text-left text-xs text-white/80 hover:bg-white/5 hover:text-ckc-gold"
+                  className="block w-full px-4 py-2.5 text-left text-xs text-ckc-muted hover:bg-ckc-surface hover:text-ckc-gold"
                 >
                   Details
                 </Link>

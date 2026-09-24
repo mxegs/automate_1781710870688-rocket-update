@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapGroup } from '@/lib/supabase/mappers';
 import { normalizePhone } from '@/lib/auth/session';
@@ -6,7 +7,7 @@ import { normalizePhone } from '@/lib/auth/session';
 const GROUP_SELECT = '*, group_members(member_phone)';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const db = getSupabaseAdmin();
@@ -15,7 +16,12 @@ export async function GET(
   }
 
   const { id } = await params;
-  const { data, error } = await db.from('groups').select(GROUP_SELECT).eq('id', id).maybeSingle();
+  const { data, error } = await db
+    .from('groups')
+    .select(GROUP_SELECT)
+    .eq('id', id)
+    .eq('church_id', churchIdFromUrl(request.url))
+    .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

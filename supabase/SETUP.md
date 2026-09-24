@@ -45,6 +45,7 @@ In Supabase Dashboard → **SQL Editor** → **New query**, run each file **in o
 10. `supabase/migrations/20250624000000_remove_dummy_contacts.sql` ← **removes fake phones/emails**
 11. `supabase/migrations/20250625000000_email_auth_invites.sql` ← **email on invites + invite requests**
 12. `supabase/migrations/20250626000000_simplify_email_signup.sql` ← **phone optional on requests/invites**
+13. `supabase/migrations/20250812100000_magic_link_tokens.sql` ← **durable email sign-in links**
 
 **Quick check:** paste and run `supabase/check_migrations.sql` — it shows ✓/✗ for each migration plus how many members have email for broadcast.
 

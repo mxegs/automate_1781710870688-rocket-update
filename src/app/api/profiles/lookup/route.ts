@@ -34,5 +34,6 @@ export async function GET(request: Request) {
     username: data.username,
     displayName: data.display_name,
     campusId: data.campus_id,
+    churchId: data.church_id ?? undefined,
   });
 }

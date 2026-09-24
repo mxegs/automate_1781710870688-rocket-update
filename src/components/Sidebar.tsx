@@ -17,7 +17,7 @@ import {
 import { filterAdminNavForRole, getLeaderNavItems, getRoleLabel } from '@/lib/auth/permissions';
 import { getGroupsLedBy } from '@/lib/groups/service';
 import type { UserRole, ViewMode } from '@/lib/auth/session';
-import { BRAND } from '@/lib/assets';
+import { getChurchBranding } from '@/lib/church/service';
 
 interface NavItem {
   label: string;
@@ -70,6 +70,7 @@ export default function Sidebar() {
   const [userRole, setUserRole] = useState<UserRole>('member');
   const [viewMode, setViewModeState] = useState<ViewMode>('staff');
 
+  const [churchMark, setChurchMark] = useState('Church');
   const [leadsGroups, setLeadsGroups] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -80,7 +81,8 @@ export default function Sidebar() {
       setDisplayName(getDisplayName(session));
       setViewModeState(getViewMode(session));
       setIsSuperAdmin(session.isSuperAdmin === true);
-      getGroupsLedBy(session.phone).then((led) => setLeadsGroups(led.length > 0));
+      getGroupsLedBy(session.phone, session.churchId).then((led) => setLeadsGroups(led.length > 0));
+      getChurchBranding(session.churchId).then((church) => setChurchMark(church.name || 'Church'));
     }
   }, [pathname]);
 
@@ -181,7 +183,7 @@ export default function Sidebar() {
   return (
     <>
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-ckc-black border-b border-white/10">
-        <AppLogo size={24} text={BRAND.abbreviation} className="text-cloud font-bold text-base tracking-tight" />
+        <AppLogo size={24} text={churchMark} className="text-cloud font-bold text-base tracking-tight" />
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="text-cloud/70 hover:text-cloud p-1"
@@ -201,7 +203,7 @@ export default function Sidebar() {
         }`}
       >
         <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-          <AppLogo size={24} text={BRAND.abbreviation} className="text-cloud font-bold text-base tracking-tight" />
+          <AppLogo size={24} text={churchMark} className="text-cloud font-bold text-base tracking-tight" />
           <button onClick={() => setMobileOpen(false)} className="text-cloud/50 hover:text-cloud">
             <Icon name="XMarkIcon" size={20} variant="outline" />
           </button>
@@ -243,7 +245,10 @@ export default function Sidebar() {
       >
         <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
           {!collapsed && (
-            <AppLogo size={24} text={BRAND.abbreviation} className="text-cloud font-bold text-sm tracking-tight" />
+            <div>
+              <p className="text-sm font-bold text-cloud tracking-tight">Leadership Desk</p>
+              <p className="text-[10px] text-ckc-gold">{churchMark}</p>
+            </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}

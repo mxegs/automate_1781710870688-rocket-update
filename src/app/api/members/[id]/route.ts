@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { MembershipApplication } from '@/lib/membership/types';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const db = getSupabaseAdmin();
@@ -12,11 +13,13 @@ export async function GET(
   }
 
   const { id } = await params;
+  const churchId = churchIdFromUrl(request.url);
 
   const { data: member, error } = await db
     .from('members')
     .select('*')
     .eq('id', id)
+    .eq('church_id', churchId)
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -30,6 +33,7 @@ export async function GET(
       .from('membership_applications')
       .select('application_data, submitted_at')
       .eq('id', member.application_id)
+      .eq('church_id', churchId)
       .maybeSingle();
 
     if (app?.application_data) {

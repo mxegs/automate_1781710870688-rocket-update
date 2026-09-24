@@ -35,6 +35,9 @@ export async function checkEmailLoginOptions(email: string): Promise<{
   hasPassword?: boolean;
   role?: string;
   source?: string;
+  pendingInvite?: boolean;
+  suspended?: boolean;
+  message?: string;
 }> {
   return apiFetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
 }

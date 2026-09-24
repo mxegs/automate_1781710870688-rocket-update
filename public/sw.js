@@ -1,4 +1,4 @@
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const CACHE_NAME = `ckc-app-v${CACHE_VERSION}`;
 const SHELL_URLS = ['/login', '/manifest.webmanifest', '/assets/images/app_logo.png'];
 

@@ -15,6 +15,7 @@ import {
 } from '@/lib/groups/service';
 import { getCampusLabel, CAMPUSES, AGE_CATEGORIES, type CampusId } from '@/lib/church/constants';
 import { getSession } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import type { ChurchGroup, GroupCategory } from '@/lib/groups/types';
 
 export default function GroupsAdminPage() {
@@ -38,8 +39,8 @@ export default function GroupsAdminPage() {
   });
 
   const refresh = async () => {
-    setGroups(await getAllGroups());
-    setMemberOptions(await getMemberOptions());
+    setGroups(await getAllGroups(resolveMemberChurch()));
+    setMemberOptions(await getMemberOptions(resolveMemberChurch()));
   };
 
   useEffect(() => {

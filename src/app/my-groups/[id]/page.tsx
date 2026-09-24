@@ -16,6 +16,7 @@ import {
   saveSong,
   sendSongToBand,
 } from '@/lib/groups/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { getSession } from '@/lib/auth/session';
 import { MUSICAL_KEYS, type GroupBroadcast, type GroupSong } from '@/lib/groups/types';
 import type { ChurchGroup } from '@/lib/groups/types';
@@ -47,7 +48,7 @@ export default function GroupLeaderPage() {
   });
 
   const refresh = async () => {
-    const g = await getGroupById(groupId);
+    const g = await getGroupById(groupId, resolveMemberChurch());
     setGroup(g);
     setBroadcasts(await getBroadcasts(groupId));
     setSongs(await getSongs(groupId));
@@ -60,12 +61,12 @@ export default function GroupLeaderPage() {
       return;
     }
     (async () => {
-      const g = await getGroupById(groupId);
+      const g = await getGroupById(groupId, session.churchId);
       if (!g) {
         router.replace('/my-groups');
         return;
       }
-      const led = await getGroupsLedBy(session.phone);
+      const led = await getGroupsLedBy(session.phone, session.churchId);
       const isAdmin = session.role === 'admin' || session.role === 'pastor';
       const isLeader = led.some((x) => x.id === groupId);
       if (!isLeader && !isAdmin) {

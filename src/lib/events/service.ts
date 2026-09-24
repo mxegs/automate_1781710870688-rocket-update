@@ -1,33 +1,39 @@
 import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 import type { ChurchEvent, EventInput, EventRsvp } from './types';
 
 export async function getAdminEvents(options: {
+  churchId?: string;
   campusId?: CampusId;
   allCampuses?: boolean;
 }): Promise<ChurchEvent[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams({ forAdmin: 'true' });
+  withChurchId(params, options.churchId);
   if (options.allCampuses) params.set('allCampuses', 'true');
   else if (options.campusId) params.set('campusId', options.campusId);
   return apiFetch<ChurchEvent[]>(`/api/events?${params}`);
 }
 
 export async function getMemberEventsFeed(options: {
+  churchId?: string;
   memberCampus?: CampusId;
   isVisitor?: boolean;
 }): Promise<ChurchEvent[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams();
+  withChurchId(params, options.churchId);
   if (options.memberCampus) params.set('memberCampus', options.memberCampus);
   if (options.isVisitor) params.set('isVisitor', 'true');
   return apiFetch<ChurchEvent[]>(`/api/events?${params}`);
 }
 
-export async function getEventById(id: string): Promise<ChurchEvent | null> {
+export async function getEventById(id: string, churchId?: string): Promise<ChurchEvent | null> {
   if (!useBackend()) return null;
   try {
-    return await apiFetch<ChurchEvent>(`/api/events/${id}`);
+    const params = withChurchId(new URLSearchParams(), churchId);
+    return await apiFetch<ChurchEvent>(`/api/events/${id}?${params}`);
   } catch {
     return null;
   }
@@ -109,12 +115,13 @@ export async function registerEventVisitor(data: {
   });
 }
 
-export async function getEventRsvps(eventId: string): Promise<EventRsvp[]> {
-  return apiFetch<EventRsvp[]>(`/api/events/${eventId}/rsvp`);
+export async function getEventRsvps(eventId: string, churchId?: string): Promise<EventRsvp[]> {
+  const params = withChurchId(new URLSearchParams(), churchId);
+  return apiFetch<EventRsvp[]>(`/api/events/${eventId}/rsvp?${params}`);
 }
 
-export async function getMyRsvp(eventId: string, phone: string): Promise<EventRsvp | null> {
-  const rsvps = await getEventRsvps(eventId);
+export async function getMyRsvp(eventId: string, phone: string, churchId?: string): Promise<EventRsvp | null> {
+  const rsvps = await getEventRsvps(eventId, churchId);
   const norm = phone.replace(/\D/g, '');
   return rsvps.find((r) => r.phone?.replace(/\D/g, '') === norm) ?? null;
 }
@@ -125,4 +132,80 @@ export async function verifyTicket(code: string): Promise<{
   event?: ChurchEvent;
 }> {
   return apiFetch(`/api/events/tickets/verify?code=${encodeURIComponent(code)}`);
+}
+
+export type CheckInMethod = 'self' | 'kiosk' | 'scanner' | 'staff';
+
+export interface EventCheckIn {
+  id: string;
+  eventId: string;
+  campusId?: string;
+  profileId?: string;
+  memberId?: string;
+  rsvpId?: string;
+  isDependant: boolean;
+  dependantName?: string;
+  guardianMemberId?: string;
+  room?: string;
+  seat?: string;
+  securityCode?: string;
+  method: CheckInMethod;
+  checkedInAt: string;
+}
+
+export interface CheckInPayload {
+  eventId: string;
+  profileId?: string;
+  memberId?: string;
+  rsvpId?: string;
+  dependants?: { name: string; room?: string }[];
+  room?: string;
+  seat?: string;
+  method?: CheckInMethod;
+}
+
+export interface MyCheckIn {
+  id: string;
+  eventId: string;
+  room?: string;
+  seat?: string;
+  securityCode?: string;
+  checkedInAt: string;
+}
+
+export interface TodayCheckIn {
+  event: ChurchEvent | null;
+  checkin: MyCheckIn | null;
+  dependants: EventCheckIn[];
+}
+
+export async function createCheckin(payload: CheckInPayload): Promise<{
+  primary: EventCheckIn;
+  dependants: EventCheckIn[];
+}> {
+  return apiFetch('/api/events/checkins', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getEventCheckins(eventId: string): Promise<EventCheckIn[]> {
+  return apiFetch(`/api/events/${eventId}/checkins`);
+}
+
+export async function getMyCheckin(eventId: string, profileId: string): Promise<MyCheckIn | null> {
+  const params = new URLSearchParams({ eventId, profileId });
+  return apiFetch(`/api/events/checkins/me?${params}`);
+}
+
+export async function getMyCheckinForToday(
+  campusId?: CampusId,
+  profileId?: string,
+  churchId?: string,
+): Promise<TodayCheckIn> {
+  const params = new URLSearchParams();
+  withChurchId(params, churchId);
+  if (campusId) params.set('campusId', campusId);
+  if (profileId) params.set('profileId', profileId);
+  return apiFetch(`/api/events/checkins/today?${params}`);
 }

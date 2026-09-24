@@ -10,6 +10,7 @@ const CACHE_REFRESH_MS = 6 * 60 * 60 * 1000;
 
 export default function PwaRegister() {
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') return;
     if (!('serviceWorker' in navigator)) return;
 
     let updateTimer: ReturnType<typeof setInterval> | undefined;

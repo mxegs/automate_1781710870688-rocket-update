@@ -69,7 +69,7 @@ function SetProfilePasswordForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <span className="ckc-label-pill">One-time setup</span>
-            <h2 className="text-base font-semibold text-ckc-white">Choose a password</h2>
+            <h2 className="text-base font-semibold text-cloud">Choose a password</h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
               Set a password for staff sign-in. After this, use your email and password on the login
               page — no email link each time.
@@ -114,7 +114,7 @@ function SetProfilePasswordForm() {
 
 export default function SetProfilePasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ckc-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-life-page" />}>
       <SetProfilePasswordForm />
     </Suspense>
   );

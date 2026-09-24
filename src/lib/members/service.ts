@@ -1,6 +1,7 @@
 import { apiFetch } from '@/lib/api/client';
 import type { MembershipApplication } from '@/lib/membership/types';
 import type { CampusId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 
 export type MemberDbStatus = 'active' | 'inactive' | 'suspended' | 'pending';
 
@@ -20,8 +21,9 @@ export interface MemberDetail {
   submittedAt: string | null;
 }
 
-export async function getMemberDetail(id: string): Promise<MemberDetail> {
-  return apiFetch<MemberDetail>(`/api/members/${id}`);
+export async function getMemberDetail(id: string, churchId?: string): Promise<MemberDetail> {
+  const params = withChurchId(new URLSearchParams(), churchId);
+  return apiFetch<MemberDetail>(`/api/members/${id}?${params}`);
 }
 
 export async function updateMemberAction(
