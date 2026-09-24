@@ -7,7 +7,7 @@ import AuthShell from '@/components/auth/AuthShell';
 import { CkcButton, CkcCard } from '@/components/ui/CkcForm';
 import { normalizeEmailValue, setInviteSession } from '@/lib/auth/session';
 import { findInviteByToken } from '@/lib/invites/service';
-import { BRAND } from '@/lib/assets';
+import { rememberChurchSlug } from '@/lib/church/last-slug';
 
 export default function InvitePage() {
   const router = useRouter();
@@ -30,13 +30,20 @@ export default function InvitePage() {
           setError('This invite has no email on file. Ask your admin to resend it.');
           return;
         }
+        if (invite.churchSlug) rememberChurchSlug(invite.churchSlug);
         setInviteMeta(invite);
       })
       .finally(() => setLoading(false));
   }, [token]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!inviteMeta || !inviteEmail) return;
+    const accepted = await fetch(`/api/invites/token/${encodeURIComponent(token)}/accept`, {
+      method: 'POST',
+    }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
+    const churchSlug = accepted?.churchSlug || inviteMeta.churchSlug;
+    const churchId = accepted?.churchId || inviteMeta.churchId;
+    if (churchSlug) rememberChurchSlug(churchSlug);
     setInviteSession({
       phone: inviteMeta.phone ?? '',
       email: inviteEmail,
@@ -44,12 +51,14 @@ export default function InvitePage() {
       officialName: inviteMeta.officialName,
       givenName: inviteMeta.givenName,
       surname: inviteMeta.surname,
+      churchId,
+      churchSlug,
     });
-    router.push('/signup/complete');
+    router.push(churchSlug ? `/${churchSlug}/signup/complete` : '/signup/complete');
   };
 
   return (
-    <AuthShell subtitle="Membership registration invite">
+    <AuthShell subtitle="Membership registration invite" title={inviteMeta?.churchName || undefined}>
       <CkcCard>
         {loading ? (
           <p className="text-center text-sm text-ckc-muted">Loading invite…</p>
@@ -67,7 +76,7 @@ export default function InvitePage() {
               Welcome, {inviteMeta?.givenName || inviteMeta?.officialName?.split(' ')[0]}
             </h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
-              You&apos;ve been invited to join {BRAND.name}. Tap below to open the membership form.
+              You&apos;ve been invited to join {inviteMeta?.churchName || 'this church'}. Tap below to open the membership form.
               You&apos;ll add your cell number and choose a username there.
             </p>
 

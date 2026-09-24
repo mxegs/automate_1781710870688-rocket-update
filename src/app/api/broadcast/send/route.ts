@@ -4,6 +4,7 @@ import { resolveBroadcastAudience, type BroadcastFilters } from '@/lib/broadcast
 import { resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { sendMailchimpBroadcast, buildBroadcastEmailHtml } from '@/lib/email/mailchimp';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { churchDisplayName } from '@/lib/church/name-server';
 import { sendBulkSms } from '@/lib/sms/service';
 
 function parseFilters(body: Record<string, unknown>): BroadcastFilters {
@@ -16,8 +17,8 @@ function parseFilters(body: Record<string, unknown>): BroadcastFilters {
   };
 }
 
-function wrapEmailHtml(subject: string, body: string): string {
-  return buildBroadcastEmailHtml(subject, body);
+function wrapEmailHtml(subject: string, body: string, churchName: string): string {
+  return buildBroadcastEmailHtml(subject, body, churchName);
 }
 
 export async function POST(request: Request) {
@@ -29,10 +30,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Staff sign-in required' }, { status: 401 });
   }
 
+  const { data: profile } = await db.from('profiles').select('church_id').eq('id', actor.id).maybeSingle();
+  const churchName = await churchDisplayName(profile?.church_id);
   const body = await request.json();
   const channel = body.channel as 'sms' | 'email';
   const message = String(body.message ?? '').trim();
-  const subject = String(body.subject ?? 'Message from CKC').trim();
+  const subject = String(body.subject ?? `Message from ${churchName}`).trim();
 
   if (!channel || !message) {
     return NextResponse.json({ error: 'Channel and message are required' }, { status: 400 });
@@ -66,7 +69,7 @@ export async function POST(request: Request) {
 
       const result = await sendMailchimpBroadcast({
         subject,
-        html: wrapEmailHtml(subject, message),
+        html: wrapEmailHtml(subject, message, churchName),
         plainText: message,
         recipients: emailRecipients,
       });

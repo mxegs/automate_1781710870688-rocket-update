@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await db
     .from('profiles')
-    .select('id, email, password_hash, role')
+    .select('id, email, password_hash, role, church_id')
     .ilike('email', email)
     .maybeSingle();
 
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
         email: synced.email,
         password_hash: synced.password_hash,
         role: synced.role,
+        church_id: null as string | null,
       };
     }
   }
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
   try {
     const token = await issuePasswordSetupToken(db, email);
     const resetUrl = `${getAppUrl(request)}/reset-password?token=${encodeURIComponent(token)}`;
-    const emailResult = await sendPasswordResetEmail(email, resetUrl);
+    const emailResult = await sendPasswordResetEmail(email, resetUrl, resolved?.church_id ?? null);
     const isDev = process.env.NODE_ENV !== 'production';
 
     return NextResponse.json({

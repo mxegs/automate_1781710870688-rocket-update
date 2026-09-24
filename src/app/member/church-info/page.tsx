@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import LifeHero from '@/components/church-life/LifeHero';
 import { LifeSocialIcon } from '@/components/church-life/LifeSocialIcons';
-import { BRAND } from '@/lib/assets';
+import { getChurchBranding } from '@/lib/church/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { LIFE_PHOTOS } from '@/lib/church-life/imagery';
 import { lifeSocialLinks } from '@/lib/church-life/nav';
 
@@ -13,7 +14,7 @@ const WELCOME = {
   lead: 'We are glad you are here. Take a moment to learn who we are as a church family.',
   aboutTitle: 'About our church',
   about: [
-    'Christ Kingdom Citizens (CKC) is a Spirit-filled community committed to knowing God, growing together, and serving our city.',
+    'We are a Spirit-filled community committed to knowing God, growing together, and serving our city.',
     'We are a multigenerational church that values the Word of God, the presence of the Holy Spirit, and authentic community — whether you are new to faith or have walked with God for years.',
     'Church is more than a Sunday gathering. It is family, belonging, and a place to become who God called you to be.',
   ],
@@ -57,17 +58,35 @@ function scrollToId(id: string) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function ChurchInfoHero() {
+  const [churchName, setChurchName] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    getChurchBranding(resolveMemberChurch()).then((church) => {
+      if (!cancelled) setChurchName(church.name);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <LifeHero
+      imageUrl={LIFE_PHOTOS.sanctuary}
+      titleLead={churchName || 'Church'}
+      titleRest={WELCOME.headline}
+      badge=""
+    />
+  );
+}
+
 export default function ChurchInfoPage() {
   return (
     <AppShell access="shared">
       <div className="visitor-welcome pb-10">
         <div className="px-5 pt-5">
-          <LifeHero
-            imageUrl={LIFE_PHOTOS.sanctuary}
-            titleLead={BRAND.name}
-            titleRest={WELCOME.headline}
-            badge={BRAND.abbreviation}
-          />
+          <ChurchInfoHero />
         </div>
 
         <section className="life-section">

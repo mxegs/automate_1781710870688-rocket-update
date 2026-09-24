@@ -73,7 +73,8 @@ function SetPasswordForm() {
     try {
       await setMemberPassword({ applicationId, password });
       sessionStorage.removeItem(SETUP_KEY);
-      router.push('/signup/success');
+      const slug = window.localStorage.getItem('ckc_last_church_slug');
+      router.push(slug ? `/${slug}/member` : '/signup/success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save password.');
     } finally {

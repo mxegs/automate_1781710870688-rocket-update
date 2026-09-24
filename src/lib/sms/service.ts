@@ -162,8 +162,8 @@ export async function sendBulkSms(phones: string[], message: string): Promise<Bu
   return { sent: unique.length, failed: 0, demo: true };
 }
 
-export function buildInviteSmsMessage(name: string, inviteUrl: string): string {
-  return `Hi ${name}, you've been invited to join Christ Kingdom Citizens. Complete your membership here: ${inviteUrl}`;
+export function buildInviteSmsMessage(name: string, inviteUrl: string, churchName = 'your church'): string {
+  return `Hi ${name}, you've been invited to join ${churchName}. Complete your membership here: ${inviteUrl}`;
 }
 
 export function buildInviteRequestNotifyMessage(
@@ -171,6 +171,7 @@ export function buildInviteRequestNotifyMessage(
   email: string,
   campusLabel: string,
   membersUrl: string,
+  churchName = 'your church',
 ): string {
-  return `CKC: ${fullName} (${email}) requested membership at ${campusLabel}. Review: ${membersUrl}`;
+  return `${churchName}: ${fullName} (${email}) requested membership at ${campusLabel}. Review: ${membersUrl}`;
 }

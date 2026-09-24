@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 import LifeHero from '@/components/church-life/LifeHero';
 import { LIFE_PHOTOS, lifeImageFor } from '@/lib/church-life/imagery';
 import { getMemberAnnouncements } from '@/lib/announcements/service';
-import { resolveMemberCampus } from '@/lib/member/campus';
+import { resolveMemberCampus, resolveMemberChurch } from '@/lib/member/campus';
 import { getSession } from '@/lib/auth/session';
 import type { Announcement } from '@/lib/announcements/types';
 
@@ -50,7 +50,11 @@ export default function MemberAnnouncementsPage() {
     (async () => {
       try {
         const campus = await resolveMemberCampus();
-        const list = await getMemberAnnouncements({ memberCampus: campus, isVisitor });
+        const list = await getMemberAnnouncements({
+          churchId: resolveMemberChurch(),
+          memberCampus: campus,
+          isVisitor,
+        });
         if (list.length > 0) {
           setAnnouncements(list);
           setUsingDemo(false);

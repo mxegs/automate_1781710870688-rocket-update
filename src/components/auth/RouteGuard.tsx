@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { canAccessRoute } from '@/lib/auth/permissions';
 import { getGroupsLedBy } from '@/lib/groups/service';
+import type { UserRole } from '@/lib/auth/session';
 import {
   getPostLoginRoute,
   getSession,
   getViewMode,
   isStaffRole,
 } from '@/lib/auth/session';
-import type { UserRole } from '@/lib/auth/session';
+import { extractChurchSlug } from '@/lib/church/resolve-from-url';
 
 type PortalAccess = 'staff' | 'member' | 'shared' | 'visitor' | 'group-leader';
 
@@ -40,13 +41,18 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
       return;
     }
 
+    if (!session.churchId && !extractChurchSlug(pathname) && access !== 'shared') {
+      router.replace('/login');
+      return;
+    }
+
     const viewMode = getViewMode(session);
 
     (async () => {
       let leadsGroups = false;
       if (access === 'group-leader') {
         try {
-          const led = await getGroupsLedBy(session.phone);
+          const led = await getGroupsLedBy(session.phone, session.churchId);
           leadsGroups = led.length > 0;
         } catch {
           leadsGroups = false;

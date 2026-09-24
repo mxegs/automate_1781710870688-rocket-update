@@ -11,12 +11,13 @@ import LifePhoto from '@/components/church-life/LifePhoto';
 import { LIFE_PHOTOS, eventCover, sermonCover } from '@/lib/church-life/imagery';
 import { getMemberEventsFeed, getMyCheckinForToday, type MyCheckIn } from '@/lib/events/service';
 import { getMemberMediaFeed } from '@/lib/sermons/service';
-import { resolveMemberCampus } from '@/lib/member/campus';
+import { resolveMemberCampus, resolveMemberChurch } from '@/lib/member/campus';
 import { resolveMemberIdsFromSession } from '@/lib/member/identity';
 import { getCampusLabel } from '@/lib/church/constants';
 import type { MediaItem } from '@/lib/sermons/types';
 import type { ChurchEvent } from '@/lib/events/types';
 import { getDisplayName, getSession } from '@/lib/auth/session';
+import { getChurchBranding } from '@/lib/church/service';
 
 const QUICK_LINKS = [
   { label: 'Daily Word', href: '/member/bible-study', image: LIFE_PHOTOS.bible },
@@ -30,6 +31,24 @@ function greeting(): string {
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
+}
+
+function MemberChurchLine() {
+  const [churchName, setChurchName] = useState('');
+  const campusLabel = getCampusLabel(getSession()?.campusId ?? 'midrand');
+
+  useEffect(() => {
+    let cancelled = false;
+    getChurchBranding(resolveMemberChurch()).then((church) => {
+      if (!cancelled) setChurchName(church.name);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!churchName) return null;
+  return <p className="mt-1 text-sm text-ckc-muted">{churchName} · {campusLabel}</p>;
 }
 
 type HeroMode = 'daily' | 'checkin-ready' | 'checked-in' | 'ended';
@@ -53,13 +72,14 @@ export default function MemberHomePage() {
     setName(getDisplayName(session).split(' ')[0] || 'Friend');
     (async () => {
       const campus = await resolveMemberCampus();
-      const sermons = await getMemberMediaFeed({ memberCampus: campus });
+      const churchId = resolveMemberChurch();
+      const sermons = await getMemberMediaFeed({ churchId, memberCampus: campus });
       setLatestSermon(sermons[0] ?? null);
-      const events = await getMemberEventsFeed({ memberCampus: campus });
+      const events = await getMemberEventsFeed({ churchId, memberCampus: campus });
       setNextEvent(events[0] ?? null);
 
       const ids = await resolveMemberIdsFromSession();
-      const today = await getMyCheckinForToday(campus, ids?.profileId).catch(() => null);
+      const today = await getMyCheckinForToday(campus, ids?.profileId, churchId).catch(() => null);
       if (!today?.event) {
         setHeroMode('daily');
         return;
@@ -94,7 +114,7 @@ export default function MemberHomePage() {
         <div className="px-5 pt-5">
           <p className="text-sm text-ckc-muted">{greeting()}</p>
           <h1 className="font-serif text-[32px] font-semibold leading-tight text-ckc-black">{name}</h1>
-          <p className="mt-1 text-sm text-ckc-muted">Christ Kingdom Citizens · Midrand</p>
+          <MemberChurchLine />
         </div>
 
         <div className="px-5 pt-5">

@@ -53,7 +53,7 @@ export default function TicketScanPage() {
             ref={inputRef}
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="CKC-XXXXXX-XXXXXX"
+            placeholder="XXXXXX-XXXXXX"
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-lg tracking-wider text-ckc-gold"
             autoFocus
           />

@@ -8,6 +8,7 @@ import LifePhoto from '@/components/church-life/LifePhoto';
 import { LIFE_PHOTOS } from '@/lib/church-life/imagery';
 import { type CampusId } from '@/lib/church/constants';
 import { fetchProfileByPhone, getSession } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { getMemberMediaFeed } from '@/lib/sermons/service';
 import type { MediaItem } from '@/lib/sermons/types';
 import { getThumbnailUrl, getWatchUrl } from '@/lib/sermons/utils';
@@ -31,7 +32,7 @@ export default function SermonsPage() {
     const isGuest = !session || session.role === 'visitor';
 
     if (isGuest) {
-      getMemberMediaFeed({ isVisitor: true })
+      getMemberMediaFeed({ churchId: resolveMemberChurch(), isVisitor: true })
         .then((items) => setSermons(items))
         .finally(() => setLoading(false));
       return;
@@ -41,6 +42,7 @@ export default function SermonsPage() {
       .then(async (profile) => {
         const campus = (profile?.campusId as CampusId) ?? 'midrand';
         const items = await getMemberMediaFeed({
+          churchId: resolveMemberChurch(),
           memberCampus: campus,
           isVisitor: false,
         });

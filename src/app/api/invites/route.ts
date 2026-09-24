@@ -38,6 +38,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'You can only send invites for your campus' }, { status: 403 });
   }
 
+  const { data: staff } = await db.from('profiles').select('church_id').eq('id', actor.id).maybeSingle();
+  const churchId = (staff as { church_id?: string | null } | null)?.church_id ?? null;
+
   const token = generateToken();
   const { data, error } = await db
     .from('invites')
@@ -49,6 +52,7 @@ export async function POST(request: Request) {
       official_name: officialName,
       username: null,
       campus_id: campusId,
+      church_id: churchId,
       invite_request_id: body.inviteRequestId ?? null,
       status: 'pending',
     })
@@ -58,7 +62,7 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const inviteUrl = `${getAppUrl(request)}/invite/${token}`;
-  const emailResult = await sendInviteEmail(email, officialName, inviteUrl);
+  const emailResult = await sendInviteEmail(email, officialName, inviteUrl, (data as { church_id?: string | null }).church_id ?? null);
 
   return NextResponse.json({
     ...mapInvite(data),

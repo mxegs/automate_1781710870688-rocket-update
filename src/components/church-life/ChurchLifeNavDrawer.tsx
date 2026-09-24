@@ -15,6 +15,7 @@ import {
 import type { ChurchLifeNavItem } from '@/lib/church-life/nav';
 import type { ViewMode } from '@/lib/auth/session';
 import { usePathname, useRouter } from 'next/navigation';
+import { useChurchBranding } from '@/components/church-life/ChurchBrandingProvider';
 
 interface ChurchLifeNavDrawerProps {
   open: boolean;
@@ -32,6 +33,7 @@ export default function ChurchLifeNavDrawer({
   const router = useRouter();
   const pathname = usePathname();
   const session = getSession();
+  const church = useChurchBranding();
   const displayName = session ? getDisplayName(session) : 'Guest';
   const isStaff = session ? isStaffRole(session.role) : false;
   const viewMode = session ? getViewMode(session) : 'member';
@@ -58,7 +60,7 @@ export default function ChurchLifeNavDrawer({
         <div className="flex items-center justify-between px-4 py-5">
           <div>
             <p className="font-serif text-base font-semibold text-ckc-black">Welcome, {displayName}</p>
-            <p className="text-[11px] text-ckc-muted">Christ Kingdom Citizens</p>
+            <p className="text-[11px] text-ckc-muted">{church.name}</p>
             <p className="mt-0.5 text-[10px] text-ckc-gold">{portalLabel}</p>
           </div>
           <button type="button" onClick={onClose} className="text-ckc-muted hover:text-ckc-black" aria-label="Close menu">

@@ -23,7 +23,12 @@ export async function resolveMemberCampus(): Promise<CampusId | undefined> {
   return 'midrand';
 }
 
+/** Church on the signed-in session. Missing means the church is unknown. */
+export function resolveMemberChurch(): string | undefined {
+  return getSession()?.churchId?.trim() || undefined;
+}
+
 export function getCampusFeedTitle(campusId?: CampusId): string {
-  if (!campusId) return 'CKC Member Portal';
+  if (!campusId) return 'Member Portal';
   return `${getCampusLabel(campusId)} Feed`;
 }

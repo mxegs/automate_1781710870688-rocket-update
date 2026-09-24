@@ -62,7 +62,7 @@ function getConfig(): MailchimpConfig | null {
     apiKey,
     server,
     audienceId,
-    fromName: process.env.MAILCHIMP_FROM_NAME?.trim() || 'Christ Kingdom Citizens',
+    fromName: process.env.MAILCHIMP_FROM_NAME?.trim() || 'your church',
     fromEmail: process.env.MAILCHIMP_FROM_EMAIL?.trim() || replyTo,
     replyTo,
   };
@@ -97,7 +97,7 @@ function escapeHtml(text: string): string {
 }
 
 /** Compact HTML — large or multi-line templates can trigger Mailchimp 504 timeouts. */
-export function buildBroadcastEmailHtml(subject: string, body: string): string {
+export function buildBroadcastEmailHtml(subject: string, body: string, churchName = 'your church'): string {
   const safeSubject = escapeHtml(subject);
   const paragraphs = body
     .split(/\n+/)
@@ -106,7 +106,7 @@ export function buildBroadcastEmailHtml(subject: string, body: string): string {
     .map((p) => `<p>${escapeHtml(p)}</p>`)
     .join('');
 
-  return `<!DOCTYPE html><html><body style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#1a1a1a;"><h1 style="color:#c9a227;">${safeSubject}</h1>${paragraphs}<p style="font-size:12px;color:#888;">Christ Kingdom Citizens</p></body></html>`;
+  return `<!DOCTYPE html><html><body style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#1a1a1a;"><h1 style="color:#c9a227;">${safeSubject}</h1>${paragraphs}<p style="font-size:12px;color:#888;">${escapeHtml(churchName)}</p></body></html>`;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -156,7 +156,7 @@ function resolveFromSettings(
 ): { fromEmail: string; fromName: string; replyTo: string } {
   // Prefer Mailchimp audience defaults — they are verified in your account
   const fromEmail = list.campaign_defaults?.from_email || config.fromEmail;
-  const fromName = list.campaign_defaults?.from_name || config.fromName || 'CKC';
+  const fromName = list.campaign_defaults?.from_name || config.fromName || 'your church';
   const replyTo = config.replyTo || fromEmail;
   return { fromEmail, fromName, replyTo };
 }

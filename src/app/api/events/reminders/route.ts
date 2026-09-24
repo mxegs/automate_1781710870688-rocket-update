@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { generateTicketCode } from '@/lib/events/utils';
+import { churchDisplayName } from '@/lib/church/name-server';
 import { sendSms } from '@/lib/sms/service';
 
 export async function POST() {
@@ -33,7 +34,8 @@ export async function POST() {
 
     for (const rsvp of rsvps ?? []) {
       if (!rsvp.phone) continue;
-      const message = `Reminder: ${event.title} is coming up on ${new Date(event.starts_at).toLocaleString('en-ZA')}. We look forward to seeing you! — CKC`;
+      const churchName = await churchDisplayName(event.church_id);
+      const message = `Reminder: ${event.title} is coming up on ${new Date(event.starts_at).toLocaleString('en-ZA')}. We look forward to seeing you! — ${churchName}`;
       await sendSms(rsvp.phone, message);
       await db
         .from('event_rsvps')

@@ -29,7 +29,8 @@ export async function POST(request: Request) {
     void purgeExpiredMagicLinks(db);
     const token = await issueMagicLink(db, email, allowVisitor);
     const signInUrl = `${getAppUrl(request)}/login/verify?token=${encodeURIComponent(token)}`;
-    const result = await sendMagicLinkEmail(email, signInUrl);
+    const { data: profile } = await db.from('profiles').select('church_id').ilike('email', email).maybeSingle();
+    const result = await sendMagicLinkEmail(email, signInUrl, profile?.church_id ?? null);
 
     if (!result.success) {
       return NextResponse.json({ error: result.error ?? 'Could not send email' }, { status: 502 });

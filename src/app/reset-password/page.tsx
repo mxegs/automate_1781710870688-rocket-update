@@ -70,7 +70,7 @@ function ResetPasswordForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <h2 className="text-base font-semibold text-cloud">New password</h2>
-            <p className="text-xs text-ckc-muted">Choose a new password for your CKC account.</p>
+            <p className="text-xs text-ckc-muted">Choose a new password for your church account.</p>
 
             <CkcField label="New password" required>
               <CkcInput

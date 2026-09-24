@@ -9,6 +9,7 @@ import EventRegisterPanel from '@/components/events/EventRegisterPanel';
 import VisitorEventSignupForm from '@/components/events/VisitorEventSignupForm';
 import EventDetailCard from '@/components/events/EventDetailCard';
 import { getEventById } from '@/lib/events/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import {
   getVisitorEventProfile,
   hasCompleteVisitorEventProfile,
@@ -33,7 +34,7 @@ export default function RsvpPortalPage() {
     setEvent(null);
     setVisitorProfile(getVisitorEventProfile());
 
-    getEventById(eventId)
+    getEventById(eventId, resolveMemberChurch())
       .then((found) => {
         if (cancelled) return;
         if (!found) {

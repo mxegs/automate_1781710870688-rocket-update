@@ -1,15 +1,14 @@
-export const DEFAULT_CHURCH_ID = 'ckc';
-
-export function resolveChurchId(churchId?: string | null): string {
+export function resolveChurchId(churchId?: string | null): string | null {
   const value = churchId?.trim();
-  return value || DEFAULT_CHURCH_ID;
+  return value || null;
 }
 
 export function withChurchId(params: URLSearchParams, churchId?: string | null): URLSearchParams {
-  params.set('churchId', resolveChurchId(churchId));
+  const id = resolveChurchId(churchId);
+  if (id) params.set('churchId', id);
   return params;
 }
 
-export function churchIdFromUrl(url: string): string {
+export function churchIdFromUrl(url: string): string | null {
   return resolveChurchId(new URL(url).searchParams.get('churchId'));
 }

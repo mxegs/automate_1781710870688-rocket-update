@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard, StatCard } from '@/components/portal/PageHeader';
 import { getAdminEvents } from '@/lib/events/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import type { ChurchEvent } from '@/lib/events/types';
 
 const recentVisitors: { name: string; date: string; status: string; source: string }[] = [
@@ -38,7 +39,7 @@ export default function DashboardPage() {
   const [upcomingEvents, setUpcomingEvents] = useState<ChurchEvent[]>([]);
 
   useEffect(() => {
-    getAdminEvents({ allCampuses: true }).then((e) => setUpcomingEvents(e.slice(0, 4)));
+    getAdminEvents({ churchId: resolveMemberChurch(), allCampuses: true }).then((e) => setUpcomingEvents(e.slice(0, 4)));
   }, []);
 
   return (

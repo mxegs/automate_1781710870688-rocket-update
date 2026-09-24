@@ -7,6 +7,7 @@ import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import EventDetailCard from '@/components/events/EventDetailCard';
 import { getEventById } from '@/lib/events/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import type { ChurchEvent } from '@/lib/events/types';
 
 /** Admin preview of a single event (same layout as member portal). */
@@ -17,7 +18,7 @@ export default function AdminEventDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getEventById(eventId).then((e) => {
+    getEventById(eventId, resolveMemberChurch()).then((e) => {
       setEvent(e);
       setLoading(false);
     });

@@ -91,14 +91,14 @@ export async function getGroupById(id: string, churchId?: string): Promise<Churc
   return ensureSeeded().find((g) => g.id === id) ?? null;
 }
 
-export async function getGroupsLedBy(phone: string): Promise<ChurchGroup[]> {
+export async function getGroupsLedBy(phone: string, churchId?: string): Promise<ChurchGroup[]> {
   const normalized = normalizePhone(phone);
   // Empty / incomplete phone must never match (endsWith('') matches every leader)
   if (!normalized || normalized.length < 9) {
     return [];
   }
 
-  const all = await getAllGroups();
+  const all = await getAllGroups(churchId);
   const tail = normalized.slice(-9);
   return all.filter((g) => {
     const leader = normalizePhone(g.leaderPhone);
@@ -284,7 +284,7 @@ export async function markSongSent(songId: string, groupId?: string): Promise<Gr
 export async function sendSongToBand(song: GroupSong, group: ChurchGroup): Promise<{ sent: number; demo: boolean }> {
   const { sendSms } = await import('@/lib/sms/service');
   const chart = formatSongChart(song);
-  const message = `CKC Worship — ${song.title} (Key: ${song.key})\n\n${chart}`;
+  const message = `Worship — ${song.title} (Key: ${song.key})\n\n${chart}`;
   let sent = 0;
   for (const phone of group.memberPhones) {
     await sendSms(phone, message);

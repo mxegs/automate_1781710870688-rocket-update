@@ -16,7 +16,7 @@ export const memberLifeNav: ChurchLifeNavItem[] = [
 ];
 
 export const visitorLifeNav: ChurchLifeNavItem[] = [
-  { label: 'About CKC', href: '/member/church-info', icon: 'BuildingLibraryIcon' },
+  { label: 'About', href: '/member/church-info', icon: 'BuildingLibraryIcon' },
   { label: 'Sermons', href: '/member/sermons', icon: 'PlayCircleIcon' },
   { label: 'Events', href: '/member/events', icon: 'CalendarDaysIcon' },
   { label: 'Daily Word', href: '/member/bible-study', icon: 'BookOpenIcon' },

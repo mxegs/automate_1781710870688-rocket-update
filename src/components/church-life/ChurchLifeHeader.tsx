@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
 import { getDisplayName, getSession } from '@/lib/auth/session';
+import { useChurchBranding } from '@/components/church-life/ChurchBrandingProvider';
 
 interface ChurchLifeHeaderProps {
   onMenuOpen: () => void;
@@ -12,6 +13,7 @@ interface ChurchLifeHeaderProps {
 
 export default function ChurchLifeHeader({ onMenuOpen, homeHref = '/member' }: ChurchLifeHeaderProps) {
   const session = getSession();
+  const church = useChurchBranding();
   const initial = (session ? getDisplayName(session) : 'C').trim().charAt(0).toUpperCase() || 'C';
 
   return (
@@ -26,7 +28,7 @@ export default function ChurchLifeHeader({ onMenuOpen, homeHref = '/member' }: C
       </button>
 
       <Link href={homeHref} className="flex-1 text-center" aria-label="Home">
-        <p className="font-serif text-xl font-bold tracking-tight text-ckc-black">CKC</p>
+        <p className="truncate font-serif text-lg font-bold tracking-tight text-ckc-black">{church.name}</p>
       </Link>
 
       <div

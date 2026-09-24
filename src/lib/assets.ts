@@ -1,3 +1,6 @@
+/** Product name. Change this when the app gets its own name. It is not a church. */
+export const APP_NAME = 'Church App';
+
 export const BRAND = {
   name: 'Christ Kingdom Citizens',
   abbreviation: 'CKC',

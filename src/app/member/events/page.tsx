@@ -7,7 +7,7 @@ import LifeHero from '@/components/church-life/LifeHero';
 import { eventCover, LIFE_PHOTOS } from '@/lib/church-life/imagery';
 import { getMemberEventsFeed } from '@/lib/events/service';
 import { groupEventsByMonth } from '@/lib/events/utils';
-import { resolveMemberCampus } from '@/lib/member/campus';
+import { resolveMemberCampus, resolveMemberChurch } from '@/lib/member/campus';
 import { getSession } from '@/lib/auth/session';
 import { useBackend } from '@/lib/api/client';
 
@@ -28,6 +28,7 @@ export default function MemberEventsPage() {
       try {
         const campus = await resolveMemberCampus();
         const list = await getMemberEventsFeed({
+          churchId: resolveMemberChurch(),
           memberCampus: campus,
           isVisitor,
         });
@@ -55,7 +56,7 @@ export default function MemberEventsPage() {
     <AppShell access="shared">
       <div className="px-5 pb-8 pt-5">
         <h1 className="font-serif text-[32px] font-semibold leading-none text-ckc-black">Events</h1>
-        <p className="mt-1 text-sm text-ckc-muted">What is happening at CKC</p>
+        <p className="mt-1 text-sm text-ckc-muted">What is happening</p>
 
         {featured ? (
           <div className="mt-5">

@@ -18,7 +18,7 @@ export default function MyGroupsPage() {
     const session = getSession();
     if (!session) return;
     setDisplayName(session.displayName || session.username || 'Leader');
-    getGroupsLedBy(session.phone).then(setGroups);
+    getGroupsLedBy(session.phone, session.churchId).then(setGroups);
   }, []);
 
   return (

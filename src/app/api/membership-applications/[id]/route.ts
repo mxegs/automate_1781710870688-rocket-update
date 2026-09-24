@@ -4,6 +4,7 @@ import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import { normalizePhone } from '@/lib/auth/session';
 import { sendMembershipApprovedEmail } from '@/lib/email/service';
+import { churchDisplayName } from '@/lib/church/name-server';
 import { sendSms } from '@/lib/sms/service';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
@@ -153,14 +154,15 @@ export async function PATCH(
   const firstName = personal.fullName?.trim().split(/\s+/)[0] || 'Friend';
   const loginUrl = `${getAppUrl(request)}/login`;
 
+  const churchName = await churchDisplayName((app as { church_id?: string | null }).church_id);
   if (memberEmail.includes('@')) {
-    await sendMembershipApprovedEmail(memberEmail, firstName, loginUrl);
+    await sendMembershipApprovedEmail(memberEmail, firstName, loginUrl, (app as { church_id?: string | null }).church_id ?? null);
   }
 
   if (app.phone) {
     await sendSms(
       app.phone,
-      `Hi ${firstName}, your CKC membership is approved! Sign in at ${loginUrl} with your email and password.`,
+      `Hi ${firstName}, your ${churchName} membership is approved! Sign in at ${loginUrl} with your email and password.`,
     );
   }
 

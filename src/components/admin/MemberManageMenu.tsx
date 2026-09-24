@@ -5,6 +5,7 @@ import Icon from '@/components/ui/AppIcon';
 import ApplicationReviewContent from '@/components/membership/ApplicationReviewContent';
 import { getCampusLabel } from '@/lib/church/constants';
 import { formatPhoneDisplay } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { getMemberDetail, updateMemberAction, type MemberDetail } from '@/lib/members/service';
 import type { MembershipApplication } from '@/lib/membership/types';
 
@@ -47,7 +48,7 @@ export default function MemberManageMenu({ member, onUpdated }: MemberManageMenu
     setLoading(true);
     setError('');
     try {
-      setDetail(await getMemberDetail(member.id));
+      setDetail(await getMemberDetail(member.id, resolveMemberChurch()));
       setViewOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load member details.');

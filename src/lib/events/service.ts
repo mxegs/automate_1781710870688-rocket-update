@@ -120,8 +120,8 @@ export async function getEventRsvps(eventId: string, churchId?: string): Promise
   return apiFetch<EventRsvp[]>(`/api/events/${eventId}/rsvp?${params}`);
 }
 
-export async function getMyRsvp(eventId: string, phone: string): Promise<EventRsvp | null> {
-  const rsvps = await getEventRsvps(eventId);
+export async function getMyRsvp(eventId: string, phone: string, churchId?: string): Promise<EventRsvp | null> {
+  const rsvps = await getEventRsvps(eventId, churchId);
   const norm = phone.replace(/\D/g, '');
   return rsvps.find((r) => r.phone?.replace(/\D/g, '') === norm) ?? null;
 }

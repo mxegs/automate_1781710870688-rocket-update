@@ -65,6 +65,7 @@ export default function EventsPage() {
 
   const load = async () => {
     const list = await getAdminEvents({
+      churchId: session?.churchId,
       allCampuses: campusFilter === 'all' && allCampusAccess,
       campusId: campusFilter !== 'all' ? campusFilter : allCampusAccess ? undefined : 'midrand',
     });
@@ -129,7 +130,7 @@ export default function EventsPage() {
 
   const openRsvps = async (event: ChurchEvent) => {
     setSelected(event);
-    if (backend) setRsvps(await getEventRsvps(event.id));
+    if (backend) setRsvps(await getEventRsvps(event.id, session?.churchId));
   };
 
   const visitorRsvps = rsvps.filter((r) => r.isVisitor);

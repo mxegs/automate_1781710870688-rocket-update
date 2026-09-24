@@ -6,6 +6,7 @@ import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import { CAMPUSES, FOLLOWUP_STAGES, getCampusLabel, type CampusId, type FollowUpStageId } from '@/lib/church/constants';
 import { getFollowUps, sendFollowUpMessage, updateFollowUpStage } from '@/lib/followups/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import type { FollowUpContact } from '@/lib/followups/service';
 import { useBackend } from '@/lib/api/client';
 
@@ -31,6 +32,7 @@ export default function FollowUpsPage() {
     setActionError('');
     try {
       const list = await getFollowUps({
+        churchId: resolveMemberChurch(),
         campusId: campusFilter !== 'All' ? (campusFilter as CampusId) : undefined,
         stage: stageFilter !== 'All' ? (stageFilter as FollowUpStageId) : undefined,
       });

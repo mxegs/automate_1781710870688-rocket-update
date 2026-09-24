@@ -325,6 +325,8 @@ export interface InviteSession {
   givenName?: string;
   surname?: string;
   username?: string;
+  churchId?: string;
+  churchSlug?: string;
 }
 
 export function setInviteSession(data: InviteSession): void {
@@ -346,6 +348,8 @@ export function getInviteSession(): InviteSession | null {
       givenName: parsed.givenName,
       surname: parsed.surname,
       username: parsed.username,
+      churchId: parsed.churchId,
+      churchSlug: parsed.churchSlug,
     };
   } catch {
     return null;

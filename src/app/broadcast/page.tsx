@@ -51,12 +51,12 @@ export default function BroadcastPage() {
   useEffect(() => {
     const loadGroups = async () => {
       if (isLeader && session?.phone) {
-        const led = await getGroupsLedBy(session.phone);
+        const led = await getGroupsLedBy(session.phone, session?.churchId);
         setGroups(led);
         if (led[0]) setGroupId((prev) => prev || led[0].id);
         return;
       }
-      const list = await getAllGroups();
+      const list = await getAllGroups(session?.churchId);
       const scoped = allCampuses ? list : campusScope ? list.filter((g) => g.campus === campusScope) : list;
       setGroups(scoped);
       if (scoped[0]) setGroupId((prev) => prev || scoped[0].id);
@@ -132,7 +132,7 @@ export default function BroadcastPage() {
         ...filters,
         channel,
         message: message.trim(),
-        subject: subject.trim() || 'Message from CKC',
+        subject: subject.trim() || 'Message from your church',
       });
       const demoNote = res.demo ? ' (demo mode)' : '';
       const warnNote = 'warnings' in res && res.warnings?.length ? ` Note: ${res.warnings.join(' ')}` : '';

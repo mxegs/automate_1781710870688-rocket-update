@@ -96,7 +96,7 @@ export default function GivePage() {
               <div className="rounded-[22px] bg-ckc-black p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ckc-gold">Bank details</p>
                 <p className="mt-2 text-sm leading-relaxed text-white/85">
-                  Account: CKC Church
+                  Account: Church account
                   <br />
                   Bank: Standard Bank
                   <br />

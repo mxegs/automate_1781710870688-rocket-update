@@ -5,6 +5,7 @@ import Icon from '@/components/ui/AppIcon';
 import ApplicationReviewContent from '@/components/membership/ApplicationReviewContent';
 import { getCampusLabel } from '@/lib/church/constants';
 import { formatPhoneDisplay } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import {
   getSubmittedApplications,
   reviewApplication,
@@ -21,7 +22,7 @@ export default function PendingApplicationsPanel() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      setApps(await getSubmittedApplications());
+      setApps(await getSubmittedApplications(resolveMemberChurch()));
     } finally {
       setLoading(false);
     }

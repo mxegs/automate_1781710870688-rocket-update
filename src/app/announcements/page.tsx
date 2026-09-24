@@ -9,6 +9,7 @@ import {
   getAdminAnnouncements,
   updateAnnouncement,
 } from '@/lib/announcements/service';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import { EVENT_VISIBILITY_OPTIONS } from '@/lib/events/types';
 import {
@@ -45,7 +46,7 @@ export default function AnnouncementsPage() {
 
   const load = async () => {
     try {
-      setItems(await getAdminAnnouncements({ allCampuses: true }));
+      setItems(await getAdminAnnouncements({ churchId: resolveMemberChurch(), allCampuses: true }));
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Could not load announcements.');
       setItems([]);

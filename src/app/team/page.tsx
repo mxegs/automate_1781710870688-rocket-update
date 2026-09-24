@@ -8,6 +8,7 @@ import { CkcButton, CkcField, CkcInput } from '@/components/ui/CkcForm';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import { canManageTeam, churchWideRoleLabel } from '@/lib/auth/church-wide-staff';
 import { getSession } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { assignStaffRole, listStaffProfiles, removeStaffRole } from '@/lib/staff/service';
 import type { AssignableStaffRole, StaffProfile } from '@/lib/staff/types';
 import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
@@ -48,7 +49,7 @@ export default function TeamPage() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      setStaff(await listStaffProfiles());
+      setStaff(await listStaffProfiles(resolveMemberChurch()));
       if (useBackend()) {
         const rows = await apiFetch<
           { email?: string | null; full_name: string; campus_id: string }[]

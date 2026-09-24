@@ -47,4 +47,4 @@ export const PRAYER_STATUS_LABELS: Record<PrayerStatus, string> = {
 };
 
 export const PRAYER_AUTO_REPLY =
-  'Thank you for sharing your prayer request with CKC. Our prayer team and pastors have received it and are lifting you up in prayer. God bless you.';
+  'Thank you for sharing your prayer request with your church. Our prayer team and pastors have received it and are lifting you up in prayer. God bless you.';

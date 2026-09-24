@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { BRAND } from '@/lib/assets';
 import { LIFE_PHOTOS } from '@/lib/church-life/imagery';
 
 interface AuthShellProps {
@@ -20,8 +19,8 @@ export default function AuthShell({ children, subtitle, showLogo = true, title }
         <div className="absolute inset-0 bg-gradient-to-t from-ckc-black via-black/40 to-black/20" />
         {showLogo && (
           <div className="absolute inset-x-0 bottom-10 px-6 text-center">
-            <p className="font-serif text-[42px] font-bold leading-none tracking-tight text-white">CKC</p>
-            <p className="mt-2 text-sm font-medium text-white/85">{title || BRAND.name}</p>
+            <p className="font-serif text-[42px] font-bold leading-none tracking-tight text-white">{title || 'Welcome'}</p>
+            <p className="mt-2 text-sm font-medium text-white/85">{title || ''}</p>
             {subtitle ? <p className="mt-1 text-xs text-white/70">{subtitle}</p> : null}
           </div>
         )}

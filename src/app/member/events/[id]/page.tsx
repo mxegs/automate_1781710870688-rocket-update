@@ -12,6 +12,7 @@ import CheckInPanel from '@/components/events/CheckInPanel';
 import { getEventById, getMyCheckin, type MyCheckIn } from '@/lib/events/service';
 import { eventActionLabel } from '@/lib/events/form';
 import { getDisplayName, getSession } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import { resolveMemberIdsFromSession } from '@/lib/member/identity';
 import { getMembershipApplication } from '@/lib/membership/service';
 import type { Dependant } from '@/lib/membership/types';
@@ -39,7 +40,8 @@ export default function MemberEventDetailPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    getEventById(eventId)
+    const churchId = resolveMemberChurch();
+    getEventById(eventId, churchId)
       .then(async (loaded) => {
         if (cancelled) return;
         setEvent(loaded);
@@ -57,7 +59,7 @@ export default function MemberEventDetailPage() {
           if (!cancelled) setCheckin(mine);
         }
         if (session?.phone) {
-          const application = await getMembershipApplication(session.phone).catch(() => null);
+          const application = await getMembershipApplication(session.phone, churchId).catch(() => null);
           if (!cancelled) setDependants(application?.guardian?.dependants ?? []);
         }
       })

@@ -4,7 +4,9 @@ import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
-import { BRAND } from '@/lib/assets';
+import { APP_NAME } from '@/lib/assets';
+import { extractChurchSlug, resolveCurrentChurch, type ResolvedChurch } from '@/lib/church/resolve-from-url';
+import { readLastChurchSlug } from '@/lib/church/last-slug';
 import { checkEmailLoginOptions, loginWithPassword } from '@/lib/auth/password';
 import { sendMagicLink } from '@/lib/auth/magic-link';
 import {
@@ -36,6 +38,36 @@ function LoginForm() {
   const [demoLink, setDemoLink] = useState('');
   const [loginMode, setLoginMode] = useState<'password' | 'magic'>('password');
   const [hasPassword, setHasPassword] = useState<boolean | null>(null);
+  const [church, setChurch] = useState<ResolvedChurch | null>(null);
+  const [gate, setGate] = useState<'checking' | 'neutral' | 'ready'>('checking');
+
+  useEffect(() => {
+    let cancelled = false;
+    const pathSlug = extractChurchSlug(window.location.pathname);
+    if (!pathSlug) {
+      const stored = readLastChurchSlug();
+      if (stored) {
+        router.replace(`/${stored}/login${window.location.search}`);
+        return;
+      }
+      setGate('neutral');
+      return;
+    }
+    resolveCurrentChurch().then((found) => {
+      if (cancelled) return;
+      if (!found) {
+        setGate('neutral');
+        return;
+      }
+      setChurch(found);
+      document.documentElement.style.setProperty('--ckc-primary', found.primaryColor || '#6B7280');
+      document.documentElement.style.setProperty('--ckc-secondary', found.secondaryColor || '#F7F3EE');
+      setGate('ready');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const normalizedEmail = normalizeEmailValue(email);
 
@@ -125,7 +157,9 @@ function LoginForm() {
         session.viewMode = 'staff';
       }
       setSession(session);
-      router.replace(getPostLoginRoute(session.role, session.viewMode));
+      const next = getPostLoginRoute(session.role, session.viewMode);
+      const slug = church?.slug || extractChurchSlug(window.location.pathname);
+      router.replace(slug ? `/${slug}${next}` : next);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed.');
     } finally {
@@ -136,17 +170,32 @@ function LoginForm() {
   const fieldClass =
     'w-full rounded-2xl bg-[#F3F4F6] py-3.5 pl-11 pr-4 text-[15px] text-ckc-black placeholder:text-[#9CA3AF] outline-none ring-0 focus:bg-[#EEEFF2]';
 
+  if (gate === 'checking') {
+    return <div className="min-h-dvh bg-white" />;
+  }
+
+  if (gate === 'neutral') {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-6 text-center">
+        <p className="font-serif text-3xl font-semibold text-neutral-900">{APP_NAME}</p>
+        <h6 className="mt-6 max-w-sm font-bold text-neutral-800">
+          Welcome. Please use the link your church sent you to sign in.
+        </h6>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <div className="mx-auto flex w-full max-w-[430px] flex-1 flex-col px-6 pb-8 pt-10">
         <div className="text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={BRAND.logoFullOnLight}
-            alt="Christ Kingdom Citizens Midrand"
-            className="mx-auto h-auto w-[190px] object-contain"
-          />
-          <h6 className="mt-6 font-bold text-ckc-black">Welcome to CKC Midrand sign in now</h6>
+          {church?.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={church.logoUrl} alt={church.name} className="mx-auto h-auto w-[190px] object-contain" />
+          ) : (
+            <p className="font-serif text-3xl font-semibold text-ckc-black">{church?.name}</p>
+          )}
+          <h6 className="mt-6 font-bold text-ckc-black">Welcome to {church?.name}, sign in now</h6>
         </div>
 
         <div className="mt-8 flex flex-1 flex-col">
@@ -323,7 +372,7 @@ function LoginForm() {
             </Link>
           </p>
           <Link href="/member/church-info" className="mt-3 block text-sm text-[#9CA3AF]">
-            Just visiting? Learn about CKC
+            Just visiting? Learn about the church
           </Link>
         </div>
       </div>

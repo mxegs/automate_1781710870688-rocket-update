@@ -20,6 +20,7 @@ export async function submitMembershipApplication(input: {
   applicationData: MembershipApplication;
   inviteToken?: string;
   inviteId?: string;
+  churchId?: string;
 }): Promise<SubmittedApplication> {
   if (useBackend()) {
     return apiFetch<SubmittedApplication>('/api/membership-applications', {

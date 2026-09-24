@@ -19,30 +19,32 @@ export interface ChurchBranding {
   appName: string | null;
 }
 
-export const CKC_BRANDING: ChurchBranding = {
-  name: 'Christ Kingdom Citizens',
-  primaryColor: '#C5A073',
-  secondaryColor: '#0A0A0A',
+const NEUTRAL_BRANDING: ChurchBranding = {
+  name: '',
+  primaryColor: '#6B7280',
+  secondaryColor: '#F7F3EE',
   logoUrl: null,
   appName: null,
 };
 
-export async function getChurch(churchId?: string): Promise<ChurchRecord> {
+export async function getChurch(churchId?: string | null): Promise<ChurchRecord | null> {
   const id = resolveChurchId(churchId);
+  if (!id) return null;
   return apiFetch<ChurchRecord>(`/api/churches/${id}`);
 }
 
-export async function getChurchBranding(churchId?: string): Promise<ChurchBranding> {
+export async function getChurchBranding(churchId?: string | null): Promise<ChurchBranding> {
   try {
     const church = await getChurch(churchId);
+    if (!church) return NEUTRAL_BRANDING;
     return {
-      name: church.name || CKC_BRANDING.name,
-      primaryColor: church.primaryColor || CKC_BRANDING.primaryColor,
-      secondaryColor: church.secondaryColor || CKC_BRANDING.secondaryColor,
+      name: church.name,
+      primaryColor: church.primaryColor || NEUTRAL_BRANDING.primaryColor,
+      secondaryColor: church.secondaryColor || NEUTRAL_BRANDING.secondaryColor,
       logoUrl: church.logoUrl,
       appName: church.appName,
     };
   } catch {
-    return CKC_BRANDING;
+    return NEUTRAL_BRANDING;
   }
 }
