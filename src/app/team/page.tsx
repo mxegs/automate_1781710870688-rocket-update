@@ -11,7 +11,7 @@ import { getSession } from '@/lib/auth/session';
 import { resolveMemberChurch } from '@/lib/member/campus';
 import { assignStaffRole, listStaffProfiles, removeStaffRole } from '@/lib/staff/service';
 import type { AssignableStaffRole, StaffProfile } from '@/lib/staff/types';
-import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
+import { apiFetch, sessionHeaders, useBackend } from '@/lib/api/client';
 
 interface MemberOption {
   email: string;
@@ -53,7 +53,7 @@ export default function TeamPage() {
       if (useBackend()) {
         const rows = await apiFetch<
           { email?: string | null; full_name: string; campus_id: string }[]
-        >('/api/members', { headers: staffHeaders() });
+        >('/api/members', { headers: sessionHeaders() });
         setMembers(
           rows
             .filter((m) => m.email?.includes('@'))

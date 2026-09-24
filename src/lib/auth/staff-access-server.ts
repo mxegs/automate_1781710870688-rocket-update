@@ -19,12 +19,12 @@ export interface StaffActor {
   displayName: string;
 }
 
-export function readStaffEmailHeader(request: Request): string {
-  return normalizeEmail(request.headers.get('x-staff-email') ?? '');
+export function readSessionEmailHeader(request: Request): string {
+  return normalizeEmail(request.headers.get('x-session-email') ?? '');
 }
 
 export async function resolveStaffActor(request: Request): Promise<StaffActor | null> {
-  const email = readStaffEmailHeader(request);
+  const email = readSessionEmailHeader(request);
   if (!email.includes('@')) return null;
 
   const db = getSupabaseAdmin();

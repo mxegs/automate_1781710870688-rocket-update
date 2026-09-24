@@ -1,5 +1,5 @@
 import { DEMO_INVITES } from '@/lib/auth/demo-users';
-import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
+import { apiFetch, sessionHeaders, useBackend } from '@/lib/api/client';
 
 export interface PendingInvite {
   id: string;
@@ -114,7 +114,7 @@ export async function createInvite(input: CreateInviteInput): Promise<PendingInv
   if (useBackend()) {
     return apiFetch<PendingInvite>('/api/invites', {
       method: 'POST',
-      headers: staffHeaders(),
+      headers: sessionHeaders(),
       body: JSON.stringify(input),
     });
   }

@@ -1,4 +1,4 @@
-import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
+import { apiFetch, sessionHeaders, useBackend } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
 import { withChurchId } from '@/lib/church/tenant';
 import type { ChurchEvent, EventInput, EventRsvp } from './types';
@@ -67,7 +67,7 @@ export async function uploadEventImage(
 
   const res = await fetch('/api/events/upload-image', {
     method: 'POST',
-    headers: staffHeaders(),
+    headers: sessionHeaders(),
     body: formData,
   });
 

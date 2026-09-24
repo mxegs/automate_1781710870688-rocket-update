@@ -1,5 +1,5 @@
 import type { CampusId } from '@/lib/church/constants';
-import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
+import { apiFetch, sessionHeaders, useBackend } from '@/lib/api/client';
 
 export type InviteRequestStatus = 'pending' | 'approved' | 'declined';
 
@@ -34,7 +34,7 @@ function writeRequests(requests: InviteRequest[]): void {
 export async function getInviteRequests(status?: InviteRequestStatus): Promise<InviteRequest[]> {
   if (useBackend()) {
     const qs = status ? `?status=${status}` : '';
-    return apiFetch<InviteRequest[]>(`/api/invite-requests${qs}`, { headers: staffHeaders() });
+    return apiFetch<InviteRequest[]>(`/api/invite-requests${qs}`, { headers: sessionHeaders() });
   }
 
   const all = readRequests();

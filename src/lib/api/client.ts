@@ -5,10 +5,10 @@ export function useBackend(): boolean {
   return supabaseConfigured;
 }
 
-export function staffHeaders(): Record<string, string> {
+export function sessionHeaders(): Record<string, string> {
   const session = getSession();
   if (session?.email) {
-    return { 'X-Staff-Email': session.email };
+    return { 'X-Session-Email': session.email };
   }
   return {};
 }
@@ -18,6 +18,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...sessionHeaders(),
       ...init?.headers,
     },
   });
