@@ -96,7 +96,7 @@ function SetPasswordForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <span className="ckc-label-pill">Almost done</span>
-            <h2 className="text-base font-semibold text-ckc-white">Choose a password</h2>
+            <h2 className="text-base font-semibold text-cloud">Choose a password</h2>
             <p className="text-xs leading-relaxed text-ckc-muted">
               Choose a password for when you are approved. We will email and SMS you as soon as your
               application is reviewed — please wait for that message before signing in.
@@ -139,7 +139,7 @@ function SetPasswordForm() {
 
 export default function SetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ckc-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-life-page" />}>
       <SetPasswordForm />
     </Suspense>
   );

@@ -16,7 +16,14 @@ interface Ministry {
   color: string;
 }
 
-const mockMinistries: Ministry[] = [];
+const mockMinistries: Ministry[] = [
+  { id: 1, name: 'Worship', leader: 'Kagiso Mthembu', members: 14, meetingDay: 'Thursday', meetingTime: '18:30', description: 'Vocalists, band, and sound serving Sunday worship and special gatherings.', icon: 'MusicalNoteIcon', color: 'sky' },
+  { id: 2, name: 'Ushers', leader: 'Sipho Nkosi', members: 12, meetingDay: 'Sunday', meetingTime: '07:45', description: 'Welcome, seating, and order of service support at both campuses.', icon: 'HandRaisedIcon', color: 'amber' },
+  { id: 3, name: "Children's Church", leader: 'Nomsa Khumalo', members: 9, meetingDay: 'Sunday', meetingTime: '08:30', description: 'Age-grouped teaching while the main service is in session.', icon: 'SparklesIcon', color: 'pink' },
+  { id: 4, name: 'Media', leader: 'Thabo Molefe', members: 7, meetingDay: 'Saturday', meetingTime: '10:00', description: 'Livestream, slides, cameras, and sermon archive uploads.', icon: 'VideoCameraIcon', color: 'purple' },
+  { id: 5, name: 'Hospitality', leader: 'Lerato Dlamini', members: 11, meetingDay: 'Sunday', meetingTime: '08:00', description: 'Tea, welcome table, and first-time guest care after service.', icon: 'HeartIcon', color: 'rose' },
+  { id: 6, name: 'Youth', leader: 'Amahle Naidoo', members: 22, meetingDay: 'Friday', meetingTime: '18:00', description: 'Friday youth gathering, retreats, and Sunday youth seating.', icon: 'UserGroupIcon', color: 'emerald' },
+];
 
 const colorMap: Record<string, string> = {
   sky: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',

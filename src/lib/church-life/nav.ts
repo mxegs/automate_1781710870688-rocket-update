@@ -37,6 +37,8 @@ export const lifeHomeTiles: LifeHomeTile[] = [
   { label: 'Prayer', href: '/member/prayer', icon: 'HandRaisedIcon', accentGold: false },
 ];
 
+export const lifeHomeTileTones = ['navy', 'cyan', 'slate', 'lilac'] as const;
+
 export const lifeSocialLinks = [
   { label: 'Facebook', href: 'https://facebook.com', brand: 'facebook' as const },
   { label: 'Instagram', href: 'https://instagram.com', brand: 'instagram' as const },

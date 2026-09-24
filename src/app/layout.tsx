@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/assets/images/app_logo.png', type: 'image/png' }],
-    apple: [{ url: '/assets/images/app_logo.png' }],
+    icon: [{ url: '/assets/brand/logo-mark-on-dark.png', type: 'image/png' }],
+    apple: [{ url: '/assets/brand/logo-mark-on-dark.png' }],
   },
 };
 

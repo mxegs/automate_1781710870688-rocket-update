@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
-import { BRAND } from '@/lib/assets';
+import { getDisplayName, getSession } from '@/lib/auth/session';
 
 interface ChurchLifeHeaderProps {
   onMenuOpen: () => void;
@@ -11,8 +11,11 @@ interface ChurchLifeHeaderProps {
 }
 
 export default function ChurchLifeHeader({ onMenuOpen, homeHref = '/member' }: ChurchLifeHeaderProps) {
+  const session = getSession();
+  const initial = (session ? getDisplayName(session) : 'C').trim().charAt(0).toUpperCase() || 'C';
+
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-[0.5px] border-[#E5E5E5] bg-white px-4 py-3.5">
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-life-page/95 px-4 py-3.5 backdrop-blur-md">
       <button
         type="button"
         onClick={onMenuOpen}
@@ -22,13 +25,16 @@ export default function ChurchLifeHeader({ onMenuOpen, homeHref = '/member' }: C
         <Icon name="Bars3Icon" size={20} variant="outline" />
       </button>
 
-      <p className="flex-1 text-center text-[11px] font-medium uppercase leading-tight tracking-[1px] text-ckc-black">
-        {BRAND.name}
-      </p>
-
-      <Link href={homeHref} className="flex-shrink-0" aria-label="Home">
-        <div className="ckc-logo-circle">CKC</div>
+      <Link href={homeHref} className="flex-1 text-center" aria-label="Home">
+        <p className="font-serif text-xl font-bold tracking-tight text-ckc-black">CKC</p>
       </Link>
+
+      <div
+        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ckc-gold text-xs font-semibold text-ckc-gold-text"
+        aria-hidden
+      >
+        {initial}
+      </div>
     </header>
   );
 }

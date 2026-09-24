@@ -126,3 +126,74 @@ export async function verifyTicket(code: string): Promise<{
 }> {
   return apiFetch(`/api/events/tickets/verify?code=${encodeURIComponent(code)}`);
 }
+
+export type CheckInMethod = 'self' | 'kiosk' | 'scanner' | 'staff';
+
+export interface EventCheckIn {
+  id: string;
+  eventId: string;
+  campusId?: string;
+  profileId?: string;
+  memberId?: string;
+  rsvpId?: string;
+  isDependant: boolean;
+  dependantName?: string;
+  guardianMemberId?: string;
+  room?: string;
+  seat?: string;
+  securityCode?: string;
+  method: CheckInMethod;
+  checkedInAt: string;
+}
+
+export interface CheckInPayload {
+  eventId: string;
+  profileId?: string;
+  memberId?: string;
+  rsvpId?: string;
+  dependants?: { name: string; room?: string }[];
+  room?: string;
+  seat?: string;
+  method?: CheckInMethod;
+}
+
+export interface MyCheckIn {
+  id: string;
+  eventId: string;
+  room?: string;
+  seat?: string;
+  securityCode?: string;
+  checkedInAt: string;
+}
+
+export interface TodayCheckIn {
+  event: ChurchEvent | null;
+  checkin: MyCheckIn | null;
+  dependants: EventCheckIn[];
+}
+
+export async function createCheckin(payload: CheckInPayload): Promise<{
+  primary: EventCheckIn;
+  dependants: EventCheckIn[];
+}> {
+  return apiFetch('/api/events/checkins', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getEventCheckins(eventId: string): Promise<EventCheckIn[]> {
+  return apiFetch(`/api/events/${eventId}/checkins`);
+}
+
+export async function getMyCheckin(eventId: string, profileId: string): Promise<MyCheckIn | null> {
+  const params = new URLSearchParams({ eventId, profileId });
+  return apiFetch(`/api/events/checkins/me?${params}`);
+}
+
+export async function getMyCheckinForToday(campusId?: CampusId, profileId?: string): Promise<TodayCheckIn> {
+  const params = new URLSearchParams();
+  if (campusId) params.set('campusId', campusId);
+  if (profileId) params.set('profileId', profileId);
+  return apiFetch(`/api/events/checkins/today?${params}`);
+}

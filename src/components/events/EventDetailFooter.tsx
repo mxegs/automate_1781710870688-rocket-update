@@ -41,7 +41,7 @@ export default function EventDetailFooter({
         <button
           type="button"
           onClick={onAction}
-          className="btn-life-primary flex-1 py-3 text-[13px]"
+          className="btn-life-primary flex-1 py-3.5"
         >
           {actionLabel}
         </button>

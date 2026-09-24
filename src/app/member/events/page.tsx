@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import EventListRow from '@/components/events/EventListRow';
 import LifeHero from '@/components/church-life/LifeHero';
+import { eventCover, LIFE_PHOTOS } from '@/lib/church-life/imagery';
 import { getMemberEventsFeed } from '@/lib/events/service';
 import { groupEventsByMonth } from '@/lib/events/utils';
 import { resolveMemberCampus } from '@/lib/member/campus';
@@ -46,29 +47,51 @@ export default function MemberEventsPage() {
     };
   }, [isVisitor]);
 
-  const monthGroups = groupEventsByMonth(events);
-  const heroImage = events[0]?.imageUrl;
+  const featured = events[0];
+  const rest = featured ? events.slice(1) : events;
+  const monthGroups = groupEventsByMonth(rest);
 
   return (
     <AppShell access="shared">
-      <div className="space-y-0">
-        <LifeHero imageUrl={heroImage} titleLead="Upcoming" titleRest="events" />
+      <div className="px-5 pb-8 pt-5">
+        <h1 className="font-serif text-[32px] font-semibold leading-none text-ckc-black">Events</h1>
+        <p className="mt-1 text-sm text-ckc-muted">What is happening at CKC</p>
 
-        <div className="bg-life-content px-3.5 py-3.5">
+        {featured ? (
+          <div className="mt-5">
+            <LifeHero
+              imageUrl={eventCover(featured)}
+              titleLead={featured.title}
+              titleRest={`${featured.date} · ${featured.time}`}
+              href={`/member/events/${featured.id}`}
+              badge="Coming up"
+              cta="View details"
+            />
+          </div>
+        ) : (
+          <div className="mt-5">
+            <LifeHero
+              imageUrl={LIFE_PHOTOS.gathering}
+              titleLead="Gather with us"
+              titleRest="Services, prayer, and campus life"
+              badge="Events"
+            />
+          </div>
+        )}
+
+        <div className="mt-6">
           {loading ? (
             <p className="py-12 text-center text-sm text-ckc-muted">Loading events…</p>
           ) : loadError ? (
             <p className="py-12 text-center text-sm text-rose-500">{loadError}</p>
           ) : !backend ? (
-            <p className="text-sm text-ckc-muted">
-              No events to show — your campus admin will add events soon.
-            </p>
+            <p className="text-sm text-ckc-muted">No events to show — your campus admin will add events soon.</p>
           ) : monthGroups.length > 0 ? (
             <div className="space-y-6">
               {monthGroups.map((group) => (
                 <section key={group.monthKey}>
                   <h2 className="life-month-heading">{group.monthLabel}</h2>
-                  <div className="mt-2.5 space-y-2">
+                  <div className="mt-3 space-y-3">
                     {group.events.map((event) => (
                       <EventListRow key={event.id} event={event} theme="light" />
                     ))}
@@ -76,7 +99,7 @@ export default function MemberEventsPage() {
                 </section>
               ))}
             </div>
-          ) : (
+          ) : featured ? null : (
             <p className="py-12 text-center text-ckc-muted">No upcoming events for your campus.</p>
           )}
         </div>

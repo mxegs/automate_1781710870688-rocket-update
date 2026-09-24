@@ -3,33 +3,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
-import { getCampusLabel, type CampusId } from '@/lib/church/constants';
+import LifeHero from '@/components/church-life/LifeHero';
+import LifePhoto from '@/components/church-life/LifePhoto';
+import { LIFE_PHOTOS } from '@/lib/church-life/imagery';
+import { type CampusId } from '@/lib/church/constants';
 import { fetchProfileByPhone, getSession } from '@/lib/auth/session';
 import { getMemberMediaFeed } from '@/lib/sermons/service';
 import type { MediaItem } from '@/lib/sermons/types';
 import { getThumbnailUrl, getWatchUrl } from '@/lib/sermons/utils';
 
-const typeConfig: Record<string, { color: string; icon: string }> = {
-  'Sermon': { color: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20', icon: 'MicrophoneIcon' },
-  'Audio': { color: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20', icon: 'MusicalNoteIcon' },
-  'Book': { color: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20', icon: 'BookOpenIcon' },
-  'Special Message': { color: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20', icon: 'SparklesIcon' },
-};
-
-const categoryColors: Record<string, string> = {
-  'Sunday Service': 'bg-ckc-gold/10 text-ckc-gold',
-  "Women's Day": 'bg-ckc-gold/10 text-ckc-gold',
-  'Youth Conference': 'bg-ckc-gold/10 text-ckc-gold',
-  'Prayer Meeting': 'bg-rose-500/10 text-rose-400',
-  'Bible Study': 'bg-ckc-gold/10 text-ckc-gold',
-  'Easter': 'bg-ckc-gold/10 text-ckc-gold',
-  'Midweek Service': 'bg-ckc-gold/10 text-ckc-gold',
-};
+const FILTER_CHIP =
+  'whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium';
 
 export default function SermonsPage() {
   const [sermons, setSermons] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [feedCampus, setFeedCampus] = useState<CampusId | null>(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [preacherFilter, setPreacherFilter] = useState('All');
@@ -37,7 +25,6 @@ export default function SermonsPage() {
   const [monthFilter, setMonthFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [selectedSermon, setSelectedSermon] = useState<MediaItem | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     const session = getSession();
@@ -45,10 +32,7 @@ export default function SermonsPage() {
 
     if (isGuest) {
       getMemberMediaFeed({ isVisitor: true })
-        .then((items) => {
-          setFeedCampus(null);
-          setSermons(items);
-        })
+        .then((items) => setSermons(items))
         .finally(() => setLoading(false));
       return;
     }
@@ -56,7 +40,6 @@ export default function SermonsPage() {
     fetchProfileByPhone(session.phone)
       .then(async (profile) => {
         const campus = (profile?.campusId as CampusId) ?? 'midrand';
-        setFeedCampus(campus);
         const items = await getMemberMediaFeed({
           memberCampus: campus,
           isVisitor: false,
@@ -69,12 +52,11 @@ export default function SermonsPage() {
 
   const preachers = ['All', ...Array.from(new Set(sermons.map((s) => s.preacher)))];
   const years = ['All', ...Array.from(new Set(sermons.map((s) => s.year.toString()))).sort((a, b) => Number(b) - Number(a))];
-  const months = ['All', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const categories = ['All', ...Array.from(new Set(sermons.map((s) => s.category)))];
 
   const filtered = useMemo(() => {
     return sermons.filter((s) => {
-      const matchSearch = s.title.toLowerCase().includes(search.toLowerCase()) ||
+      const matchSearch =
+        s.title.toLowerCase().includes(search.toLowerCase()) ||
         s.preacher.toLowerCase().includes(search.toLowerCase()) ||
         s.description.toLowerCase().includes(search.toLowerCase()) ||
         (s.series?.toLowerCase().includes(search.toLowerCase()) ?? false);
@@ -87,17 +69,13 @@ export default function SermonsPage() {
     });
   }, [sermons, search, typeFilter, preacherFilter, yearFilter, monthFilter, categoryFilter]);
 
-  // Group by type for organized display
-  const grouped = useMemo(() => {
-    const groups: Record<string, MediaItem[]> = {};
-    filtered.forEach((s) => {
-      if (!groups[s.type]) groups[s.type] = [];
-      groups[s.type].push(s);
-    });
-    return groups;
-  }, [filtered]);
-
-  const hasFilters = typeFilter !== 'All' || preacherFilter !== 'All' || yearFilter !== 'All' || monthFilter !== 'All' || categoryFilter !== 'All' || search;
+  const hasFilters =
+    typeFilter !== 'All' ||
+    preacherFilter !== 'All' ||
+    yearFilter !== 'All' ||
+    monthFilter !== 'All' ||
+    categoryFilter !== 'All' ||
+    search;
 
   const clearFilters = () => {
     setSearch('');
@@ -108,30 +86,52 @@ export default function SermonsPage() {
     setCategoryFilter('All');
   };
 
+  const featured = !hasFilters ? filtered[0] : null;
+  const rest = featured ? filtered.slice(1) : filtered;
+  const chipClass = (active: boolean) =>
+    `${FILTER_CHIP} ${active ? 'border-ckc-gold bg-ckc-gold text-ckc-gold-text' : 'border-[#C9BBAE] bg-white text-ckc-black'}`;
+
   return (
     <AppShell access="shared">
-      <div className="life-section space-y-3">
-        <h1 className="text-base font-medium text-ckc-black">Sermons and messages</h1>
+      <div className="px-5 pb-8 pt-5">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <h1 className="font-serif text-[32px] font-semibold leading-none text-ckc-black">Sermons</h1>
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-ckc-gold-dim">Library</span>
+        </div>
+
+        {featured ? (
+          <div className="mb-5">
+            <LifeHero
+              imageUrl={getThumbnailUrl(featured)}
+              titleLead={featured.title}
+              titleRest={`${featured.preacher} · ${featured.date}`}
+              badge="Latest sermon"
+              cta="Watch"
+              onClick={() => setSelectedSermon(featured)}
+            />
+          </div>
+        ) : (
+          <div className="mb-5">
+            <LifeHero
+              imageUrl={LIFE_PHOTOS.worship}
+              titleLead="Watch with us"
+              titleRest="Sunday messages and special gatherings"
+              badge="Sermon library"
+            />
+          </div>
+        )}
 
         <input
-          type="text"
+          type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search sermons"
-          className="life-input"
+          className="life-input mb-3"
         />
 
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[10px] ${
-              typeFilter !== 'All'
-                ? 'bg-ckc-gold-button text-ckc-gold-text'
-                : 'border border-[#E5E5E5] text-ckc-muted bg-white'
-            }`}
-          >
-            <option value="All">Type</option>
+        <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={chipClass(typeFilter !== 'All')}>
+            <option value="All">All</option>
             <option value="Sermon">Sermon</option>
             <option value="Audio">Audio</option>
             <option value="Book">Book</option>
@@ -140,191 +140,132 @@ export default function SermonsPage() {
           <select
             value={preacherFilter}
             onChange={(e) => setPreacherFilter(e.target.value)}
-            className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[10px] ${
-              preacherFilter !== 'All'
-                ? 'bg-ckc-gold-button text-ckc-gold-text'
-                : 'border border-[#E5E5E5] text-ckc-muted bg-white'
-            }`}
+            className={chipClass(preacherFilter !== 'All')}
           >
             {preachers.map((p) => (
-              <option key={p} value={p}>{p === 'All' ? 'Preacher' : p}</option>
+              <option key={p} value={p}>
+                {p === 'All' ? 'Preacher' : p}
+              </option>
             ))}
           </select>
-          <select
-            value={yearFilter}
-            onChange={(e) => setYearFilter(e.target.value)}
-            className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[10px] ${
-              yearFilter !== 'All'
-                ? 'bg-ckc-gold-button text-ckc-gold-text'
-                : 'border border-[#E5E5E5] text-ckc-muted bg-white'
-            }`}
-          >
+          <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} className={chipClass(yearFilter !== 'All')}>
             {years.map((y) => (
-              <option key={y} value={y}>{y === 'All' ? 'Year' : y}</option>
+              <option key={y} value={y}>
+                {y === 'All' ? 'Year' : y}
+              </option>
             ))}
           </select>
-          {hasFilters && (
-            <button type="button" onClick={clearFilters} className="text-[10px] text-ckc-muted">
+          {hasFilters ? (
+            <button type="button" onClick={clearFilters} className="text-xs font-medium text-ckc-gold-dim">
               Clear
             </button>
-          )}
+          ) : null}
         </div>
 
-        {/* Results */}
         {loading ? (
-          <div className="text-center py-16 text-ckc-muted text-sm">Loading messages…</div>
+          <p className="py-16 text-center text-sm text-ckc-muted">Loading messages…</p>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <Icon name="MagnifyingGlassIcon" size={32} variant="outline" className="text-ckc-black/20 mx-auto mb-3" />
-            <p className="text-ckc-muted text-sm">No messages found matching your filters.</p>
-            <button onClick={clearFilters} className="mt-2 text-xs text-ckc-gold hover:text-ckc-gold/80">Clear filters</button>
-          </div>
-        ) : hasFilters ? (
-          // Flat grid when filtering
-          <div className="grid grid-cols-2 gap-2">
-            {filtered.map((sermon) => (
-              <SermonCard key={sermon.id} sermon={sermon} viewMode="grid" onClick={() => setSelectedSermon(sermon)} />
-            ))}
+          <div className="py-16 text-center">
+            <p className="text-sm text-ckc-muted">No messages match those filters.</p>
+            <button type="button" onClick={clearFilters} className="mt-2 text-sm font-medium text-ckc-gold-dim">
+              Clear filters
+            </button>
           </div>
         ) : (
-          // Grouped by type when no filters
-          <div className="space-y-8">
-            {Object.entries(grouped).map(([type, sermons]) => (
-              <div key={type}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold ${typeConfig[type]?.color}`}>
-                    <Icon name={typeConfig[type]?.icon || 'PlayCircleIcon'} size={12} variant="outline" />
-                    {type}s
-                  </div>
-                  <div className="flex-1 h-px bg-neutral-50" />
-                  <span className="text-xs text-ckc-muted/80">{sermons.length} message{sermons.length !== 1 ? 's' : ''}</span>
-                </div>
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-                  {sermons.map((sermon) => (
-                    <SermonCard key={sermon.id} sermon={sermon} viewMode={viewMode} onClick={() => setSelectedSermon(sermon)} />
-                  ))}
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-3">
+            {(featured ? rest : filtered).map((sermon) => (
+              <SermonCard key={sermon.id} sermon={sermon} onClick={() => setSelectedSermon(sermon)} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Sermon Detail Modal */}
-      {selectedSermon && (() => {
-        const watchUrl = getWatchUrl(selectedSermon);
-        return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedSermon(null)}>
-          <div className="bg-ckc-black bg-neutral-50 border border-[#E5E5E5] rounded-2xl w-full max-w-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* YouTube Thumbnail */}
-            <div className="relative aspect-video bg-black">
-              {getThumbnailUrl(selectedSermon) ? (
-                <img
-                  src={getThumbnailUrl(selectedSermon)!}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-neutral-50">
-                  <Icon name="MusicalNoteIcon" size={48} variant="outline" className="text-ckc-black/20" />
-                </div>
-              )}
-              {watchUrl ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <a
-                    href={watchUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-16 h-16 rounded-full bg-red-600/90 hover:bg-red-600 flex items-center justify-center transition-all hover:scale-110 shadow-2xl"
+      {selectedSermon &&
+        (() => {
+          const watchUrl = getWatchUrl(selectedSermon);
+          const thumb = getThumbnailUrl(selectedSermon);
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 backdrop-blur-sm sm:items-center"
+              onClick={() => setSelectedSermon(null)}
+            >
+              <div
+                className="w-full max-w-lg overflow-hidden rounded-[28px] bg-white shadow-ckc-lg"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="relative aspect-[16/10] bg-ckc-black">
+                  <LifePhoto src={thumb} className="h-full w-full" />
+                  {watchUrl ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <a
+                        href={watchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl transition hover:scale-105"
+                      >
+                        <Icon name="PlayIcon" size={24} variant="solid" className="ml-0.5 text-ckc-black" />
+                      </a>
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSermon(null)}
+                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white"
                   >
-                    <Icon name="PlayIcon" size={24} variant="solid" className="text-white ml-1" />
-                  </a>
+                    <Icon name="XMarkIcon" size={16} variant="outline" />
+                  </button>
                 </div>
-              ) : null}
-              <button onClick={() => setSelectedSermon(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white/70 hover:text-white">
-                <Icon name="XMarkIcon" size={16} variant="outline" />
-              </button>
-            </div>
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <h2 className="text-ckc-black font-bold text-base leading-snug">{selectedSermon.title}</h2>
-                  {selectedSermon.series && <p className="text-ckc-gold text-xs mt-0.5">{selectedSermon.series}</p>}
+                <div className="p-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ckc-gold-dim">
+                    {selectedSermon.type}
+                  </p>
+                  <h2 className="mt-1 font-serif text-[24px] font-semibold leading-tight text-ckc-black">
+                    {selectedSermon.title}
+                  </h2>
+                  {selectedSermon.series ? (
+                    <p className="mt-1 text-sm text-ckc-gold-dim">{selectedSermon.series}</p>
+                  ) : null}
+                  <p className="mt-3 text-sm leading-relaxed text-ckc-muted">{selectedSermon.description}</p>
+                  <p className="mt-3 text-sm text-ckc-muted">
+                    {selectedSermon.preacher} · {selectedSermon.date}
+                    {selectedSermon.duration ? ` · ${selectedSermon.duration}` : ''}
+                  </p>
+                  {watchUrl ? (
+                    <a
+                      href={watchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-life-primary mt-5 flex w-full items-center justify-center py-3.5"
+                    >
+                      {selectedSermon.youtubeId ? 'Watch on YouTube' : 'Open message'}
+                    </a>
+                  ) : (
+                    <p className="mt-5 text-center text-sm text-ckc-muted">No video link yet for this message.</p>
+                  )}
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full border flex-shrink-0 ${typeConfig[selectedSermon.type]?.color}`}>
-                  {selectedSermon.type}
-                </span>
               </div>
-              <p className="text-ckc-muted text-sm mb-4">{selectedSermon.description}</p>
-              <div className="flex flex-wrap gap-3 text-xs text-ckc-muted">
-                <span className="flex items-center gap-1"><Icon name="UserCircleIcon" size={12} variant="outline" />{selectedSermon.preacher}</span>
-                <span className="flex items-center gap-1"><Icon name="CalendarDaysIcon" size={12} variant="outline" />{selectedSermon.date}</span>
-                <span className="flex items-center gap-1"><Icon name="ClockIcon" size={12} variant="outline" />{selectedSermon.duration}</span>
-                <span className={`px-2 py-0.5 rounded-full ${categoryColors[selectedSermon.category] || 'bg-neutral-50 text-ckc-muted'}`}>{selectedSermon.category}</span>
-              </div>
-              {watchUrl ? (
-                <a
-                  href={watchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 w-full flex items-center justify-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 font-semibold text-sm py-2.5 rounded-xl transition-all"
-                >
-                  <Icon name="PlayCircleIcon" size={16} variant="outline" />
-                  {selectedSermon.youtubeId ? 'Watch on YouTube' : 'Open link'}
-                </a>
-              ) : (
-                <p className="mt-4 text-center text-xs text-ckc-muted">No video link available for this message yet.</p>
-              )}
             </div>
-          </div>
-        </div>
-        );
-      })()}
+          );
+        })()}
     </AppShell>
   );
 }
 
-function SermonCard({ sermon, viewMode, onClick }: { sermon: MediaItem; viewMode: 'grid' | 'list'; onClick: () => void }) {
-  const cfg = typeConfig[sermon.type];
-  const catColor = categoryColors[sermon.category] || 'bg-neutral-50 text-ckc-muted';
-  const thumb = getThumbnailUrl(sermon);
-
-  if (viewMode === 'list') {
-    return (
-      <button onClick={onClick} className="w-full flex items-center gap-4 bg-neutral-50 hover:bg-white/8 bg-neutral-50 border border-[#E5E5E5] hover:border-ckc-gold/20 rounded-xl p-3 transition-all text-left group">
-        <div className="relative w-24 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black">
-          {thumb ? (
-            <img src={thumb} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-neutral-50">
-              <Icon name="MusicalNoteIcon" size={20} variant="outline" className="text-ckc-muted/80" />
-            </div>
-          )}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
-            <Icon name="PlayCircleIcon" size={20} variant="solid" className="text-white/80" />
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-ckc-black text-sm font-medium truncate">{sermon.title}</p>
-          <p className="text-ckc-muted text-xs mt-0.5">{sermon.preacher} · {sermon.date}</p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded-full border ${cfg?.color}`}>{sermon.type}</span>
-          <span className="text-xs text-ckc-muted/80">{sermon.duration}</span>
-        </div>
-      </button>
-    );
-  }
-
+function SermonCard({ sermon, onClick }: { sermon: MediaItem; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-full text-left">
-      <div className="mb-1 h-[60px] rounded-lg bg-[#2a2a2a] overflow-hidden">
-        {thumb ? (
-          <img src={thumb} alt="" className="h-full w-full object-cover" />
-        ) : null}
+    <button type="button" onClick={onClick} className="w-full overflow-hidden rounded-[22px] bg-white text-left shadow-[0_10px_28px_rgba(26,22,18,0.08)]">
+      <div className="relative h-[132px]">
+        <LifePhoto src={getThumbnailUrl(sermon)} className="h-full w-full" />
+        <span className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-ckc-black">
+          <Icon name="PlayIcon" size={12} variant="solid" className="ml-0.5" />
+        </span>
       </div>
-      <p className="text-[11px] text-ckc-black line-clamp-2">{sermon.title}</p>
-      <p className="text-[9px] text-ckc-muted">{sermon.preacher}</p>
+      <div className="px-3 py-3">
+        <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-ckc-black">{sermon.title}</p>
+        <p className="mt-1 text-xs text-ckc-muted">
+          {sermon.preacher} · {sermon.date}
+        </p>
+      </div>
     </button>
   );
 }

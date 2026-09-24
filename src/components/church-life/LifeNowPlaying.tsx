@@ -13,10 +13,10 @@ interface LifeNowPlayingProps {
 export default function LifeNowPlaying({ title, preacher, href }: LifeNowPlayingProps) {
   const inner = (
     <div className="life-now-playing-card">
-      <Icon name="PlayCircleIcon" size={16} variant="outline" className="shrink-0 text-ckc-gold" />
+      <Icon name="PlayCircleIcon" size={16} variant="outline" className="shrink-0 text-ckc-gold-text" />
       <div className="min-w-0">
-        <p className="text-[9px] lowercase text-ckc-muted">now playing</p>
-        <p className="truncate text-xs text-ckc-black">
+        <p className="text-[9px] lowercase text-ckc-gold-text/70">now playing</p>
+        <p className="truncate text-xs text-ckc-gold-text">
           {title} — {preacher}
         </p>
       </div>

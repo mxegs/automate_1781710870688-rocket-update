@@ -95,7 +95,7 @@ export default function RouteGuard({ children, portal, access = 'member' }: Rout
 
   if (!allowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ckc-black text-ckc-muted">
+      <div className="flex min-h-screen items-center justify-center bg-life-page text-ckc-muted">
         <p className="text-sm">Loading…</p>
       </div>
     );

@@ -15,17 +15,17 @@ module.exports = {
           surface: '#141414',
           elevated: '#1C1C1C',
           white: '#FFFFFF',
-          muted: '#666666',
+          muted: '#888888',
           dim: '#737373',
           gold: '#C5A073',
           'gold-button': '#D9B985',
           'gold-light': '#D4BC94',
           'gold-dim': '#8A7340',
-          'gold-text': '#412402',
+          'gold-text': '#000000',
         },
         life: {
-          page: '#F4F4F2',
-          content: '#F7F7F5',
+          page: '#F7F3EE',
+          content: '#F7F3EE',
         },
         slate: {
           DEFAULT: '#1A1A1A',
@@ -48,6 +48,10 @@ module.exports = {
         'ckc-gold': 'linear-gradient(180deg, #D4BC94 0%, #C5A073 100%)',
         'ckc-surface': 'linear-gradient(180deg, #1C1C1C 0%, #0A0A0A 100%)',
         'ckc-life-fade': 'linear-gradient(180deg, #FFFFFF 0%, #E8E8E8 40%, #1A1A1A 100%)',
+      },
+      boxShadow: {
+        ckc: '0px 4px 20px rgba(197, 160, 115, 0.12)',
+        'ckc-lg': '0px 12px 32px rgba(197, 160, 115, 0.18)',
       },
       fontFamily: {
         sans: ['DM Sans', 'sans-serif'],

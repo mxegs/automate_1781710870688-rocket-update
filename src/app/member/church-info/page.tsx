@@ -2,12 +2,14 @@
 
 import React from 'react';
 import AppShell from '@/components/AppShell';
+import LifeHero from '@/components/church-life/LifeHero';
 import { LifeSocialIcon } from '@/components/church-life/LifeSocialIcons';
 import { BRAND } from '@/lib/assets';
+import { LIFE_PHOTOS } from '@/lib/church-life/imagery';
 import { lifeSocialLinks } from '@/lib/church-life/nav';
 
 const WELCOME = {
-  headline: 'Welcome',
+  headline: 'Welcome home',
   lead: 'We are glad you are here. Take a moment to learn who we are as a church family.',
   aboutTitle: 'About our church',
   about: [
@@ -58,97 +60,94 @@ function scrollToId(id: string) {
 export default function ChurchInfoPage() {
   return (
     <AppShell access="shared">
-      <div className="visitor-welcome">
-        {/* Welcome */}
-        <section className="life-section visitor-welcome-hero">
-          <p className="visitor-welcome-kicker">{BRAND.abbreviation}</p>
-          <h1 className="visitor-welcome-brand font-serif">{BRAND.name}</h1>
-          <p className="visitor-welcome-title">{WELCOME.headline}</p>
-          <p className="visitor-welcome-lead">{WELCOME.lead}</p>
-          <div className="visitor-welcome-links">
-            <button type="button" onClick={() => scrollToId('vision')} className="visitor-welcome-link">
+      <div className="visitor-welcome pb-10">
+        <div className="px-5 pt-5">
+          <LifeHero
+            imageUrl={LIFE_PHOTOS.sanctuary}
+            titleLead={BRAND.name}
+            titleRest={WELCOME.headline}
+            badge={BRAND.abbreviation}
+          />
+        </div>
+
+        <section className="life-section">
+          <p className="text-[15px] leading-relaxed text-ckc-muted">{WELCOME.lead}</p>
+          <div className="mt-4 flex gap-2">
+            <button type="button" onClick={() => scrollToId('vision')} className="rounded-full bg-ckc-black px-4 py-2 text-xs font-semibold text-white">
               Our vision
             </button>
-            <span className="visitor-welcome-dot" aria-hidden>
-              ·
-            </span>
-            <button type="button" onClick={() => scrollToId('values')} className="visitor-welcome-link">
+            <button type="button" onClick={() => scrollToId('values')} className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-ckc-black shadow-sm">
               Our values
             </button>
           </div>
         </section>
 
-        {/* About */}
-        <section className="life-section visitor-welcome-block" aria-labelledby="about-heading">
-          <h2 id="about-heading" className="visitor-welcome-heading">
+        <section className="life-section" aria-labelledby="about-heading">
+          <h2 id="about-heading" className="font-serif text-[24px] font-semibold text-ckc-black">
             {WELCOME.aboutTitle}
           </h2>
-          <div className="space-y-3">
+          <div className="mt-3 space-y-3">
             {WELCOME.about.map((para) => (
-              <p key={para} className="visitor-welcome-copy">
+              <p key={para} className="text-[15px] leading-relaxed text-[#3F392F]">
                 {para}
               </p>
             ))}
           </div>
         </section>
 
-        {/* Vision */}
-        <section
-          id="vision"
-          className="life-section visitor-welcome-block visitor-welcome-vision"
-          aria-labelledby="vision-heading"
-        >
-          <h2 id="vision-heading" className="visitor-welcome-heading">
-            {WELCOME.visionTitle}
-          </h2>
-          <p className="visitor-welcome-vision-text font-serif">{WELCOME.vision}</p>
+        <section id="vision" className="mx-5 overflow-hidden rounded-[24px]" aria-labelledby="vision-heading">
+          <div className="relative min-h-[220px]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={LIFE_PHOTOS.lights} alt="" className="absolute inset-0 h-full w-full bg-ckc-black object-cover" />
+            <div className="absolute inset-0 bg-black/55" />
+            <div className="relative p-6">
+              <h2 id="vision-heading" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ckc-gold">
+                {WELCOME.visionTitle}
+              </h2>
+              <p className="mt-3 font-serif text-[22px] font-semibold leading-snug text-white">{WELCOME.vision}</p>
+            </div>
+          </div>
         </section>
 
-        {/* Values */}
-        <section
-          id="values"
-          className="life-section visitor-welcome-block"
-          aria-labelledby="values-heading"
-        >
-          <h2 id="values-heading" className="visitor-welcome-heading">
+        <section id="values" className="life-section" aria-labelledby="values-heading">
+          <h2 id="values-heading" className="font-serif text-[24px] font-semibold text-ckc-black">
             {WELCOME.valuesTitle}
           </h2>
-          <ul className="visitor-welcome-values">
+          <ul className="mt-4 space-y-3">
             {WELCOME.values.map((value) => (
-              <li key={value.title} className="visitor-welcome-value">
-                <p className="visitor-welcome-value-title">{value.title}</p>
-                <p className="visitor-welcome-copy">{value.description}</p>
+              <li key={value.title} className="rounded-[20px] bg-white p-4 shadow-[0_8px_24px_rgba(26,22,18,0.06)]">
+                <p className="text-[15px] font-semibold text-ckc-black">{value.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-ckc-muted">{value.description}</p>
               </li>
             ))}
           </ul>
         </section>
 
-        {/* Connect — email, website, socials only */}
-        <section className="life-section visitor-welcome-connect" aria-labelledby="connect-heading">
-          <h2 id="connect-heading" className="visitor-welcome-heading">
+        <section className="life-section text-center" aria-labelledby="connect-heading">
+          <h2 id="connect-heading" className="font-serif text-[24px] font-semibold text-ckc-black">
             Stay connected
           </h2>
-          <div className="visitor-welcome-contact">
-            <a href={`mailto:${WELCOME.email}`} className="visitor-welcome-contact-link">
+          <div className="mt-3 space-y-1">
+            <a href={`mailto:${WELCOME.email}`} className="block text-[15px] font-medium text-ckc-black">
               {WELCOME.email}
             </a>
             <a
               href={WELCOME.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="visitor-welcome-contact-link"
+              className="block text-[15px] font-medium text-ckc-gold-dim"
             >
               {WELCOME.websiteLabel}
             </a>
           </div>
-          <div className="visitor-welcome-socials">
+          <div className="mt-5 flex items-center justify-center gap-5 text-ckc-black">
             {lifeSocialLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="visitor-welcome-social"
+                className="hover:text-ckc-gold"
                 aria-label={link.label}
               >
                 <LifeSocialIcon brand={link.brand} />

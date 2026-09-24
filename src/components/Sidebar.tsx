@@ -243,7 +243,10 @@ export default function Sidebar() {
       >
         <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
           {!collapsed && (
-            <AppLogo size={24} text={BRAND.abbreviation} className="text-cloud font-bold text-sm tracking-tight" />
+            <div>
+              <p className="text-sm font-bold text-cloud tracking-tight">Leadership Desk</p>
+              <p className="text-[10px] text-ckc-gold">{BRAND.abbreviation}</p>
+            </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}

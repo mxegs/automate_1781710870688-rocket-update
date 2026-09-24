@@ -57,7 +57,7 @@ function ResetPasswordForm() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ckc-gold/20">
               <span className="text-xl">✓</span>
             </div>
-            <h2 className="text-base font-semibold text-ckc-white">Password updated</h2>
+            <h2 className="text-base font-semibold text-cloud">Password updated</h2>
             <p className="text-xs text-ckc-muted">Redirecting you to sign in…</p>
           </div>
         ) : error && !token ? (
@@ -69,7 +69,7 @@ function ResetPasswordForm() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="text-base font-semibold text-ckc-white">New password</h2>
+            <h2 className="text-base font-semibold text-cloud">New password</h2>
             <p className="text-xs text-ckc-muted">Choose a new password for your CKC account.</p>
 
             <CkcField label="New password" required>
@@ -105,7 +105,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ckc-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-life-page" />}>
       <ResetPasswordForm />
     </Suspense>
   );

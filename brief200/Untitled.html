@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1"># CKC Check-In — Instructions for Cursor</p>
+<p class="p2"><br></p>
+<p class="p1">## 🚫 Global Rules (read before anything)</p>
+<p class="p2"><br></p>
+<p class="p1">- Do NOT modify these files:</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- src/lib/auth/session.ts</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- src/lib/member/campus.ts</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- src/components/AppShell.tsx</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- src/components/church-life/ChurchLifeShell.tsx</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- src/app/api/events/tickets/verify/route.ts</p>
+<p class="p2"><br></p>
+<p class="p1">- Do NOT modify existing exports in src/lib/events/service.ts. You may only APPEND new functions.</p>
+<p class="p2"><br></p>
+<p class="p1">- Do NOT touch any file under supabase/migrations/ that already exists. Only create new ones.</p>
+<p class="p2"><br></p>
+<p class="p1">- Do NOT modify the event_rsvps table or any existing table. All changes are additive.</p>
+<p class="p2"><br></p>
+<p class="p1">- Match existing conventions:</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- TypeScript</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- 'use client' where needed</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- apiFetch for API calls</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- getSupabaseAdmin() for server-side Supabase</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- ckc-gold / ckc-black / cloud Tailwind tokens</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- LifePhoto and LifeHero component patterns</p>
+<p class="p2"><br></p>
+<p class="p1">- After each step, STOP and wait for the user to confirm before continuing.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 1 — Create the event_checkins table</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: Add a new table that stores one row per person per event, so we have a permanent attendance record separate from RSVPs. This must not affect any existing table.</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do:</p>
+<p class="p2"><br></p>
+<p class="p1">- Create a new migration file in supabase/migrations/ named with today's date and a clear suffix like _event_checkins.sql.</p>
+<p class="p2"><br></p>
+<p class="p1">- The table must be called event_checkins and include columns for:</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- Unique id (uuid, primary key)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- event_id (foreign key to events, cascade on delete)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- campus_id (foreign key to campuses, set null on delete)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- profile_id (foreign key to profiles, set null on delete)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- member_id (foreign key to members, set null on delete)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- rsvp_id (foreign key to event_rsvps, set null on delete)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- is_dependant (boolean, default false)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- dependant_name (text, nullable)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- guardian_member_id (foreign key to members, set null on delete)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- room (text, nullable)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- seat (text, nullable)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- security_code (text, nullable)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- method (text, default 'self', with a check constraint allowing only: self, kiosk, scanner, staff)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- checked_in_by (foreign key to profiles, set null on delete)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- checked_in_at (timestamptz, default now)</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- synced_at (timestamptz, nullable)</p>
+<p class="p2"><br></p>
+<p class="p1">- Add a unique constraint on (event_id, member_id) to prevent double check-in for members.</p>
+<p class="p2"><br></p>
+<p class="p1">- Add indexes on event_id, member_id, and guardian_member_id.</p>
+<p class="p2"><br></p>
+<p class="p1">- Enable row-level security.</p>
+<p class="p2"><br></p>
+<p class="p1">- Add a policy allowing members to read their own check-ins (where profile_id matches the authenticated user, or guardian_member_id belongs to the authenticated user).</p>
+<p class="p2"><br></p>
+<p class="p1">- Add a policy allowing staff roles to read all check-ins.</p>
+<p class="p2"><br></p>
+<p class="p1">- Do NOT add insert/update/delete policies — writes go through the service role via API routes only.</p>
+<p class="p2"><br></p>
+<p class="p1">- Do NOT modify event_rsvps or its ticket_scanned_at column — they stay for backwards compatibility.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the user the migration file path and full contents. Ask them to run it in Supabase before proceeding.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 2 — Add service functions (append only)</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: Add TypeScript functions that the UI will call to create and fetch check-ins. Do not touch existing functions.</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do:</p>
+<p class="p2"><br></p>
+<p class="p1">- Open src/lib/events/service.ts.</p>
+<p class="p2"><br></p>
+<p class="p1">- APPEND (do not modify existing lines) the following:</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- A TypeScript interface for a check-in record. Fields mirror the DB columns, but camelCase (e.g., eventId, profileId, isDependant, dependantName, guardianMemberId, securityCode, checkedInAt, method).</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- A TypeScript interface for a check-in creation payload: eventId, optional profileId, optional memberId, optional rsvpId, optional dependants array of { name, room? }, optional room, optional seat, optional method.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- A function createCheckin(payload) that POSTs to /api/events/checkins and returns { primary, dependants }.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- A function getEventCheckins(eventId) that GETs /api/events/{eventId}/checkins.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- A function getMyCheckin(eventId, profileId) that GETs /api/events/checkins/me?eventId=...&amp;profileId=...</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- A function getMyCheckinForToday(campusId?) that GETs /api/events/checkins/today?campusId=...&amp;profileId=... and returns { event, checkin, dependants }.</p>
+<p class="p2"><br></p>
+<p class="p1">- Use the existing apiFetch helper from @/lib/api/client, matching the style of the existing functions in the file.</p>
+<p class="p2"><br></p>
+<p class="p1">- Import ChurchEvent and CampusId types where needed, using existing import paths.</p>
+<p class="p2"><br></p>
+<p class="p1">- Do NOT remove, rename, or edit any existing function in service.ts.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the user a diff of what was added.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 3 — Create the API routes</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: Four new API route files that read and write check-ins. They use the service role Supabase client, not the user session.</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do:</p>
+<p class="p2"><br></p>
+<p class="p1">Route 1: src/app/api/events/checkins/route.ts — POST handler</p>
+<p class="p1">- Accepts JSON: eventId, optional profileId, memberId, rsvpId, dependants (array of { name, room? }), room, seat, method.</p>
+<p class="p1">- Validates eventId is present.</p>
+<p class="p1">- Looks up the event to get its campus_id. Returns 404 if event doesn't exist.</p>
+<p class="p1">- Generates a 4-digit security_code (string, e.g., "4821").</p>
+<p class="p1">- Upserts the primary check-in into event_checkins with the campus, profile, member, rsvp, room, seat, security code, and method. Uses onConflict: 'event_id,member_id' so re-checking in is idempotent.</p>
+<p class="p1">- If dependants were provided, inserts one row per dependant: is_dependant: true, dependant_name, guardian_member_id: memberId, the same room, the same security_code, and the same method.</p>
+<p class="p1">- Returns { primary, dependants } where each is the row(s) as inserted.</p>
+<p class="p2"><br></p>
+<p class="p1">Route 2: src/app/api/events/[id]/checkins/route.ts — GET handler</p>
+<p class="p1">- Fetches all check-ins for the given event, ordered by checked_in_at ascending.</p>
+<p class="p1">- Returns camelCase mapped objects: id, eventId, campusId, profileId, memberId, rsvpId, isDependant, dependantName, guardianMemberId, room, seat, securityCode, method, checkedInAt.</p>
+<p class="p2"><br></p>
+<p class="p1">Route 3: src/app/api/events/checkins/me/route.ts — GET handler</p>
+<p class="p1">- Reads query params eventId and profileId.</p>
+<p class="p1">- Returns the single check-in row where event_id matches and profile_id matches, or null if none.</p>
+<p class="p1">- Returns camelCase fields: id, eventId, room, seat, securityCode, checkedInAt.</p>
+<p class="p2"><br></p>
+<p class="p1">Route 4: src/app/api/events/checkins/today/route.ts — GET handler</p>
+<p class="p1">- Reads query params campusId and profileId.</p>
+<p class="p1">- Finds the single event today (from midnight to midnight, based on starts_at) matching the campus, ordered by starts_at ascending, limit 1.</p>
+<p class="p1">- If no event or no profileId, returns { event: null, checkin: null, dependants: [] }.</p>
+<p class="p1">- Otherwise fetches check-ins for that event where profile_id = profileId OR guardian_member_id = profileId.</p>
+<p class="p1">- Splits into primary (non-dependant) and dependants array.</p>
+<p class="p1">- Returns { event, checkin, dependants }.</p>
+<p class="p2"><br></p>
+<p class="p1">Conventions:</p>
+<p class="p1">- Use getSupabaseAdmin() from @/lib/supabase/admin.</p>
+<p class="p1">- Return 503 if the DB isn't configured, 400 for missing required params, 500 for DB errors — matching the pattern in src/app/api/events/tickets/verify/route.ts.</p>
+<p class="p2"><br></p>
+<p class="p1">Do NOT modify src/app/api/events/tickets/verify/route.ts.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the four new file paths and their contents.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 4 — Create the CheckInHero component</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: A hero card that replaces the sermon hero on the home screen when it's a service day. It has three visual states: ready (not yet checked in), checked-in (with seat, kids room, security code), and ended (service is over).</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do:</p>
+<p class="p2"><br></p>
+<p class="p1">- Create src/components/church-life/CheckInHero.tsx.</p>
+<p class="p1">- Match the visual language of LifeHero.tsx: rounded-3xl, gradient background, gold accents, serif title font, uppercase small label.</p>
+<p class="p1">- Props: eventTitle, campusLabel, timeLabel, href, state ('ready' | 'checked-in' | 'ended'), optional seat, kidsRoom, securityCode.</p>
+<p class="p1">- The component renders a Link to href styled as a card.</p>
+<p class="p1">- Ready state: shows a prominent white button "Check in now".</p>
+<p class="p1">- Checked-in state: shows a "Checked in" badge top-right, and below the title: seat, kids room, and the security code in large mono font.</p>
+<p class="p1">- Ended state: shows "Service ended — watch the replay".</p>
+<p class="p1">- Use only existing Tailwind tokens (ckc-gold, ckc-black, cloud, font-serif, etc.).</p>
+<p class="p1">- Follow the code style of LifeHero.tsx.</p>
+<p class="p2"><br></p>
+<p class="p1">Do NOT modify LifeHero.tsx.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the new file.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 5 — Make the home screen hero dynamic</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: On the home screen (/member), swap LifeHero for CheckInHero when the user is checked in, needs to check in, or when today's service just ended. Otherwise keep the current sermon hero.</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do:</p>
+<p class="p2"><br></p>
+<p class="p1">- Open src/app/member/page.tsx.</p>
+<p class="p1">- Add local state to track the hero mode: daily, checkin-ready, checked-in, or ended, plus the current event, the current check-in record, and the first dependant's room.</p>
+<p class="p1">- In the existing useEffect, after resolving campus, call getMyCheckinForToday(campus).</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- If there's no event today → mode stays daily.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- If the current time is past the event's end → mode is ended, store the event.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- If the current time is within the event window and a check-in exists → mode is checked-in, store the event, check-in (seat, room, security code), and first dependant's room.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- If the current time is within the event window and no check-in exists → mode is checkin-ready, store the event.</p>
+<p class="p1">- In the render, replace the current LifeHero block:</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- When mode is daily, render the existing LifeHero unchanged.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- Otherwise render CheckInHero with the appropriate props.</p>
+<p class="p1">- Import CheckInHero, getMyCheckinForToday, and getCampusLabel at the top.</p>
+<p class="p1">- Keep everything else in the file identical — the "Coming up" event card, the four quick links, and the footer stay as they are.</p>
+<p class="p2"><br></p>
+<p class="p1">Do NOT modify any other file in this step.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the diff of src/app/member/page.tsx.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 6 — Create the CheckInPanel component</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: A self-contained panel used on the event detail page that walks the member through check-in, including selecting which kids are attending.</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do:</p>
+<p class="p2"><br></p>
+<p class="p1">- Create src/components/events/CheckInPanel.tsx.</p>
+<p class="p1">- Props: event (ChurchEvent), optional profileId, memberId, rsvpId, dependants (array of Dependant from @/lib/membership/types), and memberName.</p>
+<p class="p1">- Manage local state with these phases: idle, confirming-kids, submitting, checked-in, error.</p>
+<p class="p1">- Idle state (no dependants): Show a card with a heading, a short subtitle, and a single gold "Check in now" button. On click, submit.</p>
+<p class="p1">- Idle state (with dependants): Show the same card, but the subtitle mentions the number of children. On click, go to confirming-kids.</p>
+<p class="p1">- Confirming kids state: Show a checklist. The member themselves is shown ticked and disabled. Each dependant is a toggleable row with name, surname, and age. A "Confirm check-in" button submits. Only selected dependants are sent.</p>
+<p class="p1">- Submitting state: Button shows "Checking in…", disabled.</p>
+<p class="p1">- Checked-in state: Show a success card with a check icon, the member's name and event title, seat (if any), kids room (if any), and the security code in large mono font. Include the message "Show this code at the kids' room for pickup."</p>
+<p class="p1">- Error state: Show the error message and let the user retry.</p>
+<p class="p1">- Use createCheckin from service.ts.</p>
+<p class="p1">- Room routing: for now, send a placeholder room string (e.g., "Room 2B") in the dependants payload. Leave a clear TODO comment that room routing is a future improvement.</p>
+<p class="p1">- Match the visual language of EventRegisterPanel.tsx — same rounded cards, same gold buttons, same text sizes.</p>
+<p class="p2"><br></p>
+<p class="p1">Do NOT modify EventRegisterPanel.tsx.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the new file.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 7 — Wire CheckInPanel into the event detail page</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: On /member/events/[id], if today is the event day and the member is not yet checked in, show the CheckInPanel above the existing event card. Otherwise, behave exactly as today.</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do first:</p>
+<p class="p2"><br></p>
+<p class="p1">- Create src/lib/member/identity.ts with a helper resolveMemberIdsFromSession() that takes the current session and returns { profileId, memberId } by looking up the profile and member in Supabase. Use getSupabaseAdmin() only in server contexts; for client, add a small API call if needed. Keep it minimal.</p>
+<p class="p1">- Create src/lib/membership/service.ts with getMembershipApplication(phone) that fetches the membership_applications row by phone and returns its application_data cast to MembershipApplication. This is read-only.</p>
+<p class="p1">- Do NOT modify session.ts or any existing file when adding these two helpers.</p>
+<p class="p2"><br></p>
+<p class="p1">Then in src/app/member/events/[id]/page.tsx:</p>
+<p class="p2"><br></p>
+<p class="p1">- Import CheckInPanel, getMyCheckin, and getMembershipApplication.</p>
+<p class="p1">- Add local state: checkin, dependants, isEventDay.</p>
+<p class="p1">- In the existing useEffect, after the event loads:</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- Compute isEventDay from startsAt and endsAt (default to a 2-hour window if endsAt is missing).</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- If not a visitor, call getMyCheckin(event.id, profileId) and set state.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- If not a visitor, call getMembershipApplication(session.phone) and set dependants from application.guardian.dependants.</p>
+<p class="p1">- In the render, above the existing EventDetailCard, add a conditional:</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- Render CheckInPanel only when the user is not a visitor, it's event day, and there is no existing check-in.</p>
+<p class="p1"><span class="Apple-converted-space">  </span>- Pass the event, resolved ids, dependants, and display name.</p>
+<p class="p1">- Everything else in the file stays untouched — including the existing showRegister modal, visitor flow, and EventDetailCard.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the two new helper files and the diff to the event detail page.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## ✅ Step 8 — Upgrade the scanner</p>
+<p class="p2"><br></p>
+<p class="p1">Goal: Turn /events/scan from a form into a fast scanner: auto-focused input, submit on Enter (which is what barcode scanners emit), result shown huge, and a running count.</p>
+<p class="p2"><br></p>
+<p class="p1">What Cursor must do:</p>
+<p class="p2"><br></p>
+<p class="p1">- Open src/app/events/scan/page.tsx.</p>
+<p class="p1">- Keep the AppShell access="staff" wrapper.</p>
+<p class="p1">- Replace the form so that the input is auto-focused on mount.</p>
+<p class="p1">- On submit (Enter or button), POST the code to the existing /api/events/tickets/verify endpoint. Do NOT modify that endpoint.</p>
+<p class="p1">- Show the result in a large, centered card: green for valid, red for invalid, using existing color tokens.</p>
+<p class="p1">- On successful scan, increment a local counter shown at the bottom: "N scanned this session".</p>
+<p class="p1">- Clear the input and refocus after each scan so the next scan is instant.</p>
+<p class="p1">- Do NOT add offline sync yet — that's a future step.</p>
+<p class="p2"><br></p>
+<p class="p1">Deliverable: Show the diff.</p>
+<p class="p2"><br></p>
+<p class="p1">---</p>
+<p class="p2"><br></p>
+<p class="p1">## 🚦 Execution Order</p>
+<p class="p2"><br></p>
+<p class="p1">Do these in order. After each step, STOP and wait for the user to test and confirm. If any step fails, the fix is contained to that step only.</p>
+<p class="p2"><br></p>
+<p class="p1">1. Step 1 — Migration. User runs it in Supabase.</p>
+<p class="p1">2. Step 2 — Service functions. Type-check only.</p>
+<p class="p1">3. Step 3 — API routes. Test with curl or Postman.</p>
+<p class="p1">4. Step 4 — CheckInHero. Compile.</p>
+<p class="p1">5. Step 5 — Home page edit. Test at three fake times.</p>
+<p class="p1">6. Step 6 — CheckInPanel. Compile.</p>
+<p class="p1">7. Step 7 — Event detail edit + two helper files.</p>
+<p class="p1">8. Step 8 — Scanner rewrite.</p>
+<p class="p2"><br></p>
+<p class="p1">## 🔄 Rollback</p>
+<p class="p2"><br></p>
+<p class="p1">- Steps 4–8: git revert the changed files. No DB impact.</p>
+<p class="p1">- Step 3: delete the new route files. No DB impact.</p>
+<p class="p1">- Step 2: remove the appended functions. No DB impact.</p>
+<p class="p1">- Step 1: drop table public.event_checkins; Safe — no existing table was touched.</p>
+<p class="p2"><br></p>
+<p class="p1">## ⚠️ Known Simplifications (intentionally left for later)</p>
+<p class="p2"><br></p>
+<p class="p1">- Room routing is hardcoded. A future file src/lib/events/rooms.ts will map age → room.</p>
+<p class="p1">- Seat assignment is optional and read from whatever is passed. No seat map yet.</p>
+<p class="p1">- Offline sync is deferred. The PWA is ready, but the queue is a bigger build.</p>
+<p class="p1">- Tag printing is not implemented. The security code is generated and stored; printing comes later.</p>
+</body>
+</html>

@@ -33,7 +33,7 @@ export default function ChurchLifeShell({
       <div className="min-h-screen bg-life-page">
         <div
           data-portal="church-life"
-          className="relative mx-auto flex min-h-dvh w-full max-w-life flex-col bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_0_0_1px_#E5E5E5]"
+          className="relative mx-auto flex min-h-dvh w-full max-w-life flex-col bg-life-page"
         >
           <ChurchLifeHeader onMenuOpen={() => setMenuOpen(true)} homeHref={homeHref} />
           <ChurchLifeNavDrawer

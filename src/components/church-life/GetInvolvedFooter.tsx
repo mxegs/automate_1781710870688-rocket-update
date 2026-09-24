@@ -17,7 +17,7 @@ export default function GetInvolvedFooter({ fill = false }: GetInvolvedFooterPro
     <footer className={className}>
       <div className="mb-3 flex items-center justify-center gap-2">
         <div className="h-px w-[30px] bg-ckc-gold" />
-        <span className="text-[11px] font-medium uppercase tracking-[0.1em] text-ckc-gold">
+        <span className="text-[11px] font-serif font-semibold tracking-normal text-ckc-gold">
           Get Involved
         </span>
         <div className="h-px w-[30px] bg-ckc-gold" />

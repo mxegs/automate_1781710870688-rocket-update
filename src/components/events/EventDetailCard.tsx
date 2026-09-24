@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import Icon from '@/components/ui/AppIcon';
+import LifePhoto from '@/components/church-life/LifePhoto';
+import { eventCover } from '@/lib/church-life/imagery';
 import EventDetailSections from '@/components/events/EventDetailSections';
 import EventDetailFooter from '@/components/events/EventDetailFooter';
 import type { ChurchEvent } from '@/lib/events/types';
@@ -26,29 +26,18 @@ export default function EventDetailCard({
 
   return (
     <article className={isLight ? 'bg-white' : 'overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]'}>
-      {event.imageUrl ? (
-        <div className="px-3.5 pt-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={event.imageUrl}
-            alt={event.title}
-            className={`w-full object-cover ${isLight ? 'h-[130px] rounded-[10px]' : 'aspect-video rounded-none'}`}
-          />
-        </div>
-      ) : (
-        <div className={`px-3.5 pt-2.5 ${isLight ? '' : ''}`}>
-          <div
-            className={`flex w-full items-center justify-center ${
-              isLight ? 'h-[130px] rounded-[10px] bg-[#3a3a3a]' : 'aspect-video bg-white/5'
-            }`}
-          >
-            <Icon name="CalendarDaysIcon" size={48} variant="outline" className="text-ckc-muted/40" />
-          </div>
-        </div>
-      )}
+      <div className={isLight ? 'overflow-hidden rounded-[24px]' : ''}>
+        <LifePhoto
+          src={eventCover(event)}
+          alt={event.title}
+          className={`w-full object-cover ${isLight ? 'h-[220px]' : 'aspect-video rounded-none'}`}
+        />
+      </div>
 
       <div className="p-3.5">
-        <h1 className={`text-base font-medium ${isLight ? 'text-ckc-black' : 'text-cloud'}`}>{event.title}</h1>
+        <h1 className={`font-serif text-[26px] font-semibold leading-tight ${isLight ? 'text-ckc-black' : 'text-cloud'}`}>
+          {event.title}
+        </h1>
 
         <div className="mt-3">
           <EventDetailSections event={event} theme={theme} />

@@ -70,7 +70,7 @@ function VerifyForm() {
 
 export default function LoginVerifyPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ckc-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-life-page" />}>
       <VerifyForm />
     </Suspense>
   );

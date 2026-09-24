@@ -3,8 +3,8 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import AuthShell from '@/components/auth/AuthShell';
-import { CkcButton, CkcCard, CkcField, CkcInput } from '@/components/ui/CkcForm';
+import Icon from '@/components/ui/AppIcon';
+import { BRAND } from '@/lib/assets';
 import { checkEmailLoginOptions, loginWithPassword } from '@/lib/auth/password';
 import { sendMagicLink } from '@/lib/auth/magic-link';
 import {
@@ -21,7 +21,6 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const isVisitor = searchParams.get('mode') === 'visitor';
 
-  // Old visitor sign-in URL → public church info (no login)
   useEffect(() => {
     if (isVisitor) {
       router.replace('/member/church-info');
@@ -30,6 +29,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
@@ -133,162 +133,207 @@ function LoginForm() {
     }
   };
 
+  const fieldClass =
+    'w-full rounded-2xl bg-[#F3F4F6] py-3.5 pl-11 pr-4 text-[15px] text-ckc-black placeholder:text-[#9CA3AF] outline-none ring-0 focus:bg-[#EEEFF2]';
+
   return (
-    <AuthShell title="Sign in" showLogo>
-      <CkcCard>
-        {sent ? (
-          <div className="space-y-4 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ckc-gold/20">
-              <span className="text-xl">✉</span>
-            </div>
-            <h2 className="text-base font-semibold text-ckc-white">Check your email</h2>
-            <p className="text-xs leading-relaxed text-ckc-muted">
-              We sent a sign-in link to <strong className="text-ckc-white">{normalizedEmail}</strong>.
-              Tap the link in that email to continue.
-            </p>
-            {demoLink && (
-              <p className="text-xs text-ckc-gold/90">
-                Demo mode:{' '}
-                <Link href={demoLink} className="underline">
-                  use this test link
-                </Link>
+    <div className="flex min-h-dvh flex-col bg-white">
+      <div className="mx-auto flex w-full max-w-[430px] flex-1 flex-col px-6 pb-8 pt-10">
+        <div className="text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={BRAND.logoFullOnLight}
+            alt="Christ Kingdom Citizens Midrand"
+            className="mx-auto h-auto w-[190px] object-contain"
+          />
+          <h6 className="mt-6 font-bold text-ckc-black">Welcome to CKC Midrand sign in now</h6>
+        </div>
+
+        <div className="mt-8 flex flex-1 flex-col">
+          {sent ? (
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F3F4F6]">
+                <Icon name="EnvelopeIcon" size={22} variant="outline" className="text-ckc-gold-dim" />
+              </div>
+              <h2 className="text-xl font-bold text-ckc-black">Check your email</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
+                We sent a sign-in link to <strong className="text-ckc-black">{normalizedEmail}</strong>. Tap the
+                link in that email to continue.
               </p>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setSent(false);
-                setDemoLink('');
+              {demoLink ? (
+                <p className="mt-3 text-sm text-ckc-gold-dim">
+                  Demo mode:{' '}
+                  <Link href={demoLink} className="font-semibold underline">
+                    use this test link
+                  </Link>
+                </p>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setSent(false);
+                  setDemoLink('');
+                }}
+                className="mt-6 text-sm font-medium text-[#6B7280]"
+              >
+                Back
+              </button>
+            </div>
+          ) : loginMode === 'magic' ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleMagicLink();
               }}
-              className="text-xs text-ckc-muted hover:text-ckc-gold"
+              className="flex flex-1 flex-col"
             >
-              Back
-            </button>
-          </div>
-        ) : isVisitor || loginMode === 'magic' ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleMagicLink();
-            }}
-            className="space-y-4"
-          >
-            <h2 className="text-base font-semibold text-ckc-white">
-              {isVisitor ? 'Continue as visitor' : 'Email sign-in link'}
-            </h2>
-            <p className="text-xs text-ckc-muted">
-              Enter your email and we&apos;ll send a one-click sign-in link.
-            </p>
+              <div className="relative">
+                <Icon
+                  name="EnvelopeIcon"
+                  size={18}
+                  variant="outline"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  autoComplete="email"
+                  className={fieldClass}
+                />
+              </div>
 
-            <CkcField label="Email address" required>
-              <CkcInput
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-            </CkcField>
+              {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
 
-            {error && <p className="text-xs text-red-400">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-5 w-full rounded-2xl bg-ckc-black py-3.5 text-[15px] font-semibold text-white disabled:opacity-50"
+              >
+                {loading ? 'Sending…' : 'Email me a sign-in link'}
+              </button>
 
-            <CkcButton type="submit" disabled={loading}>
-              {loading ? 'Sending…' : 'Email me a sign-in link'}
-            </CkcButton>
-
-            {!isVisitor && (
               <button
                 type="button"
                 onClick={() => {
                   setLoginMode('password');
                   setError('');
                 }}
-                className="w-full text-xs text-ckc-muted hover:text-ckc-gold"
+                className="mt-4 text-center text-sm font-medium text-[#6B7280]"
               >
                 Sign in with password instead
               </button>
-            )}
-          </form>
-        ) : (
-          <form onSubmit={handlePasswordLogin} className="space-y-4">
-            <h2 className="text-base font-semibold text-ckc-white">Welcome back</h2>
-            <p className="text-xs text-ckc-muted">
-              Sign in with the email and password you set when you joined.
-            </p>
+            </form>
+          ) : (
+            <form onSubmit={handlePasswordLogin} className="flex flex-1 flex-col">
+              <div className="relative">
+                <Icon
+                  name="UserIcon"
+                  size={18}
+                  variant="outline"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    void refreshLoginOptions(e.target.value);
+                  }}
+                  onBlur={() => void refreshLoginOptions(email)}
+                  placeholder="Email"
+                  autoComplete="email"
+                  className={fieldClass}
+                />
+              </div>
 
-            <CkcField label="Email address" required>
-              <CkcInput
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  void refreshLoginOptions(e.target.value);
-                }}
-                onBlur={() => void refreshLoginOptions(email)}
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-            </CkcField>
+              <div className="relative mt-3">
+                <Icon
+                  name="LockClosedIcon"
+                  size={18}
+                  variant="outline"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  autoComplete="current-password"
+                  className={`${fieldClass} pr-12`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <Icon name={showPassword ? 'EyeSlashIcon' : 'EyeIcon'} size={18} variant="outline" />
+                </button>
+              </div>
 
-            <CkcField label="Password" required>
-              <CkcInput
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </CkcField>
+              {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
 
-            {error && <p className="text-xs text-red-400">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-5 w-full rounded-2xl bg-ckc-gold py-3.5 text-[15px] font-semibold text-[#000000] disabled:opacity-50"
+              >
+                {loading ? 'Signing in…' : 'Sign In'}
+              </button>
 
-            <CkcButton type="submit" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign in'}
-            </CkcButton>
-
-            <Link href="/forgot-password" className="block w-full text-center text-xs text-ckc-muted hover:text-ckc-gold">
-              Forgot password?
-            </Link>
-
-            {hasPassword === false && (
-              <>
+              <div className="mt-4 flex flex-col items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     setLoginMode('magic');
                     setError('');
                   }}
-                  className="w-full text-xs text-ckc-gold hover:underline"
+                  className="text-sm font-medium text-[#6B7280]"
                 >
-                  No password yet? Use email sign-in link (one time — then set a password)
+                  Magic link sign in
                 </button>
-              </>
-            )}
-          </form>
-        )}
-      </CkcCard>
+                <Link href="/forgot-password" className="text-sm text-[#9CA3AF]">
+                  Forgot password?
+                </Link>
+              </div>
 
-      <div className="mt-6 space-y-2 text-center text-sm">
-        {!isVisitor && (
-          <Link href="/request-invite" className="block text-ckc-gold hover:underline">
-            New here? Request membership →
+              {hasPassword === false ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMode('magic');
+                    setError('');
+                  }}
+                  className="mt-3 text-center text-sm font-medium text-ckc-gold-dim"
+                >
+                  No password yet? Use email sign-in link
+                </button>
+              ) : null}
+            </form>
+          )}
+        </div>
+
+        <div className="mt-auto pt-8 text-center">
+          <p className="text-sm text-[#6B7280]">
+            No account yet?{' '}
+            <Link href="/request-invite" className="font-semibold text-ckc-gold-dim">
+              Create one
+            </Link>
+          </p>
+          <Link href="/member/church-info" className="mt-3 block text-sm text-[#9CA3AF]">
+            Just visiting? Learn about CKC
           </Link>
-        )}
-        <Link href="/member/church-info" className="block text-ckc-muted hover:text-ckc-gold">
-          Just visiting? Learn about CKC →
-        </Link>
-        {isVisitor && (
-          <Link href="/login" className="block text-ckc-muted hover:text-ckc-gold">
-            Member or staff? Sign in here →
-          </Link>
-        )}
+        </div>
       </div>
-    </AuthShell>
+    </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ckc-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <LoginForm />
     </Suspense>
   );

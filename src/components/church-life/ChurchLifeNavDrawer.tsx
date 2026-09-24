@@ -14,7 +14,7 @@ import {
 } from '@/lib/auth/session';
 import type { ChurchLifeNavItem } from '@/lib/church-life/nav';
 import type { ViewMode } from '@/lib/auth/session';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface ChurchLifeNavDrawerProps {
   open: boolean;
@@ -30,6 +30,7 @@ export default function ChurchLifeNavDrawer({
   portalLabel,
 }: ChurchLifeNavDrawerProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const session = getSession();
   const displayName = session ? getDisplayName(session) : 'Guest';
   const isStaff = session ? isStaffRole(session.role) : false;
@@ -53,37 +54,50 @@ export default function ChurchLifeNavDrawer({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} aria-hidden />
-      <aside className="fixed inset-y-0 left-0 z-50 w-[220px] max-w-[85vw] bg-ckc-black shadow-2xl">
-        <div className="flex items-center justify-between px-3.5 py-4">
+      <aside className="fixed inset-y-0 left-0 z-50 w-[260px] max-w-[85vw] bg-white shadow-ckc-lg">
+        <div className="flex items-center justify-between px-4 py-5">
           <div>
-            <p className="text-xs text-white">{displayName}</p>
-            <p className="text-[9px] text-ckc-gold">{portalLabel}</p>
+            <p className="font-serif text-base font-semibold text-ckc-black">Welcome, {displayName}</p>
+            <p className="text-[11px] text-ckc-muted">Christ Kingdom Citizens</p>
+            <p className="mt-0.5 text-[10px] text-ckc-gold">{portalLabel}</p>
           </div>
-          <button type="button" onClick={onClose} className="text-[#999] hover:text-white" aria-label="Close menu">
-            <Icon name="XMarkIcon" size={14} variant="outline" />
+          <button type="button" onClick={onClose} className="text-ckc-muted hover:text-ckc-black" aria-label="Close menu">
+            <Icon name="XMarkIcon" size={16} variant="outline" />
           </button>
         </div>
 
-        <nav className="space-y-0 overflow-y-auto px-2" style={{ maxHeight: 'calc(100vh - 160px)' }}>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className="flex items-center gap-2 px-1.5 py-2 text-[11px] text-[#ccc] hover:text-white"
-            >
-              <Icon name={item.icon} size={13} variant="outline" className="text-ckc-gold" />
-              {item.label}
-            </Link>
-          ))}
+        <nav className="space-y-0.5 overflow-y-auto px-2" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+          {navItems.map((item) => {
+            const active = pathname === item.href || (item.href !== '/member' && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={`flex items-center gap-3 rounded-full px-3 py-2.5 text-sm transition-colors ${
+                  active
+                    ? 'bg-ckc-gold text-ckc-gold-text font-medium'
+                    : 'text-ckc-black hover:bg-black/[0.04]'
+                }`}
+              >
+                <Icon
+                  name={item.icon}
+                  size={16}
+                  variant="outline"
+                  className={active ? 'text-ckc-gold-text' : 'text-ckc-muted'}
+                />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 space-y-1 border-t border-[#262626] p-3">
+        <div className="absolute bottom-0 left-0 right-0 space-y-1 border-t border-[#E5E5E5] bg-white p-3">
           {isStaff && (
             <button
               type="button"
               onClick={toggleViewMode}
-              className="w-full rounded-md border border-ckc-gold py-1.5 text-center text-[10px] text-ckc-gold"
+              className="w-full rounded-lg border border-ckc-gold/30 py-2 text-center text-[11px] font-medium text-ckc-gold"
             >
               {viewMode === 'staff' ? 'See Church Life' : 'Leadership desk'}
             </button>
@@ -93,7 +107,7 @@ export default function ChurchLifeNavDrawer({
               <Link
                 href="/account/change-password"
                 onClick={onClose}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-ckc-gold"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-ckc-muted hover:text-ckc-gold"
               >
                 <Icon name="KeyIcon" size={14} variant="outline" />
                 Change password
@@ -101,7 +115,7 @@ export default function ChurchLifeNavDrawer({
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-rose-400"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-ckc-muted hover:text-rose-500"
               >
                 <Icon name="ArrowLeftOnRectangleIcon" size={14} variant="outline" />
                 Sign Out
@@ -112,7 +126,7 @@ export default function ChurchLifeNavDrawer({
               <Link
                 href="/login"
                 onClick={onClose}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-ckc-gold hover:text-white"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-ckc-gold hover:text-ckc-gold-dim"
               >
                 <Icon name="ArrowRightOnRectangleIcon" size={14} variant="outline" />
                 Member / staff sign in
@@ -120,7 +134,7 @@ export default function ChurchLifeNavDrawer({
               <Link
                 href="/request-invite"
                 onClick={onClose}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/40 hover:text-ckc-gold"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-ckc-muted hover:text-ckc-gold"
               >
                 <Icon name="UserPlusIcon" size={14} variant="outline" />
                 Request membership

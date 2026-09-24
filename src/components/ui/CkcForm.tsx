@@ -13,7 +13,7 @@ interface CkcFieldProps {
 export function CkcField({ label, required, optional, error, children }: CkcFieldProps) {
   return (
     <div>
-      <label className="mb-1.5 block text-[10px] text-ckc-gold">
+      <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-white/70">
         {label}
         {required && <span className="text-ckc-gold"> *</span>}
         {optional && <span className="text-ckc-dim"> (optional)</span>}
@@ -47,11 +47,11 @@ export function CkcButton({
   variant = 'gold',
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'gold' | 'ghost' }) {
-  const base = 'w-full rounded-lg py-2.5 text-sm font-semibold transition-all flex items-center justify-center gap-2';
+  const base = 'w-full rounded-full py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2';
   const styles =
     variant === 'gold'
       ? 'btn-ckc-gold'
-      : 'border border-white/10 bg-transparent text-ckc-muted hover:border-ckc-gold/30 hover:text-ckc-white';
+      : 'border border-[#c7c5d3]/70 bg-transparent text-ckc-muted hover:border-ckc-gold/30 hover:text-ckc-gold';
 
   return (
     <button {...props} className={`${base} ${styles} ${props.className || ''}`}>
@@ -80,8 +80,8 @@ export function CkcRadioGroup<T extends string>({
           onClick={() => onChange(opt)}
           className={`rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
             value === opt
-              ? 'border-ckc-gold/50 bg-ckc-gold/10 text-ckc-gold'
-              : 'border-white/10 bg-ckc-elevated text-ckc-muted hover:border-white/20'
+              ? 'border-ckc-gold/40 bg-ckc-gold/10 text-ckc-gold'
+              : 'border-[#c7c5d3]/60 bg-ckc-surface text-ckc-muted hover:border-ckc-gold/30'
           }`}
         >
           {opt}
@@ -117,8 +117,8 @@ export function CkcCheckboxGroup({
           onClick={() => toggle(opt)}
           className={`rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
             values.includes(opt)
-              ? 'border-ckc-gold/50 bg-ckc-gold/10 text-ckc-gold'
-              : 'border-white/10 bg-ckc-elevated text-ckc-muted hover:border-white/20'
+              ? 'border-ckc-gold/40 bg-ckc-gold/10 text-ckc-gold'
+              : 'border-[#c7c5d3]/60 bg-ckc-surface text-ckc-muted hover:border-ckc-gold/30'
           }`}
         >
           {opt}
@@ -129,5 +129,5 @@ export function CkcCheckboxGroup({
 }
 
 export function CkcCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`ckc-card rounded-2xl p-5 ${className}`}>{children}</div>;
+  return <div className={`ckc-card rounded-2xl p-6 ${className}`}>{children}</div>;
 }

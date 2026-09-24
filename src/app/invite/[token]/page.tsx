@@ -63,7 +63,7 @@ export default function InvitePage() {
         ) : (
           <div className="space-y-4">
             <span className="ckc-label-pill">Invite received</span>
-            <h2 className="text-base font-semibold text-ckc-white">
+            <h2 className="text-base font-semibold text-cloud">
               Welcome, {inviteMeta?.givenName || inviteMeta?.officialName?.split(' ')[0]}
             </h2>
             <p className="text-xs leading-relaxed text-ckc-muted">

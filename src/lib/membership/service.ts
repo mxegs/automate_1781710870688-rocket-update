@@ -71,3 +71,10 @@ export async function reviewApplication(
   const updated = apps.map((a) => (a.id === id ? { ...a, status } : a));
   localStorage.setItem('ckc_submitted_applications', JSON.stringify(updated));
 }
+
+export async function getMembershipApplication(phone: string): Promise<MembershipApplication | null> {
+  if (!useBackend() || !phone) return null;
+  return apiFetch<MembershipApplication | null>(
+    `/api/membership-applications/by-phone?phone=${encodeURIComponent(phone)}`,
+  );
+}
