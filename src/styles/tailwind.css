@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  --ckc-primary: #C5A073;
+  --ckc-secondary: #0A0A0A;
   --ckc-black: #0A0A0A;
   --ckc-card: #1A1A1A;
   --ckc-block: #1E1E1E;

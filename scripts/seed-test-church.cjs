@@ -3,7 +3,7 @@
  * Does not send email or SMS.
  *
  * Run only against the staging database:
- *   node --env-file=.env scripts/seed-test-church.cjs
+ *   node --env-file=.env.staging scripts/seed-test-church.cjs
  *
  * Refuses the live CKC project.
  */

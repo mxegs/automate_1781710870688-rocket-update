@@ -9,7 +9,7 @@ module.exports = {
     extend: {
       colors: {
         ckc: {
-          black: '#0A0A0A',
+          black: 'color-mix(in srgb, var(--ckc-secondary, #0A0A0A) calc(<alpha-value> * 100%), transparent)',
           card: '#1A1A1A',
           block: '#1E1E1E',
           surface: '#141414',
@@ -17,7 +17,7 @@ module.exports = {
           white: '#FFFFFF',
           muted: '#888888',
           dim: '#737373',
-          gold: '#C5A073',
+          gold: 'color-mix(in srgb, var(--ckc-primary, #C5A073) calc(<alpha-value> * 100%), transparent)',
           'gold-button': '#D9B985',
           'gold-light': '#D4BC94',
           'gold-dim': '#8A7340',
