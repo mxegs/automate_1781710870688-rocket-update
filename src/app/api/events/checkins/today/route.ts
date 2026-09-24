@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { mapEventRow } from '@/lib/events/mappers';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function johannesburgDay(now = new Date()) {
@@ -43,10 +44,12 @@ export async function GET(request: Request) {
   const empty = { event: null, checkin: null, dependants: [] };
   if (!profileId) return NextResponse.json(empty);
 
+  const churchId = churchIdFromUrl(request.url);
   const { start, end } = johannesburgDay();
   let query = db
     .from('events')
     .select('*')
+    .eq('church_id', churchId)
     .gte('starts_at', start)
     .lt('starts_at', end)
     .order('starts_at', { ascending: true })
@@ -61,7 +64,12 @@ export async function GET(request: Request) {
   const eventRow = events?.[0];
   if (!eventRow) return NextResponse.json(empty);
 
-  const { data: member } = await db.from('members').select('id').eq('profile_id', profileId).maybeSingle();
+  const { data: member } = await db
+    .from('members')
+    .select('id')
+    .eq('profile_id', profileId)
+    .eq('church_id', churchId)
+    .maybeSingle();
 
   const { data: rows, error: checkInError } = await db
     .from('event_checkins')

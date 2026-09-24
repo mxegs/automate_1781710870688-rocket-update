@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { FollowUpContact } from '@/lib/followups/service';
 import type { CampusId, FollowUpStageId } from '@/lib/church/constants';
@@ -28,7 +29,11 @@ export async function GET(request: Request) {
   const campusId = searchParams.get('campusId');
   const stage = searchParams.get('stage');
 
-  let query = db.from('follow_ups').select('*').order('updated_at', { ascending: false });
+  let query = db
+    .from('follow_ups')
+    .select('*')
+    .eq('church_id', churchIdFromUrl(request.url))
+    .order('updated_at', { ascending: false });
   if (campusId) query = query.eq('campus_id', campusId);
   if (stage) query = query.eq('stage', stage);
 

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { extractYoutubeId } from '@/lib/sermons/utils';
 import type { ContentVisibility, MediaItem, MediaType } from '@/lib/sermons/types';
@@ -80,6 +81,7 @@ export async function GET(request: Request) {
   const { data, error } = await db
     .from('media_items')
     .select('*')
+    .eq('church_id', churchIdFromUrl(request.url))
     .order('preached_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

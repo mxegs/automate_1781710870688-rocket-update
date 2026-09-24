@@ -2,6 +2,7 @@ import { normalizePhone } from '@/lib/auth/session';
 import { apiFetch, useBackend } from '@/lib/api/client';
 import type { MembershipApplication } from '@/lib/membership/types';
 import type { CampusId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 
 export interface SubmittedApplication {
   id: string;
@@ -42,9 +43,10 @@ export async function submitMembershipApplication(input: {
   return payload;
 }
 
-export async function getSubmittedApplications(): Promise<SubmittedApplication[]> {
+export async function getSubmittedApplications(churchId?: string): Promise<SubmittedApplication[]> {
   if (useBackend()) {
-    return apiFetch<SubmittedApplication[]>('/api/membership-applications?status=submitted');
+    const params = withChurchId(new URLSearchParams({ status: 'submitted' }), churchId);
+    return apiFetch<SubmittedApplication[]>(`/api/membership-applications?${params}`);
   }
 
   try {
@@ -72,9 +74,11 @@ export async function reviewApplication(
   localStorage.setItem('ckc_submitted_applications', JSON.stringify(updated));
 }
 
-export async function getMembershipApplication(phone: string): Promise<MembershipApplication | null> {
+export async function getMembershipApplication(
+  phone: string,
+  churchId?: string,
+): Promise<MembershipApplication | null> {
   if (!useBackend() || !phone) return null;
-  return apiFetch<MembershipApplication | null>(
-    `/api/membership-applications/by-phone?phone=${encodeURIComponent(phone)}`,
-  );
+  const params = withChurchId(new URLSearchParams({ phone }), churchId);
+  return apiFetch<MembershipApplication | null>(`/api/membership-applications/by-phone?${params}`);
 }

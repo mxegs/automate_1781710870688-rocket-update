@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { normalizePhone } from '@/lib/auth/session';
 
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
   const { data, error } = await db
     .from('membership_applications')
     .select('application_data, phone, status')
+    .eq('church_id', churchIdFromUrl(request.url))
     .in('status', ['submitted', 'approved'])
     .or(`phone.eq.${phone},phone.like.%${suffix}`)
     .order('submitted_at', { ascending: false })

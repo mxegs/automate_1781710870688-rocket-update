@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { Announcement, AnnouncementStatus, RepeatInterval } from '@/lib/announcements/types';
 import type { ContentVisibility } from '@/lib/sermons/types';
@@ -65,6 +66,7 @@ export async function GET(request: Request) {
   const { data, error } = await db
     .from('announcements')
     .select('*')
+    .eq('church_id', churchIdFromUrl(request.url))
     .order('pinned', { ascending: false })
     .order('publish_at', { ascending: false });
 

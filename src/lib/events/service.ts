@@ -1,33 +1,39 @@
 import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 import type { ChurchEvent, EventInput, EventRsvp } from './types';
 
 export async function getAdminEvents(options: {
+  churchId?: string;
   campusId?: CampusId;
   allCampuses?: boolean;
 }): Promise<ChurchEvent[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams({ forAdmin: 'true' });
+  withChurchId(params, options.churchId);
   if (options.allCampuses) params.set('allCampuses', 'true');
   else if (options.campusId) params.set('campusId', options.campusId);
   return apiFetch<ChurchEvent[]>(`/api/events?${params}`);
 }
 
 export async function getMemberEventsFeed(options: {
+  churchId?: string;
   memberCampus?: CampusId;
   isVisitor?: boolean;
 }): Promise<ChurchEvent[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams();
+  withChurchId(params, options.churchId);
   if (options.memberCampus) params.set('memberCampus', options.memberCampus);
   if (options.isVisitor) params.set('isVisitor', 'true');
   return apiFetch<ChurchEvent[]>(`/api/events?${params}`);
 }
 
-export async function getEventById(id: string): Promise<ChurchEvent | null> {
+export async function getEventById(id: string, churchId?: string): Promise<ChurchEvent | null> {
   if (!useBackend()) return null;
   try {
-    return await apiFetch<ChurchEvent>(`/api/events/${id}`);
+    const params = withChurchId(new URLSearchParams(), churchId);
+    return await apiFetch<ChurchEvent>(`/api/events/${id}?${params}`);
   } catch {
     return null;
   }
@@ -109,8 +115,9 @@ export async function registerEventVisitor(data: {
   });
 }
 
-export async function getEventRsvps(eventId: string): Promise<EventRsvp[]> {
-  return apiFetch<EventRsvp[]>(`/api/events/${eventId}/rsvp`);
+export async function getEventRsvps(eventId: string, churchId?: string): Promise<EventRsvp[]> {
+  const params = withChurchId(new URLSearchParams(), churchId);
+  return apiFetch<EventRsvp[]>(`/api/events/${eventId}/rsvp?${params}`);
 }
 
 export async function getMyRsvp(eventId: string, phone: string): Promise<EventRsvp | null> {
@@ -191,8 +198,13 @@ export async function getMyCheckin(eventId: string, profileId: string): Promise<
   return apiFetch(`/api/events/checkins/me?${params}`);
 }
 
-export async function getMyCheckinForToday(campusId?: CampusId, profileId?: string): Promise<TodayCheckIn> {
+export async function getMyCheckinForToday(
+  campusId?: CampusId,
+  profileId?: string,
+  churchId?: string,
+): Promise<TodayCheckIn> {
   const params = new URLSearchParams();
+  withChurchId(params, churchId);
   if (campusId) params.set('campusId', campusId);
   if (profileId) params.set('profileId', profileId);
   return apiFetch(`/api/events/checkins/today?${params}`);

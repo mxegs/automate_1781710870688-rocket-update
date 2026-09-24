@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { shouldHideFromMemberDirectory } from '@/lib/auth/super-admin';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function isBirthdayToday(dateOfBirth: string | null): boolean {
@@ -22,6 +23,7 @@ export async function GET(request: Request) {
   const { data, error } = await db
     .from('members')
     .select('full_name, surname, phone, email, campus_id, date_of_birth, status')
+    .eq('church_id', churchIdFromUrl(request.url))
     .eq('status', 'active');
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,5 +1,6 @@
 import { apiFetch, useBackend } from '@/lib/api/client';
 import type { CampusId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 import type { ContentVisibility, MediaItem, MediaItemInput, MediaType } from './types';
 
 const DB_TYPE_TO_APP: Record<string, MediaType> = {
@@ -52,12 +53,14 @@ function mapRow(row: {
 }
 
 export async function getAdminMediaItems(options: {
+  churchId?: string;
   campusId?: CampusId;
   allCampuses?: boolean;
 }): Promise<MediaItem[]> {
   if (!useBackend()) return [];
 
   const params = new URLSearchParams({ forAdmin: 'true' });
+  withChurchId(params, options.churchId);
   if (options.allCampuses) params.set('allCampuses', 'true');
   else if (options.campusId) params.set('campusId', options.campusId);
 
@@ -65,12 +68,14 @@ export async function getAdminMediaItems(options: {
 }
 
 export async function getMemberMediaFeed(options: {
+  churchId?: string;
   memberCampus?: CampusId;
   isVisitor?: boolean;
 }): Promise<MediaItem[]> {
   if (!useBackend()) return [];
 
   const params = new URLSearchParams();
+  withChurchId(params, options.churchId);
   if (options.memberCampus) params.set('memberCampus', options.memberCampus);
   if (options.isVisitor) params.set('isVisitor', 'true');
 

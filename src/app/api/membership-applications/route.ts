@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { assignDependantSerials } from '@/lib/membership/family';
 import { getAppUrl } from '@/lib/app-url';
 import { sendApplicationReceivedEmail } from '@/lib/email/service';
@@ -38,6 +39,7 @@ export async function GET(request: Request) {
   const { data, error } = await db
     .from('membership_applications')
     .select('*')
+    .eq('church_id', churchIdFromUrl(request.url))
     .eq('status', status as 'draft' | 'submitted' | 'approved' | 'rejected')
     .order('submitted_at', { ascending: false });
 

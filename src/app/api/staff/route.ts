@@ -6,6 +6,7 @@ import {
   canManageStaffRoles,
   resolveStaffActor,
 } from '@/lib/auth/staff-access-server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { AssignableStaffRole } from '@/lib/staff/types';
 
@@ -75,6 +76,7 @@ export async function GET(request: Request) {
   const { data, error } = await db
     .from('profiles')
     .select('id, email, phone, role, campus_id, display_name, official_name, username, created_at')
+    .eq('church_id', churchIdFromUrl(request.url))
     .in('role', [...STAFF_LIST_ROLES])
     .order('role')
     .order('display_name');

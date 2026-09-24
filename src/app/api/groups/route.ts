@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapGroup } from '@/lib/supabase/mappers';
 import { normalizePhone } from '@/lib/auth/session';
 
 const GROUP_SELECT = '*, group_members(member_phone)';
 
-export async function GET() {
+export async function GET(request: Request) {
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
   }
 
-  const { data, error } = await db.from('groups').select(GROUP_SELECT).order('created_at', { ascending: false });
+  const { data, error } = await db
+    .from('groups')
+    .select(GROUP_SELECT)
+    .eq('church_id', churchIdFromUrl(request.url))
+    .order('created_at', { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json((data ?? []).map(mapGroup));

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { PRAYER_AUTO_REPLY } from '@/lib/prayer/types';
 import type { PrayerRequest, PrayerStatus } from '@/lib/prayer/types';
@@ -32,7 +33,11 @@ export async function GET(request: Request) {
   const campusId = searchParams.get('campusId');
   const allCampuses = searchParams.get('allCampuses') === 'true';
 
-  let query = db.from('prayer_requests').select('*').order('created_at', { ascending: false });
+  let query = db
+    .from('prayer_requests')
+    .select('*')
+    .eq('church_id', churchIdFromUrl(request.url))
+    .order('created_at', { ascending: false });
   if (!allCampuses && campusId) {
     query = query.eq('campus_id', campusId);
   }

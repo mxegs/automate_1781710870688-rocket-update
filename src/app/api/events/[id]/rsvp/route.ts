@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { generateTicketCode } from '@/lib/events/utils';
 import { buildYocoPaymentUrl } from '@/lib/payments/yoco';
@@ -21,7 +22,7 @@ function mapRsvp(row: Record<string, unknown>): EventRsvp {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const db = getSupabaseAdmin();
@@ -32,6 +33,7 @@ export async function GET(
     .from('event_rsvps')
     .select('*')
     .eq('event_id', id)
+    .eq('church_id', churchIdFromUrl(request.url))
     .order('rsvp_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

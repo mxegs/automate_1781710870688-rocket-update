@@ -1,9 +1,11 @@
 import { apiFetch, staffHeaders, useBackend } from '@/lib/api/client';
+import { withChurchId } from '@/lib/church/tenant';
 import type { AssignStaffInput, StaffProfile } from './types';
 
-export async function listStaffProfiles(): Promise<StaffProfile[]> {
+export async function listStaffProfiles(churchId?: string): Promise<StaffProfile[]> {
   if (!useBackend()) return [];
-  return apiFetch<StaffProfile[]>('/api/staff', { headers: staffHeaders() });
+  const params = withChurchId(new URLSearchParams(), churchId);
+  return apiFetch<StaffProfile[]>(`/api/staff?${params}`, { headers: staffHeaders() });
 }
 
 export async function assignStaffRole(input: AssignStaffInput): Promise<StaffProfile> {

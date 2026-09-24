@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { shouldHideFromMemberDirectory } from '@/lib/auth/super-admin';
+import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET(request: Request) {
@@ -14,6 +15,7 @@ export async function GET(request: Request) {
   let query = db
     .from('members')
     .select('id, full_name, surname, phone, email, campus_id, gender, age, status, member_since, application_id, date_of_birth')
+    .eq('church_id', churchIdFromUrl(request.url))
     .order('full_name');
 
   if (statusFilter === 'active') {

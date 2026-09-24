@@ -1,5 +1,6 @@
 import { apiFetch, useBackend } from '@/lib/api/client';
 import type { CampusId, FollowUpStageId } from '@/lib/church/constants';
+import { withChurchId } from '@/lib/church/tenant';
 
 export interface FollowUpContact {
   id: string;
@@ -13,11 +14,13 @@ export interface FollowUpContact {
 }
 
 export async function getFollowUps(options: {
+  churchId?: string;
   campusId?: CampusId;
   stage?: FollowUpStageId;
 }): Promise<FollowUpContact[]> {
   if (!useBackend()) return [];
   const params = new URLSearchParams();
+  withChurchId(params, options.churchId);
   if (options.campusId) params.set('campusId', options.campusId);
   if (options.stage) params.set('stage', options.stage);
   return apiFetch<FollowUpContact[]>(`/api/follow-ups?${params}`);

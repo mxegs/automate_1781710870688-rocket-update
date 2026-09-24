@@ -1,5 +1,6 @@
 import { normalizePhone } from '@/lib/auth/session';
 import { apiFetch, useBackend } from '@/lib/api/client';
+import { withChurchId } from '@/lib/church/tenant';
 import type { ChurchGroup, GroupBroadcast, GroupSong } from './types';
 
 const GROUPS_KEY = 'ckc_groups';
@@ -70,17 +71,19 @@ function ensureSeeded(): ChurchGroup[] {
   return existing;
 }
 
-export async function getAllGroups(): Promise<ChurchGroup[]> {
+export async function getAllGroups(churchId?: string): Promise<ChurchGroup[]> {
   if (useBackend()) {
-    return apiFetch<ChurchGroup[]>('/api/groups');
+    const params = withChurchId(new URLSearchParams(), churchId);
+    return apiFetch<ChurchGroup[]>(`/api/groups?${params}`);
   }
   return ensureSeeded();
 }
 
-export async function getGroupById(id: string): Promise<ChurchGroup | null> {
+export async function getGroupById(id: string, churchId?: string): Promise<ChurchGroup | null> {
   if (useBackend()) {
     try {
-      return await apiFetch<ChurchGroup>(`/api/groups/${id}`);
+      const params = withChurchId(new URLSearchParams(), churchId);
+      return await apiFetch<ChurchGroup>(`/api/groups/${id}?${params}`);
     } catch {
       return null;
     }
@@ -301,9 +304,10 @@ export type MemberOption = {
 
 export const DEMO_MEMBER_OPTIONS: MemberOption[] = [];
 
-export async function getMemberOptions(): Promise<MemberOption[]> {
+export async function getMemberOptions(churchId?: string): Promise<MemberOption[]> {
   if (useBackend()) {
     try {
+      const params = withChurchId(new URLSearchParams({ status: 'active' }), churchId);
       const members = await apiFetch<
         {
           full_name: string;
@@ -313,7 +317,7 @@ export async function getMemberOptions(): Promise<MemberOption[]> {
           age: number | null;
           status: string;
         }[]
-      >('/api/members?status=active');
+      >(`/api/members?${params}`);
       if (members.length > 0) {
         return members.map((m) => ({
           phone: m.phone,
