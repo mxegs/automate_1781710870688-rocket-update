@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { mapEventRow } from '@/lib/events/mappers';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function eventUpdatePayload(body: Record<string, unknown>): Record<string, unknown> {
@@ -36,6 +37,9 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -64,6 +68,10 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -71,20 +79,24 @@ export async function PATCH(
   const body = await request.json();
   const updates = eventUpdatePayload(body);
 
-  const { data, error } = await db.from('events').update(updates).eq('id', id).select('*').single();
+  const { data, error } = await db.from('events').update(updates).eq('id', id).eq('church_id', churchId).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(mapEventRow(data, 0));
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const { id } = await params;
-  const { error } = await db.from('events').delete().eq('id', id);
+  const { error } = await db.from('events').delete().eq('id', id).eq('church_id', churchId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

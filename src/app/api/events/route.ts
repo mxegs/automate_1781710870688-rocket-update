@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { mapEventRow } from '@/lib/events/mappers';
 import { filterEventsFeed } from '@/lib/events/utils';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function eventInsertPayload(body: Record<string, unknown>) {
@@ -30,6 +31,9 @@ function eventInsertPayload(body: Record<string, unknown>) {
 }
 
 export async function GET(request: Request) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -79,6 +83,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -89,7 +97,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await db
     .from('events')
-    .insert(eventInsertPayload(body))
+    .insert({ ...eventInsertPayload(body), church_id: churchId })
     .select('*')
     .single();
 

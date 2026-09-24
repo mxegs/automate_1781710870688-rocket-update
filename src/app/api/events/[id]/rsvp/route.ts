@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { generateTicketCode } from '@/lib/events/utils';
 import { buildYocoPaymentUrl } from '@/lib/payments/yoco';
@@ -25,6 +26,9 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -44,6 +48,10 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -112,6 +120,7 @@ export async function POST(
     .from('event_rsvps')
     .insert({
       event_id: eventId,
+      church_id: churchId,
       visitor_id: visitorId,
       profile_id: body.profileId || null,
       name: body.name.trim(),

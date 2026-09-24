@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { assignDependantSerials } from '@/lib/membership/family';
 import { getAppUrl } from '@/lib/app-url';
 import { sendApplicationReceivedEmail } from '@/lib/email/service';
@@ -29,6 +30,9 @@ function mapApplication(row: {
 }
 
 export async function GET(request: Request) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapGroup } from '@/lib/supabase/mappers';
 import { normalizePhone } from '@/lib/auth/session';
@@ -7,6 +8,9 @@ import { normalizePhone } from '@/lib/auth/session';
 const GROUP_SELECT = '*, group_members(member_phone)';
 
 export async function GET(request: Request) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
@@ -23,6 +27,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
@@ -37,6 +45,7 @@ export async function POST(request: Request) {
     .from('groups')
     .insert({
       name: body.name.trim(),
+      church_id: churchId,
       category: body.category ?? 'community',
       campus_id: body.campus,
       description: body.description ?? null,

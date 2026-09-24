@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { Announcement, AnnouncementStatus, RepeatInterval } from '@/lib/announcements/types';
 import type { ContentVisibility } from '@/lib/sermons/types';
@@ -53,6 +54,9 @@ function isPublishedForFeed(row: Record<string, unknown>): boolean {
 }
 
 export async function GET(request: Request) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -87,6 +91,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -105,6 +113,7 @@ export async function POST(request: Request) {
     .from('announcements')
     .insert({
       campus_id: body.campus,
+      church_id: churchId,
       visibility: body.visibility ?? 'campus_only',
       title: body.title.trim(),
       content: body.content.trim(),

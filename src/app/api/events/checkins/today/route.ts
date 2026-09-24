@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { mapEventRow } from '@/lib/events/mappers';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function johannesburgDay(now = new Date()) {
@@ -35,6 +36,9 @@ function mapDependant(row: Record<string, unknown>) {
 }
 
 export async function GET(request: Request) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 

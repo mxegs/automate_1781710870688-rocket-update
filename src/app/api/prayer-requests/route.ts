@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
+import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { PRAYER_AUTO_REPLY } from '@/lib/prayer/types';
 import type { PrayerRequest, PrayerStatus } from '@/lib/prayer/types';
@@ -26,6 +27,9 @@ function mapRow(row: Record<string, unknown>): PrayerRequest {
 }
 
 export async function GET(request: Request) {
+  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -48,6 +52,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
+  if (denied) return denied;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -63,6 +71,7 @@ export async function POST(request: Request) {
     .from('prayer_requests')
     .insert({
       campus_id: body.campus,
+      church_id: churchId,
       profile_id: body.profileId || null,
       submitter_name: body.submitterName?.trim() || 'Member',
       contact_phone: body.contactPhone?.trim() || null,
