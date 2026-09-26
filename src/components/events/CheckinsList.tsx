@@ -7,15 +7,26 @@ import { checkinRoomBucket, type CheckinsRoomFilter } from '@/components/events/
 
 export type MemberName = { fullName: string; surname: string };
 
+function memberDisplayName(entry: MemberName | undefined, fallback: string): string {
+  if (!entry) return fallback;
+  const full = entry.fullName.trim();
+  const surname = entry.surname.trim();
+  if (!full) return surname || fallback;
+  if (!surname) return full;
+  const compact = full.replace(/\s+/g, ' ').toLowerCase();
+  const sur = surname.toLowerCase();
+  if (compact === sur || compact.endsWith(` ${sur}`)) return full;
+  return `${full} ${surname}`;
+}
+
 function adultName(row: EventCheckIn, names: Map<string, MemberName>): string {
   const entry = row.memberId ? names.get(row.memberId) : undefined;
-  return entry?.fullName || 'Adult';
+  return memberDisplayName(entry, 'Adult');
 }
 
 function guardianName(row: EventCheckIn, names: Map<string, MemberName>): string {
   const entry = row.guardianMemberId ? names.get(row.guardianMemberId) : undefined;
-  if (!entry) return '';
-  return [entry.fullName, entry.surname].filter(Boolean).join(' ').trim();
+  return memberDisplayName(entry, '');
 }
 
 function groupOrder(): string[] {
