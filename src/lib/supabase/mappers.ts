@@ -19,7 +19,7 @@ type GroupRow = {
 };
 
 export function dbRoleToAppRole(role: DbUserRole): UserRole {
-  if (role === 'super_admin') return 'admin';
+  if (role === 'super_admin') return 'super_admin';
   if (role === 'senior_pastor') return 'senior_pastor';
   if (role === 'administrative_manager') return 'administrative_manager';
   return role as UserRole;

@@ -1,5 +1,5 @@
 import type { CampusId } from '@/lib/church/constants';
-import { isChurchWideDbRole } from '@/lib/auth/church-wide-staff';
+import { getPlatformRole } from '@/lib/auth/roles';
 import { isSuperAdminEmail, normalizeEmail } from '@/lib/auth/super-admin';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { UserRole as DbUserRole } from '@/lib/supabase/types';
@@ -73,31 +73,43 @@ export async function resolveStaffActor(request: Request): Promise<StaffActor | 
 }
 
 export function actorCampusScope(actor: StaffActor): CampusId | null {
-  if (actor.isSuperAdmin || isChurchWideDbRole(actor.dbRole)) return null;
+  const platformRole = getPlatformRole(actor.dbRole, actor.isSuperAdmin);
+  if (platformRole === 'platform_admin' || platformRole === 'church_admin') return null;
   return actor.campusId;
 }
 
 export function hasAllCampusStaffAccess(actor: StaffActor): boolean {
-  return actor.isSuperAdmin || isChurchWideDbRole(actor.dbRole);
+  const platformRole = getPlatformRole(actor.dbRole, actor.isSuperAdmin);
+  return platformRole === 'platform_admin' || platformRole === 'church_admin';
 }
 
 export function canManageStaffRoles(actor: StaffActor): boolean {
-  return actor.isSuperAdmin || isChurchWideDbRole(actor.dbRole);
+  const platformRole = getPlatformRole(actor.dbRole, actor.isSuperAdmin);
+  return platformRole === 'platform_admin' || platformRole === 'church_admin';
 }
 
 export function canManageInvites(actor: StaffActor): boolean {
+  const platformRole = getPlatformRole(actor.dbRole, actor.isSuperAdmin);
   return (
-    actor.isSuperAdmin ||
-    isChurchWideDbRole(actor.dbRole) ||
-    actor.dbRole === 'admin' ||
-    actor.dbRole === 'pastor'
+    platformRole === 'platform_admin' ||
+    platformRole === 'church_admin' ||
+    platformRole === 'campus_admin'
   );
 }
 
 export function canManageCampus(actor: StaffActor, campusId: CampusId): boolean {
   if (hasAllCampusStaffAccess(actor)) return true;
-  if (actor.dbRole === 'admin' || actor.dbRole === 'pastor') {
+  if (getPlatformRole(actor.dbRole, actor.isSuperAdmin) === 'campus_admin') {
     return actor.campusId === campusId;
   }
   return false;
+}
+
+export function canEditMembershipSettings(actor: StaffActor): boolean {
+  const platformRole = getPlatformRole(actor.dbRole, actor.isSuperAdmin);
+  return (
+    platformRole === 'platform_admin' ||
+    platformRole === 'church_admin' ||
+    platformRole === 'campus_admin'
+  );
 }

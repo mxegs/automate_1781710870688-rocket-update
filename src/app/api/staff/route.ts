@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { CampusId } from '@/lib/church/constants';
-import { isChurchWideDbRole } from '@/lib/auth/church-wide-staff';
+import { getPlatformRole } from '@/lib/auth/roles';
 import { normalizeEmail, shouldHideFromMemberDirectory } from '@/lib/auth/super-admin';
 import {
   canManageStaffRoles,
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
   const campusId = (body.campusId as CampusId | null | undefined) ?? null;
   const displayName = (body.displayName ?? body.officialName ?? '').trim();
   const officialName = (body.officialName ?? displayName).trim();
-  const churchWide = isChurchWideDbRole(role);
+  const churchWide = getPlatformRole(role, false) === 'church_admin';
 
   if (!email.includes('@') || !displayName) {
     return NextResponse.json({ error: 'Email and name are required' }, { status: 400 });

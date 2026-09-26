@@ -1,4 +1,5 @@
 import { findDemoUser } from './demo-users';
+import { getPlatformRole } from './roles';
 import { apiFetch, useBackend } from '@/lib/api/client';
 
 export type UserRole =
@@ -8,7 +9,8 @@ export type UserRole =
   | 'pastor'
   | 'leader'
   | 'senior_pastor'
-  | 'administrative_manager';
+  | 'administrative_manager'
+  | 'super_admin';
 export type ViewMode = 'staff' | 'member';
 
 export interface AuthSession {
@@ -54,12 +56,12 @@ export function getDisplayName(session: AuthSession | null): string {
 }
 
 export function isStaffRole(role: UserRole): boolean {
+  const platformRole = getPlatformRole(role, role === 'super_admin');
   return (
-    role === 'admin' ||
-    role === 'pastor' ||
-    role === 'leader' ||
-    role === 'senior_pastor' ||
-    role === 'administrative_manager'
+    platformRole === 'platform_admin' ||
+    platformRole === 'church_admin' ||
+    platformRole === 'campus_admin' ||
+    platformRole === 'group_leader'
   );
 }
 
@@ -275,15 +277,17 @@ export function setSession(session: AuthSession): void {
   const legacyRole =
     session.role === 'member' || session.role === 'visitor'
       ? session.role
-      : session.role === 'admin'
+      : session.role === 'super_admin'
         ? 'super_admin'
-        : session.role === 'senior_pastor'
-          ? 'senior_pastor'
-          : session.role === 'administrative_manager'
-            ? 'administrative_manager'
-            : session.role === 'pastor'
-              ? 'pastor'
-              : 'ministry_leader';
+        : session.role === 'admin'
+          ? 'admin'
+          : session.role === 'senior_pastor'
+            ? 'senior_pastor'
+            : session.role === 'administrative_manager'
+              ? 'administrative_manager'
+              : session.role === 'pastor'
+                ? 'pastor'
+                : 'ministry_leader';
   sessionStorage.setItem('church_role', legacyRole);
   sessionStorage.setItem('church_user', getDisplayName(session));
 }

@@ -7,6 +7,7 @@ import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import { CkcButton, CkcField, CkcInput } from '@/components/ui/CkcForm';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
 import { canManageTeam, churchWideRoleLabel } from '@/lib/auth/church-wide-staff';
+import { getPlatformRole } from '@/lib/auth/roles';
 import { getSession } from '@/lib/auth/session';
 import { resolveMemberChurch } from '@/lib/member/campus';
 import { assignStaffRole, listStaffProfiles, removeStaffRole } from '@/lib/staff/service';
@@ -29,7 +30,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 function isChurchWideRole(role: AssignableStaffRole): boolean {
-  return role === 'senior_pastor' || role === 'administrative_manager';
+  return getPlatformRole(role, false) === 'church_admin';
 }
 
 export default function TeamPage() {

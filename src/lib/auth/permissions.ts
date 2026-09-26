@@ -1,6 +1,7 @@
 import type { UserRole, ViewMode } from './session';
 import { isStaffRole } from './session';
 import { canManageTeam, isChurchWideAppRole } from './church-wide-staff';
+import { getPlatformRole } from './roles';
 
 const ADMIN_ROUTES = [
   '/dashboard',
@@ -17,6 +18,7 @@ const ADMIN_ROUTES = [
   '/pastoral-care',
   '/announcements',
   '/reports',
+  '/membership-settings',
 ];
 
 /** Routes for group/ministry leaders (assigned by admin) */
@@ -32,7 +34,15 @@ const VISITOR_ALLOWED = [
   '/member/bible-study',
 ];
 
-const LEADER_RESTRICTED = ['/reports', '/members', '/visitors', '/follow-ups', '/announcements', '/team'];
+const LEADER_RESTRICTED = [
+  '/reports',
+  '/members',
+  '/visitors',
+  '/follow-ups',
+  '/announcements',
+  '/team',
+  '/membership-settings',
+];
 
 /** App developer (super admin) — not a church member; must not send/receive broadcasts. */
 const SUPER_ADMIN_BLOCKED = ['/broadcast'];
@@ -82,23 +92,25 @@ export function canAccessRoute(
     return true;
   }
 
+  const platformRole = getPlatformRole(role, isSuperAdmin === true);
+
   if (isStaffRole(role) && viewMode === 'member') {
-    if (role === 'leader') {
+    if (platformRole === 'group_leader') {
       return isMemberRoute(pathname) || isLeaderRoute(pathname);
     }
     return isMemberRoute(pathname);
   }
 
-  if (role === 'visitor') {
+  if (platformRole === 'visitor') {
     return VISITOR_ALLOWED.some((r) => pathname === r || pathname.startsWith(`${r}/`));
   }
 
-  if (role === 'member') {
+  if (platformRole === 'member') {
     if (isLeaderRoute(pathname)) return true;
     return isMemberRoute(pathname);
   }
 
-  if (role === 'leader') {
+  if (platformRole === 'group_leader') {
     if (isLeaderRoute(pathname)) return true;
     if (LEADER_RESTRICTED.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
       return false;
@@ -107,10 +119,9 @@ export function canAccessRoute(
   }
 
   if (
-    role === 'pastor' ||
-    role === 'admin' ||
-    role === 'senior_pastor' ||
-    role === 'administrative_manager'
+    platformRole === 'platform_admin' ||
+    platformRole === 'church_admin' ||
+    platformRole === 'campus_admin'
   ) {
     return isAdminRoute(pathname) || isLeaderRoute(pathname);
   }
@@ -120,6 +131,7 @@ export function canAccessRoute(
 
 export function getRoleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
+    super_admin: 'Platform Admin',
     admin: 'Campus Administrator',
     pastor: 'Campus Pastor',
     senior_pastor: 'Senior Pastor',
@@ -140,7 +152,8 @@ export function filterAdminNavForRole(
   if (!canManageTeam({ isSuperAdmin, role })) {
     filtered = filtered.filter((item) => item.href !== '/team');
   }
-  if (role === 'leader') {
+  const platformRole = getPlatformRole(role, isSuperAdmin === true);
+  if (platformRole === 'group_leader') {
     return filtered.filter(
       (item) =>
         !LEADER_RESTRICTED.includes(item.href) &&
@@ -149,11 +162,11 @@ export function filterAdminNavForRole(
     );
   }
   // Super admin (app developer) — no broadcast; church staff use it for SMS/email
-  if (isSuperAdmin) {
+  if (platformRole === 'platform_admin') {
     filtered = filtered.filter((item) => item.href !== '/broadcast');
   }
   // Campus admin / pastor — hide reports only; church-wide roles keep full menu
-  if ((role === 'admin' && !isSuperAdmin) || role === 'pastor') {
+  if (platformRole === 'campus_admin') {
     filtered = filtered.filter((item) => item.href !== '/reports');
   }
   return filtered;
