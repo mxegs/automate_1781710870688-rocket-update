@@ -65,6 +65,163 @@ When a parent fills the membership form and reaches the dependants section, if a
 
 ---
 
+## Room settings per church
+
+**Status:** Hardcoded today. Not configurable yet.
+
+**Decision:** room names and age bands are hardcoded today via
+`src/lib/events/rooms.ts`. Later, each church should be able to
+configure its own rooms and age bands through a settings
+screen.
+
+**Why:** churches vary — some call it "Creche," some "Nursery."
+Some split 0-2 and 3-5; others combine 0-5. Forcing one
+structure on all churches is wrong.
+
+**Where:** `src/lib/events/rooms.ts`, `churches` table (or a
+new `church_rooms` table), settings UI.
+
+**When to build:** after check-in works and CKC has used it in
+a real service. Not now.
+
+**Structuring note:** `rooms.ts` has `getRoomMap(churchId)`
+that currently returns hardcoded defaults. Later, this function
+reads from the DB. `roomForChildAge(age, roomMap?)` accepts an
+optional map. This keeps the future change to one file.
+
+---
+
+## Membership expiry per church
+
+**Status:** Settings storage and UI are built. Expiry job,
+reminders, and renewal flow are pending.
+
+**Decision:** membership duration is a per-church setting.
+Columns on `churches`: `membership_duration_days`,
+`renewal_reminder_days`, `renewal_final_days`,
+`auto_approve_renewals`, `grace_period_days`.
+Duration 0 = never expires.
+
+**Why:** churches differ — some want annual, some biennial,
+some permanent. Setting per church avoids forcing one policy.
+
+**Where:** `churches` table, membership-settings page, future
+renewal logic and reminder emails.
+
+**When to build the reminder job:** after check-in and platform
+admin panel are done.
+
+**Note:** the settings storage and UI are already built. Only
+the expiry job, reminders, and renewal flow are pending.
+
+---
+
+## Rejection email
+
+**Status:** Not built.
+
+**Decision:** staff need a "Reject application" action that
+sends a rejection email. Different tone from approval. Signed
+by the church, not the platform.
+
+**Why:** completes the membership loop. Every applicant
+deserves a response.
+
+**Where:** staff review panel, email templates.
+
+**When to build:** as part of the membership review flow work —
+not urgent now.
+
+---
+
+## Platform admin panel
+
+**Status:** Not built.
+
+**Decision:** a `/platform/churches` page for super admins to
+add, edit, and deactivate churches without scripts.
+
+**Why:** currently adding a church requires Cursor and a
+script. Unlocks selling to more churches.
+
+**Where:** new staff route, `churches` table, first-admin
+invite flow.
+
+**When to build:** after check-in and before onboarding your
+first real second church.
+
+---
+
+## Supabase Auth migration
+
+**Status:** Not started. RLS is currently inert.
+
+**Decision:** migrate from custom password_hash to Supabase
+Auth before onboarding a paying church. This activates the RLS
+policies that are currently inert.
+
+**Why:** closes the last security gap. Enables RLS at the
+database level, not just the API layer.
+
+**Where:** `src/lib/auth/session.ts`, login flow, RLS policies,
+database tokens.
+
+**When to build:** before first paying church. Not before.
+
+**Reference:** `docs/rls-gap.md` has the details.
+
+---
+
+## Structured names (first, middle, surname)
+
+**Status:** Flat name field today.
+
+**Decision:** today the dependant shape is flat —
+`name: string`, `surname: string`. The form asks for "first
+name(s)" and "surname" separately, so middle names live inside
+the name field.
+
+Later (with the membership form redesign), split into:
+
+```ts
+firstName: string;
+middleName?: string;
+surname: string;
+```
+
+**Why:** search, sorting, and telling people apart all work
+better when names are structured. Duplicate-name display still
+needs campus / age / phone last-4 even after this split.
+
+**Where:** membership form, application JSON, member rows,
+staff lists.
+
+**When to build:** with the membership form redesign. Not now.
+
+---
+
+## Tenant isolation audit
+
+**Status:** Isolation is API filters + session church today.
+RLS policies exist but are inert (`auth.uid()` is always null
+under custom auth).
+
+**Decision:** do not treat database RLS as the isolation
+mechanism until Supabase Auth is live. Before a paying church
+is onboarded, audit every API route for `church_id` filters
+and drop the conflicting `using (true)` policies documented in
+`docs/rls-gap.md`.
+
+**Why:** a forgotten filter can leak another church’s rows.
+The database will not catch it while RLS is inert.
+
+**Where:** API routes, `docs/rls-gap.md`, RLS policies.
+
+**When to build:** with the Supabase Auth migration, before
+the first paying church.
+
+---
+
 ## Duplicate-name disambiguation in staff UI
 
 Decision: any staff-facing list or search result that shows
@@ -82,3 +239,25 @@ cross-cutting item.
 Optional: consider a UNIQUE constraint on
 members.identity_number to prevent true duplicates entering
 the database.
+
+---
+
+## Staff mobile experience
+
+**Status:** Decision recorded. Full admin is laptop-first.
+
+**Decision:** staff work is designed for a laptop. Two
+exceptions must stay usable on a phone: `/events/[id]/checkins`
+and `/events/scan`. Other staff screens may render on phone
+but are not optimised. A slim mobile staff view is later, only
+if a paying church asks.
+
+**Why:** fifteen admin screens will not become phone-friendly
+in this pass. Trying to do that now slows the real work.
+
+**Where:** staff chrome, those two event routes, design punch
+list.
+
+**When to build a mobile staff subset:** only on demand.
+
+**Reference:** full record in `docs/staff-and-mobile-strategy.md`.
