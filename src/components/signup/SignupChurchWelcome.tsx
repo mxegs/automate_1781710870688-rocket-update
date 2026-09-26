@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { rememberChurchBranding } from '@/lib/church/last-slug';
 import { resolveCurrentChurch } from '@/lib/church/resolve-from-url';
 
 export default function SignupChurchWelcome() {
@@ -11,6 +12,10 @@ export default function SignupChurchWelcome() {
     resolveCurrentChurch().then((church) => {
       if (cancelled || !church) return;
       setName(church.name);
+      rememberChurchBranding({
+        primaryColor: church.primaryColor || '#6B7280',
+        secondaryColor: church.secondaryColor || '#F7F3EE',
+      });
       document.documentElement.style.setProperty('--ckc-primary', church.primaryColor || '#6B7280');
       document.documentElement.style.setProperty('--ckc-secondary', church.secondaryColor || '#F7F3EE');
     });

@@ -1,5 +1,6 @@
 import { findDemoUser } from './demo-users';
 import { getPlatformRole } from './roles';
+import { forgetLastChurch } from '@/lib/church/last-slug';
 import { apiFetch, useBackend } from '@/lib/api/client';
 
 export type UserRole =
@@ -319,6 +320,7 @@ export function clearSession(): void {
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem('church_role');
   sessionStorage.removeItem('church_user');
+  forgetLastChurch();
 }
 
 export interface InviteSession {

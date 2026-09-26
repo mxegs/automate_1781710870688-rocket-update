@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
 import { APP_NAME } from '@/lib/assets';
 import { extractChurchSlug, resolveCurrentChurch, type ResolvedChurch } from '@/lib/church/resolve-from-url';
-import { readLastChurchSlug } from '@/lib/church/last-slug';
+import { rememberChurchBranding, rememberChurchSlug, readLastChurchSlug } from '@/lib/church/last-slug';
 import { checkEmailLoginOptions, loginWithPassword } from '@/lib/auth/password';
 import { sendMagicLink } from '@/lib/auth/magic-link';
 import {
@@ -51,6 +51,8 @@ function LoginForm() {
         return;
       }
       setGate('neutral');
+      document.documentElement.style.setProperty('--ckc-primary', '#6B7280');
+      document.documentElement.style.setProperty('--ckc-secondary', '#F7F3EE');
       return;
     }
     resolveCurrentChurch().then((found) => {
@@ -60,6 +62,11 @@ function LoginForm() {
         return;
       }
       setChurch(found);
+      rememberChurchSlug(found.slug);
+      rememberChurchBranding({
+        primaryColor: found.primaryColor || '#6B7280',
+        secondaryColor: found.secondaryColor || '#F7F3EE',
+      });
       document.documentElement.style.setProperty('--ckc-primary', found.primaryColor || '#6B7280');
       document.documentElement.style.setProperty('--ckc-secondary', found.secondaryColor || '#F7F3EE');
       setGate('ready');

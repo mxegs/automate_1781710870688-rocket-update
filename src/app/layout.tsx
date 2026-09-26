@@ -44,7 +44,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "document.documentElement.style.setProperty('--ckc-primary','#6B7280');document.documentElement.style.setProperty('--ckc-secondary','#F7F3EE');",
+              "try{var first=(location.pathname.split('/').filter(Boolean)[0]||'').toLowerCase();var onBareLogin=!first||first==='login';var b=!onBareLogin&&JSON.parse(localStorage.getItem('ckc_last_church_branding')||'null');if(b&&b.p&&b.s){document.documentElement.style.setProperty('--ckc-primary',b.p);document.documentElement.style.setProperty('--ckc-secondary',b.s);}else{document.documentElement.style.setProperty('--ckc-primary','#6B7280');document.documentElement.style.setProperty('--ckc-secondary','#F7F3EE');}}catch(e){document.documentElement.style.setProperty('--ckc-primary','#6B7280');document.documentElement.style.setProperty('--ckc-secondary','#F7F3EE');}",
           }}
         />
         <PwaRegister />

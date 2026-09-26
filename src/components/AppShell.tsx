@@ -3,7 +3,9 @@
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import RouteGuard from '@/components/auth/RouteGuard';
+import ChurchBrandingProvider from '@/components/church-life/ChurchBrandingProvider';
 import ChurchLifeShell from '@/components/church-life/ChurchLifeShell';
+import { getSession } from '@/lib/auth/session';
 
 type PortalAccess = 'staff' | 'member' | 'shared' | 'visitor' | 'group-leader';
 
@@ -22,17 +24,20 @@ export default function AppShell({
   }
 
   const portal = access === 'group-leader' ? 'staff' : access;
+  const session = getSession();
 
   return (
-    <RouteGuard portal={portal} access={access}>
-      <div className="min-h-screen bg-ckc-black">
-        <Sidebar />
-        <div className="md:ml-60 pt-14 md:pt-0 transition-all duration-300">
-          <main className="min-h-screen p-4 md:p-6 lg:p-8">
-            <div className="mx-auto max-w-5xl space-y-6">{children}</div>
-          </main>
+    <ChurchBrandingProvider churchId={session?.churchId}>
+      <RouteGuard portal={portal} access={access}>
+        <div className="min-h-screen bg-ckc-black">
+          <Sidebar />
+          <div className="md:ml-60 pt-14 md:pt-0 transition-all duration-300">
+            <main className="min-h-screen p-4 md:p-6 lg:p-8">
+              <div className="mx-auto max-w-5xl space-y-6">{children}</div>
+            </main>
+          </div>
         </div>
-      </div>
-    </RouteGuard>
+      </RouteGuard>
+    </ChurchBrandingProvider>
   );
 }
