@@ -8,3 +8,4 @@ Screens to revisit in the later design pass. Functional Stage 2 only.
 - /member/events/[id] confirmation screen — the "money screen"
 - Spouse-fallback dependants — panel only reads getMembershipApplication(session.phone); kids listed only on the spouse's application never appear
 - Not-found /member/events/[id] — shell shows the wrong church name (Test 6: CKC name while signed in as Grace); stay neutral or use the session church
+- /events/[id]/checkins — staff check-in view (headcounts, grouped list, search). Functional only.

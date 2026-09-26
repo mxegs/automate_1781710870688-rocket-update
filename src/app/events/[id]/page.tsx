@@ -65,6 +65,9 @@ export default function AdminEventDetailPage() {
           <Icon name="ArrowLeftIcon" size={14} variant="outline" />
           Back to events
         </Link>
+        <Link href={`/events/${event.id}/checkins`} className="mb-4 block text-sm text-ckc-gold">
+          View check-ins
+        </Link>
 
         <EventDetailCard
           event={event}
