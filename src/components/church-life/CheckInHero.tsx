@@ -25,8 +25,8 @@ export default function CheckInHero({
   securityCode?: string;
 }) {
   return (
-    <Link href={href} className="relative block overflow-hidden rounded-3xl bg-ckc-black">
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-ckc-gold/20" />
+    <Link href={href} className="relative block overflow-hidden rounded-[28px] bg-ckc-black">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-ckc-gold/20" />
       <div className="relative flex min-h-[280px] flex-col justify-end p-5">
         {state === 'checked-in' ? (
           <span className="absolute right-4 top-4 rounded-full bg-ckc-gold px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ckc-gold-text">
@@ -53,7 +53,9 @@ export default function CheckInHero({
           </div>
         ) : null}
 
-        {state === 'ended' ? <p className="mt-4 text-sm font-medium text-cloud">Service ended — watch the replay</p> : null}
+        {state === 'ended' ? (
+          <p className="mt-4 text-sm font-medium text-cloud">Service ended — watch the replay</p>
+        ) : null}
       </div>
     </Link>
   );

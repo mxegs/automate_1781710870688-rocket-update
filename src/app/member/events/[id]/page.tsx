@@ -8,20 +8,37 @@ import Icon from '@/components/ui/AppIcon';
 import EventRegisterPanel from '@/components/events/EventRegisterPanel';
 import VisitorEventSignupForm from '@/components/events/VisitorEventSignupForm';
 import EventDetailCard from '@/components/events/EventDetailCard';
-import CheckInPanel from '@/components/events/CheckInPanel';
-import { getEventById, getMyCheckin, type MyCheckIn } from '@/lib/events/service';
+import CheckInPanel, { type CheckInChild, type CheckInPanelResult } from '@/components/events/CheckInPanel';
+import { getEventById, getEventCheckins, getMyCheckin, type EventCheckIn, type MyCheckIn } from '@/lib/events/service';
 import { eventActionLabel } from '@/lib/events/form';
 import { getDisplayName, getSession } from '@/lib/auth/session';
 import { resolveMemberChurch } from '@/lib/member/campus';
 import { resolveMemberIdsFromSession } from '@/lib/member/identity';
 import { getMembershipApplication } from '@/lib/membership/service';
-import type { Dependant } from '@/lib/membership/types';
 import {
   getVisitorEventProfile,
   hasCompleteVisitorEventProfile,
   type VisitorEventProfile,
 } from '@/lib/events/visitor-profile';
 import type { ChurchEvent } from '@/lib/events/types';
+
+function johannesburgDayKey(value: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Johannesburg',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(value);
+}
+
+function isJohannesburgEventDay(startsAt: string): boolean {
+  return johannesburgDayKey(new Date()) === johannesburgDayKey(new Date(startsAt));
+}
+
+function householdKids(rows: EventCheckIn[], memberId?: string): EventCheckIn[] {
+  if (!memberId) return rows.filter((row) => row.isDependant);
+  return rows.filter((row) => row.isDependant && row.guardianMemberId === memberId);
+}
 
 export default function MemberEventDetailPage() {
   const params = useParams();
@@ -31,7 +48,8 @@ export default function MemberEventDetailPage() {
   const [showRegister, setShowRegister] = useState(false);
   const [visitorProfile, setVisitorProfile] = useState<VisitorEventProfile | null>(null);
   const [checkin, setCheckin] = useState<MyCheckIn | null>(null);
-  const [dependants, setDependants] = useState<Dependant[]>([]);
+  const [checkinKids, setCheckinKids] = useState<EventCheckIn[]>([]);
+  const [dependants, setDependants] = useState<CheckInChild[]>([]);
   const [memberIds, setMemberIds] = useState<{ profileId?: string; memberId?: string }>({});
   const [isEventDay, setIsEventDay] = useState(false);
   const session = getSession();
@@ -46,10 +64,7 @@ export default function MemberEventDetailPage() {
         if (cancelled) return;
         setEvent(loaded);
         if (!loaded || isVisitor) return;
-        const start = new Date(loaded.startsAt).getTime();
-        const end = loaded.endsAt ? new Date(loaded.endsAt).getTime() : start + 2 * 60 * 60 * 1000;
-        const now = Date.now();
-        const open = now >= start && now <= end;
+        const open = isJohannesburgEventDay(loaded.startsAt);
         setIsEventDay(open);
         const ids = await resolveMemberIdsFromSession();
         if (cancelled) return;
@@ -57,10 +72,21 @@ export default function MemberEventDetailPage() {
         if (ids?.profileId) {
           const mine = await getMyCheckin(loaded.id, ids.profileId).catch(() => null);
           if (!cancelled) setCheckin(mine);
+          if (mine) {
+            const rows = await getEventCheckins(loaded.id, churchId).catch(() => []);
+            if (!cancelled) setCheckinKids(householdKids(rows, ids?.memberId ?? undefined));
+          }
         }
         if (session?.phone) {
           const application = await getMembershipApplication(session.phone, churchId).catch(() => null);
-          if (!cancelled) setDependants(application?.guardian?.dependants ?? []);
+          const kids = (application?.guardian?.dependants ?? [])
+            .filter((child) => child.name?.trim())
+            .map((child) => ({
+              name: child.name.trim(),
+              surname: child.surname.trim(),
+              age: typeof child.age === 'number' ? child.age : null,
+            }));
+          if (!cancelled) setDependants(kids);
         }
       })
       .catch(() => {
@@ -85,6 +111,18 @@ export default function MemberEventDetailPage() {
     } else {
       await navigator.clipboard.writeText(url);
     }
+  };
+
+  const handleCheckedIn = (saved: CheckInPanelResult) => {
+    setCheckin({
+      id: saved.primary.id,
+      eventId: saved.primary.eventId,
+      room: saved.primary.room,
+      seat: saved.primary.seat,
+      securityCode: saved.primary.securityCode,
+      checkedInAt: saved.primary.checkedInAt,
+    });
+    setCheckinKids(saved.dependants);
   };
 
   if (loading) {
@@ -122,13 +160,29 @@ export default function MemberEventDetailPage() {
           Back to events
         </Link>
 
-        {!isVisitor && isEventDay && !checkin ? (
+        {!isVisitor && isEventDay && checkin ? (
+          <div className="mb-6 rounded-2xl border border-ckc-gold/30 bg-ckc-black px-4 py-4 text-cloud">
+            <p className="text-sm font-semibold text-ckc-gold">
+              Checked in ✓{checkin.securityCode ? ` ${checkin.securityCode}` : ''}
+            </p>
+            {checkin.seat ? <p className="mt-1 text-sm">Seat {checkin.seat}</p> : null}
+            {checkinKids.map((child) => (
+              <p key={child.id} className="text-sm">
+                {child.dependantName}
+                {child.room ? ` · ${child.room}` : ''}
+              </p>
+            ))}
+          </div>
+        ) : null}
+
+        {!isVisitor && isEventDay && !checkin && memberIds.profileId && memberIds.memberId ? (
           <CheckInPanel
             event={event}
             profileId={memberIds.profileId}
             memberId={memberIds.memberId}
             dependants={dependants}
             memberName={getDisplayName(session)}
+            onCheckedIn={handleCheckedIn}
           />
         ) : null}
         <EventDetailCard
