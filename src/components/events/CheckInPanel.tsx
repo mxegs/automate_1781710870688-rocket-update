@@ -42,7 +42,7 @@ export default function CheckInPanel({
     setSelected(dependants.map((_, index) => index));
   }, [dependants]);
 
-  const submit = async (children: CheckInChild[]) => {
+  const submit = async (children: CheckInChild[], useHousehold: boolean) => {
     setPhase('submitting');
     setError('');
     try {
@@ -51,6 +51,7 @@ export default function CheckInPanel({
         profileId,
         memberId,
         method: 'self',
+        useHousehold,
         dependants: children.map((child) => ({
           name: child.name,
           surname: child.surname,
@@ -69,11 +70,14 @@ export default function CheckInPanel({
 
   const startFlow = () => {
     if (dependants.length === 0) {
-      void submit([]);
+      void submit([], true);
       return;
     }
     setPhase('confirming');
   };
+
+  const householdUnchanged =
+    selected.length === dependants.length && dependants.every((_, index) => selected.includes(index));
 
   if (phase === 'done' && result) {
     return (
@@ -125,7 +129,12 @@ export default function CheckInPanel({
         ))}
         <button
           type="button"
-          onClick={() => submit(dependants.filter((_, index) => selected.includes(index)))}
+          onClick={() =>
+            submit(
+              dependants.filter((_, index) => selected.includes(index)),
+              householdUnchanged,
+            )
+          }
           className="w-full rounded-xl bg-ckc-gold py-3 text-sm font-bold text-ckc-black"
         >
           Confirm check-in

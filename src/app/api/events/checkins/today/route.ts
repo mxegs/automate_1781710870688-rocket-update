@@ -4,6 +4,14 @@ import { churchIdFromUrl } from '@/lib/church/tenant';
 import { requireSessionChurch } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
+function eventWindowRank(row: { starts_at: string; ends_at?: string | null }, now: number) {
+  const start = new Date(row.starts_at).getTime();
+  const end = row.ends_at ? new Date(row.ends_at).getTime() : start + 2 * 60 * 60 * 1000;
+  if (now >= start && now <= end) return 0;
+  if (now < start) return 1;
+  return 2;
+}
+
 function johannesburgDay(now = new Date()) {
   const day = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Africa/Johannesburg',
@@ -56,8 +64,7 @@ export async function GET(request: Request) {
     .eq('church_id', churchId)
     .gte('starts_at', start)
     .lt('starts_at', end)
-    .order('starts_at', { ascending: true })
-    .limit(1);
+    .order('starts_at', { ascending: true });
 
   if (campusId) {
     query = query.or(`campus_id.eq.${campusId},visibility.eq.church_wide`);
@@ -65,7 +72,15 @@ export async function GET(request: Request) {
 
   const { data: events, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const eventRow = events?.[0];
+
+  const now = Date.now();
+  const ranked = [...(events ?? [])].sort((a, b) => {
+    const rankA = eventWindowRank(a, now);
+    const rankB = eventWindowRank(b, now);
+    if (rankA !== rankB) return rankA - rankB;
+    return new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+  });
+  const eventRow = ranked[0];
   if (!eventRow) return NextResponse.json(empty);
 
   const { data: member } = await db

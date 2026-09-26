@@ -59,7 +59,8 @@ export async function GET(
 
   if (isDependantParam === 'true') query = query.eq('is_dependant', true);
   if (isDependantParam === 'false') query = query.eq('is_dependant', false);
-  if (room) query = query.eq('room', room);
+  if (room === 'Adults') query = query.or('is_dependant.eq.false,room.is.null');
+  else if (room) query = query.eq('room', room);
   if (campusId) query = query.eq('campus_id', campusId);
 
   const { data, error } = await query;
@@ -70,9 +71,9 @@ export async function GET(
     const needle = search.toLowerCase();
     const memberIds = [
       ...new Set(
-        rows
-          .filter((row) => !row.is_dependant && row.member_id)
-          .map((row) => row.member_id as string),
+        rows.flatMap((row) =>
+          [row.member_id, row.guardian_member_id].filter((id): id is string => Boolean(id)),
+        ),
       ),
     ];
     const nameByMemberId = new Map<string, string>();
@@ -90,7 +91,9 @@ export async function GET(
     }
     rows = rows.filter((row) => {
       if (row.is_dependant) {
-        return String(row.dependant_name ?? '').toLowerCase().includes(needle);
+        const childName = String(row.dependant_name ?? '').toLowerCase();
+        const guardianName = nameByMemberId.get(row.guardian_member_id as string) ?? '';
+        return childName.includes(needle) || guardianName.includes(needle);
       }
       return (nameByMemberId.get(row.member_id as string) ?? '').includes(needle);
     });

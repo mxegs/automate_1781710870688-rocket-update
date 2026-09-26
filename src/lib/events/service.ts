@@ -161,6 +161,7 @@ export interface CheckInPayload {
   memberId?: string;
   rsvpId?: string;
   dependants?: { name: string; room?: string }[];
+  useHousehold?: boolean;
   room?: string;
   seat?: string;
   method?: CheckInMethod;

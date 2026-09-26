@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { churchIdForSessionEmail } from '@/lib/auth/session-church';
 import { readSessionEmailHeader } from '@/lib/auth/staff-access-server';
+import { dependantsForMember } from '@/lib/membership/dependants';
 import { createCheckinForMember } from '@/lib/events/check-in';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
 
   const { data: event } = await db
     .from('events')
-    .select('id, campus_id, church_id')
+    .select('id, campus_id, church_id, visibility')
     .eq('id', body.eventId)
     .maybeSingle();
   if (!event || event.church_id !== churchId) return notFound();
@@ -57,11 +58,25 @@ export async function POST(request: Request) {
 
   const { data: member } = await db
     .from('members')
-    .select('id')
+    .select('id, campus_id')
     .eq('profile_id', profile.id)
     .eq('church_id', churchId)
     .maybeSingle();
   if (!member) return notFound();
+
+  if (
+    event.visibility === 'campus_only' &&
+    event.campus_id &&
+    member.campus_id &&
+    event.campus_id !== member.campus_id
+  ) {
+    return notFound();
+  }
+
+  let selectedDependants = selectedDependantsFromBody(body.dependants);
+  if (body.useHousehold === true) {
+    selectedDependants = await dependantsForMember(db, member.id, churchId);
+  }
 
   try {
     const result = await createCheckinForMember(db, {
@@ -70,7 +85,7 @@ export async function POST(request: Request) {
       memberId: member.id,
       churchId,
       campusId: event.campus_id,
-      selectedDependants: selectedDependantsFromBody(body.dependants),
+      selectedDependants,
       method: body.method,
     });
     return NextResponse.json({
