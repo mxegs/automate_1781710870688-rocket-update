@@ -62,3 +62,23 @@ When a parent fills the membership form and reaches the dependants section, if a
 - Room defaults: no Teens room in the default table. Ages 13-17 map to null, meaning "attend main service." A church that has a Teens room adds it via per-church room settings (later feature). Until then, teens either attend main service or are handled by their parents' check-in.
 
 **Reference:** This decision was agreed before Stage 1 was built. Stage 1 assumes parents check in all dependants, which is compatible with both outcomes above.
+
+---
+
+## Duplicate-name disambiguation in staff UI
+
+Decision: any staff-facing list or search result that shows
+member names must also show at least two of: campus, age,
+last 4 digits of phone.
+Why: churches commonly have multiple people with the same
+name. Picking the wrong one in broadcast sends an SMS to the
+wrong person.
+Where it applies: /members, /events/[id]/checkins,
+/broadcast recipient picker, /pastoral-care note attribution,
+/follow-ups.
+When to build: as part of each screen's normal
+implementation. Add to docs/ui-redesign-todo.md as a
+cross-cutting item.
+Optional: consider a UNIQUE constraint on
+members.identity_number to prevent true duplicates entering
+the database.
