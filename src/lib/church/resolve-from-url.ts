@@ -37,6 +37,7 @@ const RESERVED = new Set([
   'visitors',
   'visitor',
   'members',
+  'membership-settings',
   'small-groups',
   'home',
   'assets',

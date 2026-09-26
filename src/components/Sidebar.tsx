@@ -28,6 +28,7 @@ interface NavItem {
 const adminNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'HomeIcon' },
   { label: 'Members', href: '/members', icon: 'UsersIcon' },
+  { label: 'Membership Settings', href: '/membership-settings', icon: 'Cog6ToothIcon' },
   { label: 'Team & Roles', href: '/team', icon: 'ShieldCheckIcon' },
   { label: 'Visitors', href: '/visitors', icon: 'UserPlusIcon' },
   { label: 'Follow-Ups', href: '/follow-ups', icon: 'PhoneArrowUpRightIcon' },
