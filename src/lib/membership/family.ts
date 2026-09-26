@@ -48,19 +48,23 @@ export async function assignDependantSerials(
   };
 }
 
-export async function lookupSpouseFamilyByIdNumber(idNumber: string): Promise<{
+export async function lookupSpouseFamilyByIdNumber(
+  idNumber: string,
+  churchId: string,
+): Promise<{
   found: boolean;
   spouseName?: string;
   dependants?: MembershipApplication['guardian']['dependants'];
   familyGroupId?: string;
 }> {
   const db = getSupabaseAdmin();
-  if (!db || !idNumber.trim()) return { found: false };
+  if (!db || !idNumber.trim() || !churchId.trim()) return { found: false };
 
   const needle = normalizeId(idNumber);
   const { data } = await db
     .from('membership_applications')
     .select('application_data, status')
+    .eq('church_id', churchId)
     .in('status', ['submitted', 'approved']);
 
   for (const row of data ?? []) {

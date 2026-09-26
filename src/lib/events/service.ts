@@ -1,4 +1,5 @@
 import { apiFetch, sessionHeaders, useBackend } from '@/lib/api/client';
+import { resolveMemberChurch } from '@/lib/member/campus';
 import type { CampusId } from '@/lib/church/constants';
 import { withChurchId } from '@/lib/church/tenant';
 import type { ChurchEvent, EventInput, EventRsvp } from './types';
@@ -155,6 +156,7 @@ export interface EventCheckIn {
 
 export interface CheckInPayload {
   eventId: string;
+  churchId?: string;
   profileId?: string;
   memberId?: string;
   rsvpId?: string;
@@ -183,18 +185,25 @@ export async function createCheckin(payload: CheckInPayload): Promise<{
   primary: EventCheckIn;
   dependants: EventCheckIn[];
 }> {
-  return apiFetch('/api/events/checkins', {
+  const params = withChurchId(new URLSearchParams(), payload.churchId ?? resolveMemberChurch());
+  return apiFetch(`/api/events/checkins?${params}`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
-export async function getEventCheckins(eventId: string): Promise<EventCheckIn[]> {
-  return apiFetch(`/api/events/${eventId}/checkins`);
+export async function getEventCheckins(eventId: string, churchId?: string): Promise<EventCheckIn[]> {
+  const params = withChurchId(new URLSearchParams(), churchId ?? resolveMemberChurch());
+  return apiFetch(`/api/events/${eventId}/checkins?${params}`);
 }
 
-export async function getMyCheckin(eventId: string, profileId: string): Promise<MyCheckIn | null> {
+export async function getMyCheckin(
+  eventId: string,
+  profileId: string,
+  churchId?: string,
+): Promise<MyCheckIn | null> {
   const params = new URLSearchParams({ eventId, profileId });
+  withChurchId(params, churchId ?? resolveMemberChurch());
   return apiFetch(`/api/events/checkins/me?${params}`);
 }
 

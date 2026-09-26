@@ -199,9 +199,10 @@ export default function SignupWizard() {
       return;
     }
     try {
-      const res = await fetch(
-        `/api/membership-applications/spouse-family?idNumber=${encodeURIComponent(trimmed)}`,
-      );
+      const inviteSession = getInviteSession();
+      const params = new URLSearchParams({ idNumber: trimmed });
+      if (inviteSession?.churchId) params.set('churchId', inviteSession.churchId);
+      const res = await fetch(`/api/membership-applications/spouse-family?${params}`);
       const data = (await res.json()) as {
         found: boolean;
         spouseName?: string;
