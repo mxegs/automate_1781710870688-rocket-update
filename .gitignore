@@ -45,3 +45,6 @@ turbo/
 # Supabase CLI cache and one-off staging dumps
 supabase/.temp/
 supabase/staging-setup.sql
+
+# Local database backups (never commit)
+backups/
