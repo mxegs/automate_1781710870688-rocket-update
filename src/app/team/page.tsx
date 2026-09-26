@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
 import { CkcButton, CkcField, CkcInput } from '@/components/ui/CkcForm';
 import { CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
+import { staffDisambiguators } from '@/lib/members/disambiguate';
 import { canManageTeam, churchWideRoleLabel } from '@/lib/auth/church-wide-staff';
 import { getPlatformRole } from '@/lib/auth/roles';
 import { getSession } from '@/lib/auth/session';
@@ -18,6 +19,8 @@ interface MemberOption {
   email: string;
   fullName: string;
   campusId: CampusId;
+  age: number | null;
+  phone: string | null;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -53,7 +56,13 @@ export default function TeamPage() {
       setStaff(await listStaffProfiles(resolveMemberChurch()));
       if (useBackend()) {
         const rows = await apiFetch<
-          { email?: string | null; full_name: string; campus_id: string }[]
+          {
+            email?: string | null;
+            full_name: string;
+            campus_id: string;
+            age?: number | null;
+            phone?: string | null;
+          }[]
         >('/api/members', { headers: sessionHeaders() });
         setMembers(
           rows
@@ -62,6 +71,8 @@ export default function TeamPage() {
               email: m.email!.toLowerCase(),
               fullName: m.full_name,
               campusId: m.campus_id as CampusId,
+              age: m.age ?? null,
+              phone: m.phone ?? null,
             })),
         );
       }
@@ -160,7 +171,8 @@ export default function TeamPage() {
                 <option value="">— Select member —</option>
                 {members.map((m) => (
                   <option key={m.email} value={m.email}>
-                    {m.fullName} ({m.email}) · {getCampusLabel(m.campusId)}
+                    {m.fullName} ({m.email}) ·{' '}
+                    {staffDisambiguators({ campusId: m.campusId, age: m.age, phone: m.phone })}
                   </option>
                 ))}
               </select>

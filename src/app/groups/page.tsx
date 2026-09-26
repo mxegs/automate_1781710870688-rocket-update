@@ -14,6 +14,7 @@ import {
   type MemberOption,
 } from '@/lib/groups/service';
 import { getCampusLabel, CAMPUSES, AGE_CATEGORIES, type CampusId } from '@/lib/church/constants';
+import { staffDisambiguators } from '@/lib/members/disambiguate';
 import { getSession } from '@/lib/auth/session';
 import { resolveMemberChurch } from '@/lib/member/campus';
 import type { ChurchGroup, GroupCategory } from '@/lib/groups/types';
@@ -236,9 +237,14 @@ export default function GroupsAdminPage() {
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-cloud"
                 >
                   <option value="">Select leader</option>
-                  {memberOptions.map((m) => (
-                    <option key={m.phone} value={m.phone}>{m.name}</option>
-                  ))}
+                  {memberOptions.map((m) => {
+                    const extra = staffDisambiguators({ campusId: m.campus, age: m.age, phone: m.phone });
+                    return (
+                    <option key={m.phone} value={m.phone}>
+                      {m.name}{extra ? ` · ${extra}` : ''}
+                    </option>
+                    );
+                  })}
                 </select>
               </div>
               <div>
@@ -321,8 +327,7 @@ export default function GroupsAdminPage() {
                       {m.name}
                       <span className="text-cloud/30">
                         {' '}
-                        · {getCampusLabel(m.campus as CampusId)}
-                        {m.gender ? ` · ${m.gender}` : ''}
+                        · {staffDisambiguators({ campusId: m.campus, age: m.age, phone: m.phone })}
                       </span>
                     </label>
                   ))}

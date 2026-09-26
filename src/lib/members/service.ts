@@ -24,17 +24,34 @@ export interface MemberDetail {
 export async function getMembers(options?: {
   status?: MemberDbStatus;
   churchId?: string;
-}): Promise<{ id: string; fullName: string; surname: string }[]> {
+}): Promise<{
+  id: string;
+  fullName: string;
+  surname: string;
+  campusId: string | null;
+  age: number | null;
+  phone: string | null;
+}[]> {
   const params = new URLSearchParams();
   if (options?.status) params.set('status', options.status);
   withChurchId(params, options?.churchId);
-  const rows = await apiFetch<{ id: string; full_name: string | null; surname: string | null }[]>(
-    `/api/members?${params}`,
-  );
+  const rows = await apiFetch<
+    {
+      id: string;
+      full_name: string | null;
+      surname: string | null;
+      campus_id: string | null;
+      age: number | null;
+      phone: string | null;
+    }[]
+  >(`/api/members?${params}`);
   return rows.map((row) => ({
     id: row.id,
     fullName: row.full_name?.trim() ?? '',
     surname: row.surname?.trim() ?? '',
+    campusId: row.campus_id,
+    age: row.age,
+    phone: row.phone,
   }));
 }
 

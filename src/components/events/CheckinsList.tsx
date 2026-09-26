@@ -4,8 +4,15 @@ import React from 'react';
 import { getRoomMap } from '@/lib/events/rooms';
 import type { EventCheckIn } from '@/lib/events/service';
 import { checkinRoomBucket, type CheckinsRoomFilter } from '@/components/events/CheckinsHeadcount';
+import { staffDisambiguators } from '@/lib/members/disambiguate';
 
-export type MemberName = { fullName: string; surname: string };
+export type MemberName = {
+  fullName: string;
+  surname: string;
+  campusId?: string | null;
+  age?: number | null;
+  phone?: string | null;
+};
 
 function memberDisplayName(entry: MemberName | undefined, fallback: string): string {
   if (!entry) return fallback;
@@ -74,6 +81,18 @@ export default function CheckinsList({
                 const isKid = row.isDependant;
                 const name = isKid ? row.dependantName || 'Child' : adultName(row, names);
                 const guardian = isKid ? guardianName(row, names) : '';
+                const person = isKid
+                  ? row.guardianMemberId
+                    ? names.get(row.guardianMemberId)
+                    : undefined
+                  : row.memberId
+                    ? names.get(row.memberId)
+                    : undefined;
+                const extra = staffDisambiguators({
+                  campusId: person?.campusId,
+                  age: person?.age,
+                  phone: person?.phone,
+                });
                 return (
                   <li
                     key={row.id}
@@ -82,6 +101,7 @@ export default function CheckinsList({
                     <span>{name}</span>
                     {isKid && row.room ? <span className="text-cloud/50"> · {row.room}</span> : null}
                     {guardian ? <span className="text-cloud/50"> · {guardian}</span> : null}
+                    {extra ? <span className="text-cloud/50"> · {extra}</span> : null}
                     {row.securityCode ? (
                       <span className="font-mono text-ckc-gold"> · {row.securityCode}</span>
                     ) : null}

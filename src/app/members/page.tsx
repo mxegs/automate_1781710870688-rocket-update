@@ -8,14 +8,18 @@ import SendInvitePanel, { type SendInvitePrefill } from '@/components/admin/Send
 import InviteRequestsPanel from '@/components/admin/InviteRequestsPanel';
 import PendingApplicationsPanel from '@/components/admin/PendingApplicationsPanel';
 import MemberManageMenu, { type MemberRow } from '@/components/admin/MemberManageMenu';
-import { AGE_CATEGORIES, CAMPUSES, getCampusLabel, type CampusId } from '@/lib/church/constants';
+import { AGE_CATEGORIES, CAMPUSES, type CampusId } from '@/lib/church/constants';
+import { staffDisambiguators } from '@/lib/members/disambiguate';
 import type { InviteRequest } from '@/lib/invites/request-service';
 import { apiFetch, useBackend } from '@/lib/api/client';
 import { formatPhoneDisplay } from '@/lib/auth/session';
+import { resolveMemberChurch } from '@/lib/member/campus';
+import { withChurchId } from '@/lib/church/tenant';
 
 interface Member extends MemberRow {
   ministry: string;
   joinDate: string;
+  age: number | null;
   ageCategory: 'child' | 'youth' | 'adult';
   baptised: boolean;
   displayStatus: 'Active' | 'Suspended' | 'New';
@@ -54,6 +58,7 @@ function mapDbMember(row: {
     ministry: '—',
     joinDate: row.member_since,
     gender: row.gender === 'Male' || row.gender === 'Female' ? row.gender : 'Unknown',
+    age: row.age,
     ageCategory: ageToCategory(row.age),
     campus: row.campus_id as CampusId,
     baptised: false,
@@ -98,7 +103,7 @@ export default function MembersPage() {
         status: string;
         member_since: string;
       }[]
-    >('/api/members')
+    >(`/api/members?${withChurchId(new URLSearchParams(), resolveMemberChurch())}`)
       .then((rows) => setMembers(rows.map(mapDbMember)))
       .catch(() => setMembers([]))
       .finally(() => setMembersLoading(false));
@@ -228,7 +233,11 @@ export default function MembersPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-cloud">{member.name}</p>
                       <p className="truncate text-xs text-cloud/40">
-                        {getCampusLabel(member.campus)} · {member.gender} · {member.email || member.phone}
+                        {staffDisambiguators({
+                          campusId: member.campus,
+                          age: member.age,
+                          phone: member.phone,
+                        })}
                       </p>
                     </div>
                   </div>

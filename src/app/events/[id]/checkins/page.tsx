@@ -53,7 +53,13 @@ export default function StaffEventCheckinsPage() {
     ]);
     const map = new Map<string, MemberName>();
     for (const member of members) {
-      map.set(member.id, { fullName: member.fullName, surname: member.surname });
+      map.set(member.id, {
+        fullName: member.fullName,
+        surname: member.surname,
+        campusId: member.campusId,
+        age: member.age,
+        phone: member.phone,
+      });
     }
     setEvent(loaded);
     setRows(checkins);
