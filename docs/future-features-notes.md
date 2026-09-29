@@ -261,3 +261,18 @@ list.
 **When to build a mobile staff subset:** only on demand.
 
 **Reference:** full record in `docs/staff-and-mobile-strategy.md`.
+
+---
+
+## Invite-requests GET staff gate
+
+**Status:** Resolved.
+
+GET `/api/invite-requests` used to return church-scoped rows for any
+session with `X-Session-Email` (including members). The desk is hidden
+in the UI, but the API now requires `resolveStaffActor` +
+`canManageInvites` (senior_pastor, administrative_manager, admin,
+pastor, platform admin). Members, visitors, and group leaders get
+`404 { error: 'Not found' }`. PATCH `/api/invite-requests/[id]` uses
+the same gate. POST stays public so a visitor can request an invite
+via `churchSlug`.

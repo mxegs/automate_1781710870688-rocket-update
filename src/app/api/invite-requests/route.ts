@@ -4,7 +4,6 @@ import { getCampusLabel } from '@/lib/church/constants';
 import type { CampusId } from '@/lib/church/constants';
 import {
   canManageInvites,
-  canManageCampus,
   actorCampusScope,
   resolveStaffActor,
 } from '@/lib/auth/staff-access-server';
@@ -48,6 +47,9 @@ async function notifyCampusAdmins(
 }
 
 export async function GET(request: Request) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canManageInvites(actor)) return notFoundResponse();
+
   const churchId = await requireSessionChurchId(request);
   if (churchId instanceof NextResponse) return churchId;
 
@@ -62,14 +64,13 @@ export async function GET(request: Request) {
   let query = db
     .from('invite_requests')
     .select('*')
-    .like('notes', `church:${churchId}%`)
+    .eq('church_id', churchId)
     .order('requested_at', { ascending: false });
   if (status) {
     query = query.eq('status', status as 'pending' | 'approved' | 'declined');
   }
 
-  const actor = await resolveStaffActor(request);
-  const campusScope = actor ? actorCampusScope(actor) : null;
+  const campusScope = actorCampusScope(actor);
   if (campusScope) {
     query = query.eq('campus_id', campusScope);
   }
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
     .select('*')
     .eq('email', email)
     .eq('status', 'pending')
-    .like('notes', `church:${churchId}%`)
+    .eq('church_id', churchId)
     .maybeSingle();
 
   if (existing) {
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
       full_name: body.fullName.trim(),
       email,
       campus_id: campusId,
-      notes: `church:${churchId}`,
+      church_id: churchId,
       status: 'pending',
     })
     .select('*')

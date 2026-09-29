@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
+import {
+  canManageCampus,
+  canManageInvites,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
+import type { CampusId } from '@/lib/church/constants';
 import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapInviteRequest } from '@/lib/supabase/mappers';
-
-function churchIdFromNotes(notes: string | null | undefined): string | null {
-  const match = /^church:([^\n]+)/.exec(notes ?? '');
-  return match?.[1]?.trim() || null;
-}
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canManageInvites(actor)) return notFoundResponse();
+
   const churchId = await requireSessionChurchId(request);
   if (churchId instanceof NextResponse) return churchId;
 
@@ -21,21 +25,25 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const { data: row } = await db.from('invite_requests').select('id, notes').eq('id', id).maybeSingle();
-  if (!row || churchIdFromNotes(row.notes) !== churchId) return notFoundResponse();
+  const { data: row } = await db
+    .from('invite_requests')
+    .select('id, church_id, campus_id')
+    .eq('id', id)
+    .maybeSingle();
+  if (!row || row.church_id !== churchId) return notFoundResponse();
+  if (!canManageCampus(actor, row.campus_id as CampusId)) return notFoundResponse();
 
   const body = await request.json();
-  const staffNotes = typeof body.notes === 'string' ? body.notes : '';
-  const notes = `church:${churchId}${staffNotes ? `\n${staffNotes}` : ''}`;
 
   const { data, error } = await db
     .from('invite_requests')
     .update({
       status: body.status,
-      notes,
+      notes: body.notes ?? null,
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('church_id', churchId)
     .select('*')
     .single();
 
