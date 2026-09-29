@@ -49,5 +49,6 @@ supabase/staging-setup.sql
 # Local database backups (never commit)
 backups/
 
-# Staging fixture id manifest (local-only; scripts stay in git)
+# Staging fixture id manifests (local-only; scripts stay in git)
 scripts/fixture-ids.json
+scripts/suite-ids.json
