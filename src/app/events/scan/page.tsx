@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import AppShell from '@/components/AppShell';
+import { sessionHeaders } from '@/lib/api/client';
 
 /** Scan ticket codes on event day. Enter submits, which is what a barcode scanner sends. */
 export default function TicketScanPage() {
@@ -23,7 +24,7 @@ export default function TicketScanPage() {
     try {
       const res = await fetch('/api/events/tickets/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...sessionHeaders() },
         body: JSON.stringify({ code: ticket }),
       });
       const data = await res.json();
