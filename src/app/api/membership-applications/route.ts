@@ -1,13 +1,62 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { churchIdForSessionEmail, requireSessionChurch } from '@/lib/auth/session-church';
 import { assignDependantSerials } from '@/lib/membership/family';
-import { getAppUrl } from '@/lib/app-url';
 import { sendApplicationReceivedEmail } from '@/lib/email/service';
 import { churchDisplayName } from '@/lib/church/name-server';
 import { sendSms } from '@/lib/sms/service';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { normalizePhone } from '@/lib/auth/session';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+function notFound() {
+  return NextResponse.json({ error: 'Not found' }, { status: 404 });
+}
+
+async function churchIdFromInviteToken(
+  db: SupabaseClient,
+  token: unknown,
+): Promise<string | null> {
+  if (typeof token !== 'string' || !token.trim()) return null;
+  const { data } = await db
+    .from('invites')
+    .select('church_id')
+    .eq('token', token.trim())
+    .maybeSingle();
+  return (data as { church_id?: string | null } | null)?.church_id?.trim() || null;
+}
+
+async function churchIdFromSlugQuery(db: SupabaseClient, url: string): Promise<string | null> {
+  const slug = new URL(url).searchParams.get('churchSlug')?.trim().toLowerCase();
+  if (!slug) return null;
+  const { data } = await db.from('churches').select('id').eq('slug', slug).maybeSingle();
+  return (data as { id?: string | null } | null)?.id?.trim() || null;
+}
+
+async function resolveApplicationChurchId(
+  request: Request,
+  db: SupabaseClient,
+  body: Record<string, unknown>,
+): Promise<string | NextResponse> {
+  const sessionChurchId = await churchIdForSessionEmail(request);
+  const bodyChurchId = typeof body.churchId === 'string' ? body.churchId.trim() : '';
+  const urlChurchId = churchIdFromUrl(request.url);
+
+  if (sessionChurchId) {
+    if (bodyChurchId && bodyChurchId !== sessionChurchId) return notFound();
+    if (urlChurchId && urlChurchId !== sessionChurchId) return notFound();
+    return sessionChurchId;
+  }
+
+  const inviteChurchId = await churchIdFromInviteToken(db, body.inviteToken);
+  const slugChurchId = await churchIdFromSlugQuery(db, request.url);
+  if (inviteChurchId && slugChurchId && inviteChurchId !== slugChurchId) return notFound();
+  const churchId = inviteChurchId || slugChurchId;
+  if (!churchId) return notFound();
+  if (bodyChurchId && bodyChurchId !== churchId) return notFound();
+  if (urlChurchId && urlChurchId !== churchId) return notFound();
+  return churchId;
+}
 
 function mapApplication(row: {
   id: string;
@@ -77,10 +126,9 @@ export async function POST(request: Request) {
     };
   }
 
-  const churchId = body.churchId || churchIdFromUrl(request.url);
-  if (!churchId) {
-    return NextResponse.json({ error: 'Church is required' }, { status: 400 });
-  }
+  const churchResolved = await resolveApplicationChurchId(request, db, body as Record<string, unknown>);
+  if (churchResolved instanceof NextResponse) return churchResolved;
+  const churchId = churchResolved;
 
   const { data, error } = await db
     .from('membership_applications')
