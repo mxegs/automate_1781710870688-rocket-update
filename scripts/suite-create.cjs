@@ -540,6 +540,7 @@ function generateHouseholds(church, rng) {
   adults[leaderIndex].role = 'leader';
   adults[suspendedIndex].status = 'suspended';
 
+  // profiles.role values the app reads (not platform aliases church_admin / campus_admin).
   const staffRoles = [
     { role: 'senior_pastor', campus: 'midrand' },
     { role: 'admin', campus: 'midrand' },
@@ -669,6 +670,18 @@ async function insertBatch(db, table, rows) {
     const chunk = rows.slice(i, i + BATCH);
     const { error } = await db.from(table).insert(chunk);
     if (error) throw new Error(`${table}: ${error.message}`);
+  }
+}
+
+/** Login uses profiles.role. Member sync can overwrite staff to member; re-apply after insert. */
+async function applyLoginRoles(db, people) {
+  const rows = people.filter((p) => p.role && p.role !== 'member');
+  for (const person of rows) {
+    const { error } = await db
+      .from('profiles')
+      .update({ role: person.role })
+      .ilike('email', person.email);
+    if (error) throw new Error(`profiles.role ${person.email}: ${error.message}`);
   }
 }
 
@@ -1009,6 +1022,7 @@ async function main() {
     }
 
     await insertBatch(db, 'profiles', allProfiles);
+    await applyLoginRoles(db, collected.people);
     await insertBatch(db, 'membership_applications', allApps);
     await insertBatch(db, 'members', allMembers);
     await insertBatch(db, 'visitors', allVisitors);
