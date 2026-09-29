@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
 import { enforceBroadcastFilters } from '@/lib/broadcast/access-server';
-import { resolveBroadcastAudience, type BroadcastFilters } from '@/lib/broadcast/audience';
+import {
+  BroadcastAudienceNotFoundError,
+  resolveBroadcastAudience,
+  type BroadcastFilters,
+} from '@/lib/broadcast/audience';
+import { churchIdForSessionEmail } from '@/lib/auth/session-church';
 import { resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
-function parseFilters(body: Record<string, unknown>): BroadcastFilters {
+function notFound() {
+  return NextResponse.json({ error: 'Not found' }, { status: 404 });
+}
+
+function parseFilters(body: Record<string, unknown>, churchId: string): BroadcastFilters {
   return {
+    churchId,
     audienceType: (body.audienceType as BroadcastFilters['audienceType']) ?? 'members',
     campusId: (body.campusId as BroadcastFilters['campusId']) ?? 'all',
     gender: (body.gender as BroadcastFilters['gender']) ?? 'all',
@@ -23,8 +33,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Staff sign-in required' }, { status: 401 });
   }
 
+  const sessionChurchId = await churchIdForSessionEmail(request);
+  if (!sessionChurchId) return notFound();
+
   const body = await request.json();
-  const parsed = parseFilters(body);
+  const bodyChurchId = typeof body.churchId === 'string' ? body.churchId.trim() : '';
+  if (bodyChurchId && bodyChurchId !== sessionChurchId) return notFound();
+
+  const parsed = parseFilters(body, sessionChurchId);
   const enforced = await enforceBroadcastFilters(db, actor, parsed);
   if ('error' in enforced) {
     return NextResponse.json({ error: enforced.error }, { status: enforced.status });
@@ -48,6 +64,7 @@ export async function POST(request: Request) {
       })),
     });
   } catch (err) {
+    if (err instanceof BroadcastAudienceNotFoundError) return notFound();
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Preview failed' },
       { status: 500 },

@@ -34,7 +34,11 @@ export async function enforceBroadcastFilters(
   }
 
   if (actor.dbRole === 'leader') {
-    const { data: ledGroups } = await db.from('groups').select('id').eq('leader_phone', actor.phone);
+    const { data: ledGroups } = await db
+      .from('groups')
+      .select('id')
+      .eq('leader_phone', actor.phone)
+      .eq('church_id', scoped.churchId);
     const ledIds = (ledGroups ?? []).map((g) => g.id);
 
     if (scoped.audienceType === 'group') {
@@ -61,10 +65,10 @@ export async function enforceBroadcastFilters(
     } else if (scoped.audienceType === 'group' && scoped.groupId) {
       const { data: group } = await db
         .from('groups')
-        .select('campus_id')
+        .select('campus_id, church_id')
         .eq('id', scoped.groupId)
         .maybeSingle();
-      if (!group || group.campus_id !== campus) {
+      if (!group || group.church_id !== scoped.churchId || group.campus_id !== campus) {
         return { error: 'You can only broadcast to groups on your campus.', status: 403 };
       }
     }

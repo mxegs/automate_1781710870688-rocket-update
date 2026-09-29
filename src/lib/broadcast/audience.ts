@@ -6,10 +6,19 @@ export type BroadcastAudienceType = 'members' | 'group';
 
 export interface BroadcastFilters {
   audienceType: BroadcastAudienceType;
+  /** Session church only. Never taken from the client as the query scope. */
+  churchId: string;
   campusId?: CampusId | 'all';
   gender?: 'Male' | 'Female' | 'all';
   ageCategory?: 'child' | 'youth' | 'adult' | 'all';
   groupId?: string;
+}
+
+export class BroadcastAudienceNotFoundError extends Error {
+  constructor() {
+    super('Not found');
+    this.name = 'BroadcastAudienceNotFoundError';
+  }
 }
 
 export interface BroadcastRecipient {
@@ -57,7 +66,18 @@ export async function resolveBroadcastAudience(
   db: SupabaseClient,
   filters: BroadcastFilters,
 ): Promise<BroadcastRecipient[]> {
+  const churchId = filters.churchId?.trim();
+  if (!churchId) throw new BroadcastAudienceNotFoundError();
+
   if (filters.audienceType === 'group' && filters.groupId) {
+    const { data: group, error: groupError } = await db
+      .from('groups')
+      .select('id, church_id, leader_phone, leader_name')
+      .eq('id', filters.groupId)
+      .maybeSingle();
+    if (groupError) throw new Error(groupError.message);
+    if (!group || group.church_id !== churchId) throw new BroadcastAudienceNotFoundError();
+
     const { data: groupMembers, error: gmError } = await db
       .from('group_members')
       .select('member_phone')
@@ -71,29 +91,22 @@ export async function resolveBroadcastAudience(
     const { data: members, error } = await db
       .from('members')
       .select('id, full_name, phone, email, campus_id, gender, age, status')
+      .eq('church_id', churchId)
       .eq('status', 'active')
       .in('phone', phones);
 
     if (error) throw new Error(error.message);
 
-    const leaderRow = await db
-      .from('groups')
-      .select('leader_phone, leader_name')
-      .eq('id', filters.groupId)
-      .maybeSingle();
-
     const rows = members ?? [];
-    if (leaderRow.data?.leader_phone && !rows.some((m) => m.phone === leaderRow.data!.leader_phone)) {
-      rows.push({
-        id: `leader-${filters.groupId}`,
-        full_name: leaderRow.data.leader_name,
-        phone: leaderRow.data.leader_phone,
-        email: null,
-        campus_id: '',
-        gender: null,
-        age: null,
-        status: 'active',
-      });
+    if (group.leader_phone && !rows.some((m) => m.phone === group.leader_phone)) {
+      const { data: leaderMember } = await db
+        .from('members')
+        .select('id, full_name, phone, email, campus_id, gender, age, status')
+        .eq('church_id', churchId)
+        .eq('phone', group.leader_phone)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (leaderMember) rows.push(leaderMember);
     }
 
     return filterBroadcastRecipients(rows);
@@ -102,6 +115,7 @@ export async function resolveBroadcastAudience(
   let query = db
     .from('members')
     .select('id, full_name, phone, email, campus_id, gender, age, status')
+    .eq('church_id', churchId)
     .eq('status', 'active');
 
   if (filters.campusId && filters.campusId !== 'all') {

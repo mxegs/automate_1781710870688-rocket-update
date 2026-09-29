@@ -1,14 +1,24 @@
 import { NextResponse } from 'next/server';
 import { enforceBroadcastFilters } from '@/lib/broadcast/access-server';
-import { resolveBroadcastAudience, type BroadcastFilters } from '@/lib/broadcast/audience';
+import {
+  BroadcastAudienceNotFoundError,
+  resolveBroadcastAudience,
+  type BroadcastFilters,
+} from '@/lib/broadcast/audience';
+import { churchIdForSessionEmail } from '@/lib/auth/session-church';
 import { resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { sendMailchimpBroadcast, buildBroadcastEmailHtml } from '@/lib/email/mailchimp';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { churchDisplayName } from '@/lib/church/name-server';
 import { sendBulkSms } from '@/lib/sms/service';
 
-function parseFilters(body: Record<string, unknown>): BroadcastFilters {
+function notFound() {
+  return NextResponse.json({ error: 'Not found' }, { status: 404 });
+}
+
+function parseFilters(body: Record<string, unknown>, churchId: string): BroadcastFilters {
   return {
+    churchId,
     audienceType: (body.audienceType as BroadcastFilters['audienceType']) ?? 'members',
     campusId: (body.campusId as BroadcastFilters['campusId']) ?? 'all',
     gender: (body.gender as BroadcastFilters['gender']) ?? 'all',
@@ -30,9 +40,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Staff sign-in required' }, { status: 401 });
   }
 
-  const { data: profile } = await db.from('profiles').select('church_id').eq('id', actor.id).maybeSingle();
-  const churchName = await churchDisplayName(profile?.church_id);
+  const sessionChurchId = await churchIdForSessionEmail(request);
+  if (!sessionChurchId) return notFound();
+
+  const churchName = await churchDisplayName(sessionChurchId);
   const body = await request.json();
+  const bodyChurchId = typeof body.churchId === 'string' ? body.churchId.trim() : '';
+  if (bodyChurchId && bodyChurchId !== sessionChurchId) return notFound();
+
   const channel = body.channel as 'sms' | 'email';
   const message = String(body.message ?? '').trim();
   const subject = String(body.subject ?? `Message from ${churchName}`).trim();
@@ -41,7 +56,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Channel and message are required' }, { status: 400 });
   }
 
-  const parsed = parseFilters(body);
+  const parsed = parseFilters(body, sessionChurchId);
   const enforced = await enforceBroadcastFilters(db, actor, parsed);
   if ('error' in enforced) {
     return NextResponse.json({ error: enforced.error }, { status: enforced.status });
@@ -90,6 +105,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: 'Invalid channel' }, { status: 400 });
   } catch (err) {
+    if (err instanceof BroadcastAudienceNotFoundError) return notFound();
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Send failed' },
       { status: 500 },

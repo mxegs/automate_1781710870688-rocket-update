@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { sendBulkSms } from '@/lib/sms/service';
-import type { CampusId } from '@/lib/church/constants';
 
 function ageCategoryToRange(category: string): { min?: number; max?: number } {
   if (category === 'child') return { max: 12 };
@@ -11,6 +11,9 @@ function ageCategoryToRange(category: string): { min?: number; max?: number } {
 }
 
 export async function POST(request: Request) {
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
@@ -21,7 +24,8 @@ export async function POST(request: Request) {
   let query = db
     .from('members')
     .select('id, phone, full_name, campus_id, gender, age, status')
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .eq('church_id', churchId);
 
   if (body.campusId && body.campusId !== 'all') {
     query = query.eq('campus_id', body.campusId);
@@ -35,18 +39,30 @@ export async function POST(request: Request) {
     if (max != null) query = query.lte('age', max);
   }
   if (body.memberIds?.length) {
-    query = query.in('id', body.memberIds);
+    const ids = body.memberIds as string[];
+    query = query.in('id', ids);
+    const { data: members, error } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if ((members ?? []).length !== ids.length) return notFoundResponse();
+    return finishSms(body.dryRun, members ?? [], message);
   }
 
   const { data: members, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return finishSms(body.dryRun, members ?? [], message);
+}
 
-  const phones = (members ?? []).map((m) => m.phone).filter(Boolean);
+async function finishSms(
+  dryRun: unknown,
+  members: { id: string; phone: string; full_name: string; campus_id: string }[],
+  message: string,
+) {
+  const phones = members.map((m) => m.phone).filter(Boolean);
 
-  if (body.dryRun) {
+  if (dryRun) {
     return NextResponse.json({
       count: phones.length,
-      recipients: (members ?? []).map((m) => ({
+      recipients: members.map((m) => ({
         id: m.id,
         name: m.full_name,
         phone: m.phone,
@@ -56,7 +72,6 @@ export async function POST(request: Request) {
   }
 
   const result = await sendBulkSms(phones, message);
-
   return NextResponse.json({
     ...result,
     total: phones.length,
@@ -75,6 +90,7 @@ export async function GET(request: Request) {
 
   const fakeRequest = new Request(request.url, {
     method: 'POST',
+    headers: request.headers,
     body: JSON.stringify(body),
   });
   return POST(fakeRequest);
