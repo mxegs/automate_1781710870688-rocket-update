@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { Announcement, AnnouncementStatus, RepeatInterval } from '@/lib/announcements/types';
 import type { ContentVisibility } from '@/lib/sermons/types';
@@ -30,10 +31,16 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const { id } = await params;
+  const { data: row } = await db.from('announcements').select('id, church_id').eq('id', id).maybeSingle();
+  if (!row || row.church_id !== churchId) return notFoundResponse();
+
   const body = await request.json();
   const updates: Record<string, unknown> = {};
 
@@ -52,20 +59,32 @@ export async function PATCH(
   if (body.repeatInterval !== undefined) updates.repeat_interval = body.repeatInterval;
   if (body.repeatUntil !== undefined) updates.repeat_until = body.repeatUntil;
 
-  const { data, error } = await db.from('announcements').update(updates).eq('id', id).select('*').single();
+  const { data, error } = await db
+    .from('announcements')
+    .update(updates)
+    .eq('id', id)
+    .eq('church_id', churchId)
+    .select('*')
+    .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(mapRow(data));
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const { id } = await params;
-  const { error } = await db.from('announcements').delete().eq('id', id);
+  const { data: row } = await db.from('announcements').select('id, church_id').eq('id', id).maybeSingle();
+  if (!row || row.church_id !== churchId) return notFoundResponse();
+
+  const { error } = await db.from('announcements').delete().eq('id', id).eq('church_id', churchId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

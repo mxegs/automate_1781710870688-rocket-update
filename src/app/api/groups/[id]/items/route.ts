@@ -1,19 +1,35 @@
 import { NextResponse } from 'next/server';
+import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapBroadcast, mapSong } from '@/lib/supabase/mappers';
 
+async function requireGroupInSessionChurch(
+  request: Request,
+  groupId: string,
+): Promise<{ churchId: string } | NextResponse> {
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
+  const db = getSupabaseAdmin();
+  if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
+
+  const { data: group } = await db.from('groups').select('id, church_id').eq('id', groupId).maybeSingle();
+  if (!group || group.church_id !== churchId) return notFoundResponse();
+  return { churchId };
+}
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const db = getSupabaseAdmin();
-  if (!db) {
-    return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
-  }
-
   const { id: groupId } = await params;
-  const { searchParams } = new URL(_request.url);
-  const type = searchParams.get('type') ?? 'broadcasts';
+  const owned = await requireGroupInSessionChurch(request, groupId);
+  if (owned instanceof NextResponse) return owned;
+
+  const db = getSupabaseAdmin();
+  if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
+
+  const type = new URL(request.url).searchParams.get('type') ?? 'broadcasts';
 
   if (type === 'songs') {
     const { data, error } = await db
@@ -38,12 +54,13 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const db = getSupabaseAdmin();
-  if (!db) {
-    return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
-  }
-
   const { id: groupId } = await params;
+  const owned = await requireGroupInSessionChurch(request, groupId);
+  if (owned instanceof NextResponse) return owned;
+
+  const db = getSupabaseAdmin();
+  if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
+
   const body = await request.json();
 
   if (body.type === 'song') {
@@ -85,17 +102,27 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id: groupId } = await params;
+  const owned = await requireGroupInSessionChurch(request, groupId);
+  if (owned instanceof NextResponse) return owned;
+
   const db = getSupabaseAdmin();
-  if (!db) {
-    return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
-  }
+  if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const body = await request.json();
   if (body.songId && body.sentAt) {
+    const { data: song } = await db
+      .from('group_songs')
+      .select('id, group_id')
+      .eq('id', body.songId)
+      .maybeSingle();
+    if (!song || song.group_id !== groupId) return notFoundResponse();
+
     const { data, error } = await db
       .from('group_songs')
       .update({ sent_at: body.sentAt })
       .eq('id', body.songId)
+      .eq('group_id', groupId)
       .select('*')
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { generateTicketCode } from '@/lib/events/utils';
 import { buildYocoPaymentUrl } from '@/lib/payments/yoco';
@@ -48,9 +48,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const churchId = churchIdFromUrl(request.url);
-  const denied = await requireSessionChurch(request, churchId);
-  if (denied) return denied;
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
@@ -72,7 +71,7 @@ export async function POST(
     .maybeSingle();
 
   if (eventErr) return NextResponse.json({ error: eventErr.message }, { status: 500 });
-  if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+  if (!event || event.church_id !== churchId) return notFoundResponse();
 
   const phoneNorm = body.phone?.replace(/\D/g, '') ?? '';
   const emailNorm = body.email?.trim().toLowerCase() ?? '';
@@ -109,6 +108,7 @@ export async function POST(
         phone: body.phone?.trim() || null,
         email: body.email?.trim() || null,
         campus_id: event.campus_id,
+        church_id: churchId,
         source: 'event_rsvp',
       })
       .select('id')

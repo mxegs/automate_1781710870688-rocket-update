@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapGroup } from '@/lib/supabase/mappers';
 import { normalizePhone } from '@/lib/auth/session';
@@ -36,8 +36,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
-  if (denied) return denied;
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
 
   const db = getSupabaseAdmin();
   if (!db) {
@@ -45,6 +45,9 @@ export async function PATCH(
   }
 
   const { id } = await params;
+  const { data: group } = await db.from('groups').select('id, church_id').eq('id', id).maybeSingle();
+  if (!group || group.church_id !== churchId) return notFoundResponse();
+
   const body = await request.json();
 
   const patch: Record<string, unknown> = {};
@@ -56,7 +59,7 @@ export async function PATCH(
   if (body.leaderName !== undefined) patch.leader_name = body.leaderName;
   if (body.enableSongLibrary !== undefined) patch.enable_song_library = body.enableSongLibrary;
 
-  const { error } = await db.from('groups').update(patch).eq('id', id);
+  const { error } = await db.from('groups').update(patch).eq('id', id).eq('church_id', churchId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (body.leaderPhone) {
@@ -65,6 +68,7 @@ export async function PATCH(
       .from('profiles')
       .update({ role: 'leader' })
       .eq('phone', leaderPhone)
+      .eq('church_id', churchId)
       .neq('role', 'super_admin');
   }
 

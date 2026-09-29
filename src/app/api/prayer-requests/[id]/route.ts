@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { PrayerRequest, PrayerStatus } from '@/lib/prayer/types';
 
@@ -26,16 +27,23 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const { id } = await params;
+  const { data: row } = await db.from('prayer_requests').select('id, church_id').eq('id', id).maybeSingle();
+  if (!row || row.church_id !== churchId) return notFoundResponse();
+
   const body = await request.json();
 
   const { data, error } = await db
     .from('prayer_requests')
     .update({ status: body.status })
     .eq('id', id)
+    .eq('church_id', churchId)
     .select('*')
     .single();
 

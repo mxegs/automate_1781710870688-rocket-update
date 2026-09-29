@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { MembershipApplication } from '@/lib/membership/types';
 
@@ -67,8 +67,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
-  if (denied) return denied;
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
 
   const db = getSupabaseAdmin();
   if (!db) {
@@ -86,16 +86,16 @@ export async function PATCH(
     .maybeSingle();
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
-  if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+  if (!member || member.church_id !== churchId) return notFoundResponse();
 
   if (action === 'suspend') {
-    const { error } = await db.from('members').update({ status: 'suspended' }).eq('id', id);
+    const { error } = await db.from('members').update({ status: 'suspended' }).eq('id', id).eq('church_id', churchId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true, status: 'suspended' });
   }
 
   if (action === 'reactivate') {
-    const { error } = await db.from('members').update({ status: 'active' }).eq('id', id);
+    const { error } = await db.from('members').update({ status: 'active' }).eq('id', id).eq('church_id', churchId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true, status: 'active' });
   }
@@ -113,6 +113,7 @@ export async function PATCH(
       .from('profiles')
       .select('id, role')
       .eq('phone', member.phone)
+      .eq('church_id', churchId)
       .maybeSingle();
 
     if (profile?.role === 'member') {

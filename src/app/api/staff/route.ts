@@ -7,7 +7,7 @@ import {
   resolveStaffActor,
 } from '@/lib/auth/staff-access-server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch, requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { AssignableStaffRole } from '@/lib/staff/types';
 
@@ -107,6 +107,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Team management access required' }, { status: 403 });
   }
 
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
   const body = await request.json();
   const email = normalizeEmail(body.email ?? '');
   const role = body.role as AssignableStaffRole;
@@ -134,6 +137,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (existing) {
+    if (existing.church_id !== churchId) return notFoundResponse();
     if (existing.role === 'super_admin') {
       return NextResponse.json({ error: 'Cannot change super admin role here' }, { status: 400 });
     }
@@ -162,6 +166,7 @@ export async function POST(request: Request) {
       phone,
       email,
       role,
+      church_id: churchId,
       campus_id: churchWide ? null : campusId,
       display_name: displayName,
       official_name: officialName,

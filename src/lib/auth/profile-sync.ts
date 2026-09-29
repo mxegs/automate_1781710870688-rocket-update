@@ -311,7 +311,10 @@ export async function ensureProfileForEmail(
 }
 
 /** Repair all members that have email but no matching profile (admin maintenance). */
-export async function syncAllMemberProfiles(db: SupabaseClient): Promise<{
+export async function syncAllMemberProfiles(
+  db: SupabaseClient,
+  churchId: string,
+): Promise<{
   synced: number;
   failed: string[];
 }> {
@@ -319,7 +322,8 @@ export async function syncAllMemberProfiles(db: SupabaseClient): Promise<{
     .from('members')
     .select('email')
     .not('email', 'is', null)
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .eq('church_id', churchId);
 
   let synced = 0;
   const failed: string[] = [];

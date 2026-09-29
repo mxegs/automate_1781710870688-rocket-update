@@ -26,10 +26,21 @@ export async function churchIdForSessionEmail(request: Request): Promise<string 
   return id || null;
 }
 
+export function notFoundResponse() {
+  return NextResponse.json({ error: 'Not found' }, { status: 404 });
+}
+
 export async function requireSessionChurch(request: Request, requestedChurchId: string | null) {
   const sessionChurchId = await churchIdForSessionEmail(request);
   if (!sessionChurchId || sessionChurchId !== requestedChurchId) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return notFoundResponse();
   }
   return null;
+}
+
+/** Session church, or 404 if the header does not map to exactly one church. */
+export async function requireSessionChurchId(request: Request): Promise<string | NextResponse> {
+  const sessionChurchId = await churchIdForSessionEmail(request);
+  if (!sessionChurchId) return notFoundResponse();
+  return sessionChurchId;
 }

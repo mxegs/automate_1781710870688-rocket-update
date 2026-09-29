@@ -3,6 +3,7 @@ import { getAppUrl } from '@/lib/app-url';
 import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import { normalizePhone } from '@/lib/auth/session';
+import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { sendMembershipApprovedEmail } from '@/lib/email/service';
 import { churchDisplayName } from '@/lib/church/name-server';
 import { sendSms } from '@/lib/sms/service';
@@ -12,6 +13,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
@@ -29,10 +33,10 @@ export async function PATCH(
     .from('membership_applications')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
-  if (!app) return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+  if (!app || (app as { church_id?: string }).church_id !== churchId) return notFoundResponse();
 
   // Reject: update status only
   if (status === 'rejected') {
@@ -44,6 +48,7 @@ export async function PATCH(
         reviewed_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .eq('church_id', churchId)
       .select('*')
       .single();
 
@@ -68,6 +73,7 @@ export async function PATCH(
   const { error: memberError } = await db.from('members').insert({
     application_id: id,
     campus_id: app.campus_id,
+    church_id: churchId,
     surname: personal.surname ?? '',
     full_name: personal.fullName ?? '',
     username: personal.username ?? null,
@@ -112,6 +118,7 @@ export async function PATCH(
         phone: memberPhone,
         role: 'member',
         campus_id: app.campus_id,
+        church_id: churchId,
         official_name: personal.fullName ?? null,
         username: personal.username ?? null,
         display_name: personal.username ?? personal.fullName ?? null,
@@ -139,6 +146,7 @@ export async function PATCH(
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('church_id', churchId)
     .select('*')
     .single();
 

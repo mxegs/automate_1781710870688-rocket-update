@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { syncAllMemberProfiles } from '@/lib/auth/profile-sync';
 import { canManageInvites, resolveStaffActor } from '@/lib/auth/staff-access-server';
+import { requireSessionChurchId } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 /** One-time repair: create missing login profiles for approved members. */
@@ -15,7 +16,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Staff access required' }, { status: 403 });
   }
 
-  const result = await syncAllMemberProfiles(db);
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
+  const result = await syncAllMemberProfiles(db, churchId);
   return NextResponse.json({
     ok: true,
     message: `Synced ${result.synced} member login profile(s).`,
