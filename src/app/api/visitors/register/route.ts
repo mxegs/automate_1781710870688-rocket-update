@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import { normalizePhone } from '@/lib/auth/session';
+import { churchIdFromInviteToken, churchIdFromSlug, churchIdFromSlugQuery } from '@/lib/church/lookup-server';
+import { notFoundResponse } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export async function POST(request: Request) {
@@ -21,6 +23,14 @@ export async function POST(request: Request) {
     body.wantsToJoinChurch === true ? true : body.wantsToJoinChurch === false ? false : null;
   const eventNewsConsent = Boolean(body.eventNewsConsent);
   const campusId = String(body.campusId ?? 'midrand').trim() || 'midrand';
+
+  const slugChurchId =
+    (await churchIdFromSlugQuery(db, request.url)) ||
+    (await churchIdFromSlug(db, typeof body.churchSlug === 'string' ? body.churchSlug : null));
+  const inviteChurchId = await churchIdFromInviteToken(db, body.inviteToken);
+  if (slugChurchId && inviteChurchId && slugChurchId !== inviteChurchId) return notFoundResponse();
+  const churchId = inviteChurchId || slugChurchId;
+  if (!churchId) return notFoundResponse();
 
   if (!givenName || !surname) {
     return NextResponse.json({ error: 'Name and surname are required.' }, { status: 400 });
@@ -47,6 +57,7 @@ export async function POST(request: Request) {
     .from('visitors')
     .select('id')
     .ilike('email', email)
+    .eq('church_id', churchId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -57,6 +68,7 @@ export async function POST(request: Request) {
     phone,
     email,
     campus_id: campusId,
+    church_id: churchId,
     source: 'event_signup',
     gender,
     marital_status: maritalStatus,
@@ -76,6 +88,7 @@ export async function POST(request: Request) {
       .from('visitors')
       .update(payload)
       .eq('id', existing.id)
+      .eq('church_id', churchId)
       .select('id, name, email, phone')
       .single();
 

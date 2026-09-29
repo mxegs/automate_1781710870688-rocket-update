@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { churchIdForSessionEmail, notFoundResponse } from '@/lib/auth/session-church';
+import { churchIdFromSlugQuery } from '@/lib/church/lookup-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { normalizePhone } from '@/lib/auth/session';
 
@@ -6,27 +8,37 @@ export async function GET(request: Request) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
+  const sessionChurchId = await churchIdForSessionEmail(request);
+  const slugChurchId = await churchIdFromSlugQuery(db, request.url);
+  const churchId = sessionChurchId || slugChurchId;
+  if (!churchId) return notFoundResponse();
+
   const phone = normalizePhone(new URL(request.url).searchParams.get('phone') ?? '');
   const email = new URL(request.url).searchParams.get('email')?.trim().toLowerCase() ?? '';
   if (phone.length < 9 && !email) {
     return NextResponse.json({ error: 'Phone or email is required' }, { status: 400 });
   }
 
-  let profileQuery = db.from('profiles').select('id').limit(5);
-  if (phone.length >= 9) {
+  let profileQuery = db.from('profiles').select('id').eq('church_id', churchId).limit(2);
+  if (email.includes('@')) {
+    profileQuery = profileQuery.ilike('email', email);
+  } else if (phone.length >= 9) {
     const suffix = phone.slice(-9);
     profileQuery = profileQuery.or(`phone.eq.${phone},phone.like.%${suffix}`);
   }
+
   const { data: profiles, error: profileError } = await profileQuery;
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
+  if (!profiles?.length) return NextResponse.json({ profileId: null, memberId: null });
+  if (profiles.length > 1) return notFoundResponse();
 
-  const profile = profiles?.[0];
-  if (!profile) return NextResponse.json({ profileId: null, memberId: null });
+  const profile = profiles[0];
 
   const { data: member, error: memberError } = await db
     .from('members')
     .select('id')
     .eq('profile_id', profile.id)
+    .eq('church_id', churchId)
     .maybeSingle();
 
   if (memberError) return NextResponse.json({ error: memberError.message }, { status: 500 });

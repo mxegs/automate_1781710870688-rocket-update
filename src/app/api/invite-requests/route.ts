@@ -8,6 +8,8 @@ import {
   actorCampusScope,
   resolveStaffActor,
 } from '@/lib/auth/staff-access-server';
+import { churchIdFromSlugQuery } from '@/lib/church/lookup-server';
+import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { isInternalPlaceholderPhone, normalizeEmail } from '@/lib/auth/super-admin';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapInviteRequest } from '@/lib/supabase/mappers';
@@ -24,7 +26,7 @@ async function notifyCampusAdmins(
 
   const { data: staff } = await db
     .from('profiles')
-    .select('phone, email, role, campus_id')
+    .select('phone, email, role, campus_id, church_id')
     .in('role', ['super_admin', 'admin', 'pastor']);
 
   const phones = (staff ?? [])
@@ -46,6 +48,9 @@ async function notifyCampusAdmins(
 }
 
 export async function GET(request: Request) {
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
@@ -54,7 +59,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
 
-  let query = db.from('invite_requests').select('*').order('requested_at', { ascending: false });
+  let query = db
+    .from('invite_requests')
+    .select('*')
+    .like('notes', `church:${churchId}%`)
+    .order('requested_at', { ascending: false });
   if (status) {
     query = query.eq('status', status as 'pending' | 'approved' | 'declined');
   }
@@ -79,6 +88,8 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const email = normalizeEmail(body.email ?? '');
+  const churchId = await churchIdFromSlugQuery(db, request.url);
+  if (!churchId) return notFoundResponse();
 
   if (!body.surname?.trim() || !body.fullName?.trim() || !email.includes('@') || !body.campus) {
     return NextResponse.json({ error: 'Name, surname, email, and campus are required' }, { status: 400 });
@@ -91,6 +102,7 @@ export async function POST(request: Request) {
     .select('*')
     .eq('email', email)
     .eq('status', 'pending')
+    .like('notes', `church:${churchId}%`)
     .maybeSingle();
 
   if (existing) {
@@ -104,6 +116,7 @@ export async function POST(request: Request) {
       full_name: body.fullName.trim(),
       email,
       campus_id: campusId,
+      notes: `church:${churchId}`,
       status: 'pending',
     })
     .select('*')

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'ID number is required' }, { status: 400 });
   }
   if (!churchId) {
-    return NextResponse.json({ error: 'Church is required' }, { status: 400 });
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   const result = await lookupSpouseFamilyByIdNumber(idNumber, churchId);
