@@ -181,13 +181,15 @@ Church A in tests below = **CKC** unless a test names another church.
 
 ### D. Sermons
 
-**Data required:** Per church: 2 sermons (titles unique per church). CKC extra for visibility: one `campus_only` Midrand, one church-wide or visitor-visible (fixture proposes 2 each; CKC tests may use campus vs visitor on those two). Staff who can create/delete.
+**Data required:** Per church: 3 sermons with unique titles — `campus_only` Midrand, `church_wide`, `members_only` Midrand. Staff who can create/delete.
+
+Public GET (no `X-Session-Email`) is allowed. Caller must pass `churchSlug` or `churchId`. The church must exist. Response is that church’s `church_wide` rows only (`campus_only` and `members_only` omitted). Missing slug and churchId → 404. Session GET is unchanged (`requireSessionChurch` + feed filter). Session + `isVisitor=true` is still `church_wide` only.
 
 | # | Test | Expected |
 | --- | --- | --- |
 | D1 | CKC staff create sermon (YouTube id, campus, visibility) | Appears in CKC admin list only |
-| D2 | Midrand member feed | Sees Midrand campus-only + church-wide; not Verulam-only |
-| D3 | Visitor / public feed | Only visitor-visible items |
+| D2 | Midrand member feed | Sees Midrand campus-only + church-wide + members_only; not Verulam-only |
+| D3 | Visitor / public feed (no session, `churchSlug`) | Only `church_wide` for that church |
 | D4 | Grace (and Hope, Cornerstone) member feed | Only that church’s titles |
 | D5 | CKC staff delete | Gone from CKC member feed; other churches unchanged |
 | D6 | Member requests another church’s sermon id | 404 (also Q1) |
