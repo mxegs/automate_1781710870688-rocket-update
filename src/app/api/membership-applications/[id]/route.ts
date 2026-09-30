@@ -4,6 +4,7 @@ import { ensureProfileForEmail } from '@/lib/auth/profile-sync';
 import { normalizeEmail } from '@/lib/auth/super-admin';
 import { normalizePhone } from '@/lib/auth/session';
 import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { sendMembershipApprovedEmail } from '@/lib/email/service';
 import { churchDisplayName } from '@/lib/church/name-server';
 import { sendSms } from '@/lib/sms/service';
@@ -13,6 +14,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
+
   const churchId = await requireSessionChurchId(request);
   if (churchId instanceof NextResponse) return churchId;
 

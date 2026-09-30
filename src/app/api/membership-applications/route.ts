@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
 import { churchIdForSessionEmail, requireSessionChurch } from '@/lib/auth/session-church';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { assignDependantSerials } from '@/lib/membership/family';
 import { sendApplicationReceivedEmail } from '@/lib/email/service';
 import { churchDisplayName } from '@/lib/church/name-server';
@@ -79,6 +80,11 @@ function mapApplication(row: {
 }
 
 export async function GET(request: Request) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
   if (denied) return denied;
 
