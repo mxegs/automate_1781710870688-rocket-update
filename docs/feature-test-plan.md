@@ -419,6 +419,28 @@ Isolation today is **API `church_id` + `X-Session-Email`**, not RLS (`docs/rls-g
 
 ---
 
+### R. Cross-role access
+
+Staff inboxes and directories must not dump to members or group leaders. Pastoral staff = `senior_pastor`, `administrative_manager`, `admin`, `pastor`, platform admin. Leaders are not pastoral staff.
+
+| # | Test | Expected |
+| --- | --- | --- |
+| R1 | Member GET `/api/members` | 404 |
+| R2 | Leader GET `/api/members` | 404 |
+| R3 | Member GET `/api/follow-ups` | 404 |
+| R4 | Member GET `/api/prayer-requests` | Own prayers only |
+| R5 | Member GET `/api/invite-requests` | 404 |
+| R6 | Member GET `/api/announcements?forAdmin=true` | Published feed only (forAdmin ignored), or 404 |
+| R7 | Member GET `/api/groups` | Groups they belong to only, or 404 |
+| R8 | Member PATCH `/api/members/[id]` (another member) | 404 |
+| R9 | Member PATCH `/api/follow-ups/[id]` | 404 |
+| R10 | Leader POST `/api/broadcast` (preview/send) | Limited to groups they lead / campus scope, or 404 |
+| R11 | Member GET `/api/membership-applications/by-phone` with another member’s phone | 404 |
+| R12 | Member GET `/api/membership-applications/by-phone` with their own phone | 200 with own application, or 404 if none |
+| R13 | Non-staff GET `/api/staff` | 404 (not 403) |
+
+---
+
 ## 4. Fixture needs
 
 One suite. Do **not** implement in this pass.
