@@ -876,20 +876,25 @@ async function main() {
       });
       collected.rsvpIds.push(rsvpId);
 
-      for (let s = 0; s < 2; s += 1) {
+      const sermonSpecs = [
+        { campus: 'midrand', visibility: 'campus_only', n: 1 },
+        { campus: 'verulam', visibility: 'church_wide', n: 2 },
+        { campus: 'midrand', visibility: 'members_only', n: 3 },
+      ];
+      for (const spec of sermonSpecs) {
         const mediaId = uuidFromRng(rng);
         allMedia.push({
           id: mediaId,
-          campus_id: s === 0 ? 'midrand' : 'verulam',
+          campus_id: spec.campus,
           church_id: church.id,
-          visibility: s === 0 ? 'campus_only' : 'church_wide',
+          visibility: spec.visibility,
           media_type: 'sermon',
-          title: `${church.label} Suite Sermon ${s + 1}`,
+          title: `${church.label} Suite Sermon ${spec.n}`,
           preacher: generated.staff[0].officialName,
           preached_at: '2026-09-14',
           category: 'Sunday Service',
           description: 'Suite sermon',
-          youtube_id: `suite${church.key}${s}`.padEnd(11, 'x').slice(0, 11),
+          youtube_id: `suite${church.key}${spec.n}`.padEnd(11, 'x').slice(0, 11),
         });
         collected.mediaIds.push(mediaId);
       }
