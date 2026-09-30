@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
+import {
+  canReviewPrayerInbox,
+  readSessionEmailHeader,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { PRAYER_AUTO_REPLY } from '@/lib/prayer/types';
 import type { PrayerRequest, PrayerStatus } from '@/lib/prayer/types';
@@ -27,7 +32,8 @@ function mapRow(row: Record<string, unknown>): PrayerRequest {
 }
 
 export async function GET(request: Request) {
-  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
   if (denied) return denied;
 
   const db = getSupabaseAdmin();
@@ -36,14 +42,30 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const campusId = searchParams.get('campusId');
   const allCampuses = searchParams.get('allCampuses') === 'true';
+  const status = searchParams.get('status');
+
+  const actor = await resolveStaffActor(request);
+  const inboxStaff = Boolean(actor && canReviewPrayerInbox(actor));
 
   let query = db
     .from('prayer_requests')
     .select('*')
-    .eq('church_id', churchIdFromUrl(request.url))
+    .eq('church_id', churchId)
     .order('created_at', { ascending: false });
+
+  if (!inboxStaff) {
+    const email = readSessionEmailHeader(request);
+    const { data: profile } = await db.from('profiles').select('id').ilike('email', email).maybeSingle();
+    const profileId = (profile as { id?: string } | null)?.id?.trim();
+    if (!profileId) return notFoundResponse();
+    query = query.eq('profile_id', profileId);
+  }
+
   if (!allCampuses && campusId) {
     query = query.eq('campus_id', campusId);
+  }
+  if (status) {
+    query = query.eq('status', status as PrayerStatus);
   }
 
   const { data, error } = await query;

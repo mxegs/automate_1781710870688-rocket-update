@@ -97,6 +97,21 @@ export function canManageInvites(actor: StaffActor): boolean {
   );
 }
 
+/** Pastors/admins only. Group leaders are not pastoral inbox staff. */
+export function canUsePastoralStaffTools(actor: StaffActor): boolean {
+  if (actor.isSuperAdmin || actor.dbRole === 'super_admin') return true;
+  return (
+    actor.dbRole === 'senior_pastor' ||
+    actor.dbRole === 'administrative_manager' ||
+    actor.dbRole === 'admin' ||
+    actor.dbRole === 'pastor'
+  );
+}
+
+export function canReviewPrayerInbox(actor: StaffActor): boolean {
+  return canUsePastoralStaffTools(actor);
+}
+
 export function canManageCampus(actor: StaffActor, campusId: CampusId): boolean {
   if (hasAllCampusStaffAccess(actor)) return true;
   if (getPlatformRole(actor.dbRole, actor.isSuperAdmin) === 'campus_admin') {
