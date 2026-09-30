@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { formatPhoneDisplay } from '@/lib/auth/session';
 import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { sendSms } from '@/lib/sms/service';
 import { isInternalPlaceholderPhone } from '@/lib/auth/super-admin';
 
 export async function POST(request: Request) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
+
   const churchId = await requireSessionChurchId(request);
   if (churchId instanceof NextResponse) return churchId;
 

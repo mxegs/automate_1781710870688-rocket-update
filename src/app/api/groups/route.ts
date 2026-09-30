@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
+import {
+  canUsePastoralStaffTools,
+  readSessionEmailHeader,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
+import { visibleGroupIdsForSession } from '@/lib/groups/access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapGroup } from '@/lib/supabase/mappers';
 import { normalizePhone } from '@/lib/auth/session';
@@ -8,7 +14,8 @@ import { normalizePhone } from '@/lib/auth/session';
 const GROUP_SELECT = '*, group_members(member_phone)';
 
 export async function GET(request: Request) {
-  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
+  const churchId = churchIdFromUrl(request.url);
+  const denied = await requireSessionChurch(request, churchId);
   if (denied) return denied;
 
   const db = getSupabaseAdmin();
@@ -16,20 +23,43 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
   }
 
-  const { data, error } = await db
-    .from('groups')
-    .select(GROUP_SELECT)
-    .eq('church_id', churchIdFromUrl(request.url))
-    .order('created_at', { ascending: false });
+  const actor = await resolveStaffActor(request);
+  const email = readSessionEmailHeader(request);
+  const { data: profile } = await db
+    .from('profiles')
+    .select('phone')
+    .ilike('email', email)
+    .eq('church_id', churchId)
+    .maybeSingle();
+
+  const visible = await visibleGroupIdsForSession(db, churchId!, actor, profile?.phone);
+  if (visible !== 'all' && visible.length === 0) return NextResponse.json([]);
+
+  let query = db.from('groups').select(GROUP_SELECT).eq('church_id', churchId).order('created_at', { ascending: false });
+  if (visible !== 'all') query = query.in('id', visible);
+
+  const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json((data ?? []).map(mapGroup));
+  const phone = profile?.phone ? normalizePhone(profile.phone) : '';
+  const pastoral = Boolean(actor && canUsePastoralStaffTools(actor));
+  const asLeader = actor?.dbRole === 'leader';
+  return NextResponse.json(
+    (data ?? []).map((row) => {
+      const group = mapGroup(row);
+      if (pastoral || asLeader) return group;
+      return { ...group, memberPhones: group.memberPhones.filter((p) => normalizePhone(p) === phone) };
+    }),
+  );
 }
 
 export async function POST(request: Request) {
   const churchId = churchIdFromUrl(request.url);
   const denied = await requireSessionChurch(request, churchId);
   if (denied) return denied;
+
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
 
   const db = getSupabaseAdmin();
   if (!db) {

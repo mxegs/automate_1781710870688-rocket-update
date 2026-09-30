@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
 import { churchIdForSessionEmail, notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
 import { churchIdFromSlugQuery } from '@/lib/church/lookup-server';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { extractYoutubeId } from '@/lib/sermons/utils';
 import type { ContentVisibility, MediaItem, MediaType } from '@/lib/sermons/types';
@@ -120,7 +121,10 @@ export async function GET(request: Request) {
   if (publicFeed) {
     items = items.filter((r) => r.visibility === 'church_wide');
   } else if (forAdmin) {
-    if (!allCampuses && campusId) {
+    const actor = await resolveStaffActor(request);
+    if (!actor || !canUsePastoralStaffTools(actor)) {
+      items = filterFeed(items, memberCampus, isVisitor);
+    } else if (!allCampuses && campusId) {
       items = items.filter((i) => i.campus === campusId);
     }
   } else {
@@ -134,6 +138,9 @@ export async function POST(request: Request) {
   const churchId = churchIdFromUrl(request.url);
   const denied = await requireSessionChurch(request, churchId);
   if (denied) return denied;
+
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
 
   const db = getSupabaseAdmin();
   if (!db) {

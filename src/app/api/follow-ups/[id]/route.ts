@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { FollowUpContact } from '@/lib/followups/service';
 import type { CampusId, FollowUpStageId } from '@/lib/church/constants';
@@ -25,6 +26,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
+
   const churchId = await requireSessionChurchId(request);
   if (churchId instanceof NextResponse) return churchId;
 

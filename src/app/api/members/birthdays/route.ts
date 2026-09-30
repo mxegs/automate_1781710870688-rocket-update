@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { shouldHideFromMemberDirectory } from '@/lib/auth/super-admin';
 import { churchIdFromUrl } from '@/lib/church/tenant';
 import { requireSessionChurch } from '@/lib/auth/session-church';
+import {
+  canUsePastoralStaffTools,
+  readSessionEmailHeader,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function isBirthdayToday(dateOfBirth: string | null): boolean {
@@ -21,9 +26,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const phone = searchParams.get('phone')?.replace(/\D/g, '') ?? '';
-
   const { data, error } = await db
     .from('members')
     .select('full_name, surname, phone, email, campus_id, date_of_birth, status')
@@ -38,15 +40,30 @@ export async function GET(request: Request) {
       isBirthdayToday(row.date_of_birth),
   );
 
+  const actor = await resolveStaffActor(request);
+  const email = readSessionEmailHeader(request);
+  const { data: profile } = await db
+    .from('profiles')
+    .select('phone')
+    .ilike('email', email)
+    .eq('church_id', churchIdFromUrl(request.url))
+    .maybeSingle();
+  const sessionDigits = (profile?.phone ?? '').replace(/\D/g, '');
+  const myRow = visible.find((row) => row.phone.replace(/\D/g, '') === sessionDigits) ?? null;
+
+  if (!actor || !canUsePastoralStaffTools(actor)) {
+    return NextResponse.json({
+      celebrants: [],
+      myBirthday: Boolean(myRow),
+      myFirstName: myRow?.full_name?.split(/\s+/)[0] ?? null,
+    });
+  }
+
   const celebrants = visible.map((row) => ({
     name: `${row.full_name} ${row.surname}`.trim(),
     campusId: row.campus_id,
     phone: row.phone,
   }));
-
-  const myRow = phone
-    ? visible.find((row) => row.phone.replace(/\D/g, '') === phone)
-    : null;
 
   return NextResponse.json({
     celebrants,

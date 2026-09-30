@@ -73,9 +73,7 @@ export async function GET(request: Request) {
   }
 
   const actor = await resolveStaffActor(request);
-  if (!actor || !canManageStaffRoles(actor)) {
-    return NextResponse.json({ error: 'Team management access required' }, { status: 403 });
-  }
+  if (!actor || !canManageStaffRoles(actor)) return notFoundResponse();
 
   const { data, error } = await db
     .from('profiles')

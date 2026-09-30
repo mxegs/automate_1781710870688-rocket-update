@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { shouldHideFromMemberDirectory } from '@/lib/auth/super-admin';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET(request: Request) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
+
   const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
   if (denied) return denied;
 

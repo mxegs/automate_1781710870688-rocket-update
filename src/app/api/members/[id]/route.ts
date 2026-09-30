@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
 import { notFoundResponse, requireSessionChurch, requireSessionChurchId } from '@/lib/auth/session-church';
+import {
+  canUsePastoralStaffTools,
+  readSessionEmailHeader,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { MembershipApplication } from '@/lib/membership/types';
 
@@ -28,6 +33,27 @@ export async function GET(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) {
+    const email = readSessionEmailHeader(request);
+    const { data: profile } = await db
+      .from('profiles')
+      .select('id, phone, email')
+      .ilike('email', email)
+      .eq('church_id', churchId)
+      .maybeSingle();
+    const own =
+      Boolean(profile) &&
+      (member.profile_id === profile?.id ||
+        (member.email &&
+          profile?.email &&
+          member.email.toLowerCase() === profile.email.toLowerCase()) ||
+        (member.phone &&
+          profile?.phone &&
+          member.phone.replace(/\D/g, '') === profile.phone.replace(/\D/g, '')));
+    if (!own) return notFoundResponse();
+  }
 
   let applicationData: MembershipApplication | null = null;
   let submittedAt: string | null = null;
@@ -67,6 +93,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
+
   const churchId = await requireSessionChurchId(request);
   if (churchId instanceof NextResponse) return churchId;
 

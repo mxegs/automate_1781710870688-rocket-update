@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
 import { notFoundResponse, requireSessionChurch, requireSessionChurchId } from '@/lib/auth/session-church';
+import {
+  canUsePastoralStaffTools,
+  readSessionEmailHeader,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
+import { visibleGroupIdsForSession } from '@/lib/groups/access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapGroup } from '@/lib/supabase/mappers';
 import { normalizePhone } from '@/lib/auth/session';
@@ -20,22 +26,45 @@ export async function GET(
   }
 
   const { id } = await params;
+  const churchId = churchIdFromUrl(request.url);
+  const actor = await resolveStaffActor(request);
+  const email = readSessionEmailHeader(request);
+  const { data: profile } = await db
+    .from('profiles')
+    .select('phone')
+    .ilike('email', email)
+    .eq('church_id', churchId)
+    .maybeSingle();
+  const visible = await visibleGroupIdsForSession(db, churchId!, actor, profile?.phone);
+  if (visible !== 'all' && !visible.includes(id)) return notFoundResponse();
+
   const { data, error } = await db
     .from('groups')
     .select(GROUP_SELECT)
     .eq('id', id)
-    .eq('church_id', churchIdFromUrl(request.url))
+    .eq('church_id', churchId)
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  return NextResponse.json(mapGroup(data));
+  const group = mapGroup(data);
+  const pastoral = Boolean(actor && canUsePastoralStaffTools(actor));
+  const asLeader = actor?.dbRole === 'leader';
+  if (pastoral || asLeader) return NextResponse.json(group);
+  const phone = profile?.phone ? normalizePhone(profile.phone) : '';
+  return NextResponse.json({
+    ...group,
+    memberPhones: group.memberPhones.filter((p) => normalizePhone(p) === phone),
+  });
 }
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
+
   const churchId = await requireSessionChurchId(request);
   if (churchId instanceof NextResponse) return churchId;
 

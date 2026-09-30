@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { Announcement, AnnouncementStatus, RepeatInterval } from '@/lib/announcements/types';
 import type { ContentVisibility } from '@/lib/sermons/types';
@@ -66,6 +67,8 @@ export async function GET(request: Request) {
   const allCampuses = searchParams.get('allCampuses') === 'true';
   const memberCampus = searchParams.get('memberCampus');
   const isVisitor = searchParams.get('isVisitor') === 'true';
+  const actor = await resolveStaffActor(request);
+  const adminView = forAdmin && Boolean(actor && canUsePastoralStaffTools(actor));
 
   const { data, error } = await db
     .from('announcements')
@@ -78,7 +81,7 @@ export async function GET(request: Request) {
 
   let items = (data ?? []).map(mapRow);
 
-  if (forAdmin) {
+  if (adminView) {
     if (!allCampuses && campusId) {
       items = items.filter((a) => a.campus === campusId || a.visibility === 'church_wide');
     }
@@ -94,6 +97,9 @@ export async function POST(request: Request) {
   const churchId = churchIdFromUrl(request.url);
   const denied = await requireSessionChurch(request, churchId);
   if (denied) return denied;
+
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });

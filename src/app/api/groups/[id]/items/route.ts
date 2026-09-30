@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
+import {
+  canUsePastoralStaffTools,
+  readSessionEmailHeader,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
+import { visibleGroupIdsForSession } from '@/lib/groups/access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { mapBroadcast, mapSong } from '@/lib/supabase/mappers';
 
@@ -15,6 +21,17 @@ async function requireGroupInSessionChurch(
 
   const { data: group } = await db.from('groups').select('id, church_id').eq('id', groupId).maybeSingle();
   if (!group || group.church_id !== churchId) return notFoundResponse();
+
+  const actor = await resolveStaffActor(request);
+  const email = readSessionEmailHeader(request);
+  const { data: profile } = await db
+    .from('profiles')
+    .select('phone')
+    .ilike('email', email)
+    .eq('church_id', churchId)
+    .maybeSingle();
+  const visible = await visibleGroupIdsForSession(db, churchId, actor, profile?.phone);
+  if (visible !== 'all' && !visible.includes(groupId)) return notFoundResponse();
   return { churchId };
 }
 
@@ -54,6 +71,11 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !(canUsePastoralStaffTools(actor) || actor.dbRole === 'leader')) {
+    return notFoundResponse();
+  }
+
   const { id: groupId } = await params;
   const owned = await requireGroupInSessionChurch(request, groupId);
   if (owned instanceof NextResponse) return owned;
@@ -102,6 +124,11 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !(canUsePastoralStaffTools(actor) || actor.dbRole === 'leader')) {
+    return notFoundResponse();
+  }
+
   const { id: groupId } = await params;
   const owned = await requireGroupInSessionChurch(request, groupId);
   if (owned instanceof NextResponse) return owned;
