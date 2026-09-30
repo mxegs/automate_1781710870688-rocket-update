@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { mapEventRow } from '@/lib/events/mappers';
 import { churchIdFromUrl } from '@/lib/church/tenant';
 import { requireSessionChurch } from '@/lib/auth/session-church';
+import {
+  canUsePastoralStaffTools,
+  readSessionEmailHeader,
+  resolveStaffActor,
+} from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function eventWindowRank(row: { starts_at: string; ends_at?: string | null }, now: number) {
@@ -52,12 +57,24 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const campusId = searchParams.get('campusId');
-  const profileId = searchParams.get('profileId');
-  const empty = { event: null, checkin: null, dependants: [] };
-  if (!profileId) return NextResponse.json(empty);
-
   const churchId = churchIdFromUrl(request.url);
   const { start, end } = johannesburgDay();
+
+  const actor = await resolveStaffActor(request);
+  const email = readSessionEmailHeader(request);
+  const { data: sessionProfile } = await db
+    .from('profiles')
+    .select('id')
+    .ilike('email', email)
+    .eq('church_id', churchId)
+    .maybeSingle();
+  const requestedProfileId = searchParams.get('profileId');
+  const profileId =
+    actor && canUsePastoralStaffTools(actor)
+      ? requestedProfileId
+      : sessionProfile?.id ?? null;
+  const empty = { event: null, checkin: null, dependants: [] };
+  if (!profileId) return NextResponse.json(empty);
   let query = db
     .from('events')
     .select('*')

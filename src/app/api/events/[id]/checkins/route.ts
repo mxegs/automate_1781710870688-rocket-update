@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { churchIdForSessionEmail } from '@/lib/auth/session-church';
+import { canUsePastoralStaffTools, resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function notFound() {
@@ -31,6 +32,9 @@ export async function GET(
 ) {
   const churchId = await churchIdForSessionEmail(request);
   if (!churchId) return notFound();
+
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFound();
 
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
