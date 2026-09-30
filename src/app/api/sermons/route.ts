@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { requireSessionChurch } from '@/lib/auth/session-church';
+import { churchIdForSessionEmail, notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
+import { churchIdFromSlugQuery } from '@/lib/church/lookup-server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { extractYoutubeId } from '@/lib/sermons/utils';
 import type { ContentVisibility, MediaItem, MediaType } from '@/lib/sermons/types';
@@ -66,15 +67,22 @@ function filterFeed(
   );
 }
 
-export async function GET(request: Request) {
-  const denied = await requireSessionChurch(request, churchIdFromUrl(request.url));
-  if (denied) return denied;
+async function churchIdIfExists(
+  db: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
+  churchId: string | null,
+): Promise<string | null> {
+  if (!churchId) return null;
+  const { data } = await db.from('churches').select('id').eq('id', churchId).maybeSingle();
+  return (data as { id?: string | null } | null)?.id?.trim() || null;
+}
 
+export async function GET(request: Request) {
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
   }
 
+  const sessionChurchId = await churchIdForSessionEmail(request);
   const { searchParams } = new URL(request.url);
   const forAdmin = searchParams.get('forAdmin') === 'true';
   const campusId = searchParams.get('campusId');
@@ -82,17 +90,36 @@ export async function GET(request: Request) {
   const memberCampus = searchParams.get('memberCampus');
   const isVisitor = searchParams.get('isVisitor') === 'true';
 
+  let churchId: string | null;
+  let publicFeed = false;
+
+  if (sessionChurchId) {
+    const requested = churchIdFromUrl(request.url);
+    const denied = await requireSessionChurch(request, requested);
+    if (denied) return denied;
+    churchId = requested;
+  } else {
+    const slugChurchId = await churchIdFromSlugQuery(db, request.url);
+    const urlChurchId = await churchIdIfExists(db, churchIdFromUrl(request.url));
+    if (slugChurchId && urlChurchId && slugChurchId !== urlChurchId) return notFoundResponse();
+    churchId = slugChurchId || urlChurchId;
+    if (!churchId) return notFoundResponse();
+    publicFeed = true;
+  }
+
   const { data, error } = await db
     .from('media_items')
     .select('*')
-    .eq('church_id', churchIdFromUrl(request.url))
+    .eq('church_id', churchId)
     .order('preached_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   let items = (data ?? []).map(mapRow);
 
-  if (forAdmin) {
+  if (publicFeed) {
+    items = items.filter((r) => r.visibility === 'church_wide');
+  } else if (forAdmin) {
     if (!allCampuses && campusId) {
       items = items.filter((i) => i.campus === campusId);
     }
