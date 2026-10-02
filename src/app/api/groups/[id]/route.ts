@@ -114,3 +114,27 @@ export async function PATCH(
   const { data: full } = await db.from('groups').select(GROUP_SELECT).eq('id', id).single();
   return NextResponse.json(mapGroup(full!));
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const actor = await resolveStaffActor(request);
+  if (!actor || !canUsePastoralStaffTools(actor)) return notFoundResponse();
+
+  const churchId = await requireSessionChurchId(request);
+  if (churchId instanceof NextResponse) return churchId;
+
+  const db = getSupabaseAdmin();
+  if (!db) {
+    return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
+  }
+
+  const { id } = await params;
+  const { data: group } = await db.from('groups').select('id, church_id').eq('id', id).maybeSingle();
+  if (!group || group.church_id !== churchId) return notFoundResponse();
+
+  const { error } = await db.from('groups').delete().eq('id', id).eq('church_id', churchId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}

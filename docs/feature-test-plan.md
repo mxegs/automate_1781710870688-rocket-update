@@ -244,6 +244,7 @@ Public GET (no `X-Session-Email`) is allowed. Caller must pass `churchSlug` or `
 | G5 | Ordinary member | Cannot open staff `/groups`; My Groups nav only if they belong |
 | G6 | Leader opens `/members` or `/reports` | Guard / redirect |
 | G7 | Leader loads another church’s `groupId` | 404 |
+| G10 | CKC staff `DELETE /api/groups/[id]` | 200 `{ ok: true }`; session church only. `group_members`, `group_broadcasts`, `group_songs` cascade (`ON DELETE CASCADE`). Member/non-staff DELETE 404. |
 
 **Outcome class:** Live. `/small-groups` only redirects to `/groups`.
 
