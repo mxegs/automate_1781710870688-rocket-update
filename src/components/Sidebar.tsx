@@ -50,7 +50,6 @@ const memberNavItems: NavItem[] = [
   { label: 'Announcements', href: '/member/announcements', icon: 'MegaphoneIcon' },
   { label: 'Submit Prayer', href: '/member/prayer', icon: 'HeartIcon' },
   { label: 'Bible Study', href: '/member/bible-study', icon: 'BookOpenIcon' },
-  { label: 'Give', href: '/member/give', icon: 'GiftIcon' },
   { label: 'Church Info', href: '/member/church-info', icon: 'BuildingLibraryIcon' },
 ];
 
