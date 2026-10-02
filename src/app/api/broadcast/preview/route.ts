@@ -29,9 +29,7 @@ export async function POST(request: Request) {
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const actor = await resolveStaffActor(request);
-  if (!actor) {
-    return NextResponse.json({ error: 'Staff sign-in required' }, { status: 401 });
-  }
+  if (!actor) return notFound();
 
   const sessionChurchId = await churchIdForSessionEmail(request);
   if (!sessionChurchId) return notFound();

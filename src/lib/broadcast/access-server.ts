@@ -21,10 +21,7 @@ export async function enforceBroadcastFilters(
   filters: BroadcastFilters,
 ): Promise<{ filters: BroadcastFilters } | { error: string; status: number }> {
   if (!canSendBroadcast(actor)) {
-    return {
-      error: 'Broadcast is for church staff only. App developer accounts cannot send messages.',
-      status: 403,
-    };
+    return { error: 'Not found', status: 404 };
   }
 
   const scoped: BroadcastFilters = { ...filters };
