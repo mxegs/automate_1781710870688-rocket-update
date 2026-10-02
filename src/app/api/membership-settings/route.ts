@@ -7,7 +7,7 @@ import { churchIdForSessionEmail } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 const SETTINGS_COLUMNS =
-  'id, membership_duration_days, renewal_reminder_days, renewal_final_days, auto_approve_renewals, grace_period_days';
+  'id, membership_duration_days, renewal_reminder_days, renewal_final_days, auto_approve_renewals, grace_period_days, stream_url';
 
 function mapRow(row: {
   id: string;
@@ -16,6 +16,7 @@ function mapRow(row: {
   renewal_final_days: number;
   auto_approve_renewals: boolean;
   grace_period_days: number;
+  stream_url: string | null;
 }) {
   return {
     churchId: row.id,
@@ -24,6 +25,7 @@ function mapRow(row: {
     renewalFinalDays: row.renewal_final_days,
     autoApproveRenewals: row.auto_approve_renewals,
     gracePeriodDays: row.grace_period_days,
+    streamUrl: row.stream_url,
   };
 }
 
@@ -31,6 +33,15 @@ function parseNonNegInt(value: unknown): number | null {
   const n = typeof value === 'number' ? value : Number(value);
   if (!Number.isInteger(n) || n < 0) return null;
   return n;
+}
+
+function parseStreamUrl(value: unknown): string | null | false {
+  if (value === undefined) return null;
+  if (value === null) return null;
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+  if (!/^https?:\/\//i.test(trimmed)) return false;
+  return trimmed;
 }
 
 export async function GET(request: Request) {
@@ -45,7 +56,18 @@ export async function GET(request: Request) {
   const churchId = await churchIdForSessionEmail(request);
   if (!churchId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { data, error } = await db.from('churches').select(SETTINGS_COLUMNS).eq('id', churchId).maybeSingle();
+  let { data, error } = await db.from('churches').select(SETTINGS_COLUMNS).eq('id', churchId).maybeSingle();
+  if (error && /stream_url/.test(error.message)) {
+    const fallback = await db
+      .from('churches')
+      .select(
+        'id, membership_duration_days, renewal_reminder_days, renewal_final_days, auto_approve_renewals, grace_period_days',
+      )
+      .eq('id', churchId)
+      .maybeSingle();
+    data = fallback.data ? { ...fallback.data, stream_url: null } : fallback.data;
+    error = fallback.error;
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -70,6 +92,11 @@ export async function PATCH(request: Request) {
   const renewalFinalDays = parseNonNegInt(body.renewalFinalDays);
   const gracePeriodDays = parseNonNegInt(body.gracePeriodDays);
   const autoApproveRenewals = body.autoApproveRenewals;
+  const streamUrl = parseStreamUrl(body.streamUrl);
+
+  if (streamUrl === false) {
+    return NextResponse.json({ error: 'Live stream URL must start with http:// or https://' }, { status: 400 });
+  }
 
   if (
     membershipDurationDays == null ||
@@ -89,6 +116,7 @@ export async function PATCH(request: Request) {
       renewal_final_days: renewalFinalDays,
       auto_approve_renewals: autoApproveRenewals,
       grace_period_days: gracePeriodDays,
+      stream_url: streamUrl,
       updated_at: new Date().toISOString(),
     })
     .eq('id', churchId)

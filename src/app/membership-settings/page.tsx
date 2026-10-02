@@ -15,6 +15,7 @@ export default function MembershipSettingsPage() {
     autoApproveRenewals: false,
     gracePeriodDays: 14,
     noExpiry: false,
+    streamUrl: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,6 +36,7 @@ export default function MembershipSettingsPage() {
           autoApproveRenewals: settings.autoApproveRenewals,
           gracePeriodDays: settings.gracePeriodDays,
           noExpiry: isNoExpiry(settings.membershipDurationDays),
+          streamUrl: settings.streamUrl ?? '',
         });
       })
       .catch((err) => {
@@ -62,6 +64,7 @@ export default function MembershipSettingsPage() {
           renewalFinalDays: form.renewalFinalDays,
           autoApproveRenewals: form.autoApproveRenewals,
           gracePeriodDays: form.gracePeriodDays,
+          streamUrl: form.streamUrl,
         }),
       });
       setForm((current) => ({
@@ -72,6 +75,7 @@ export default function MembershipSettingsPage() {
         autoApproveRenewals: next.autoApproveRenewals,
         gracePeriodDays: next.gracePeriodDays,
         noExpiry: isNoExpiry(next.membershipDurationDays),
+        streamUrl: next.streamUrl ?? '',
       }));
       setSaved(true);
     } catch (err) {
@@ -156,6 +160,20 @@ export default function MembershipSettingsPage() {
               />
               Auto-approve renewals
             </label>
+
+            <CkcField label="Live stream URL">
+              <CkcInput
+                type="url"
+                inputMode="url"
+                placeholder="https://youtube.com/..."
+                value={form.streamUrl}
+                onChange={(e) => setForm((f) => ({ ...f, streamUrl: e.target.value }))}
+              />
+              <p className="mt-1 text-xs text-cloud/50">
+                Optional. Shown as Watch live on the member check-in hero during a service. Leave blank for no
+                button.
+              </p>
+            </CkcField>
 
             <CkcButton type="submit" disabled={saving}>
               {saving ? 'Saving…' : 'Save settings'}

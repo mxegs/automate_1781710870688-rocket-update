@@ -17,12 +17,11 @@ import { getCampusLabel } from '@/lib/church/constants';
 import type { MediaItem } from '@/lib/sermons/types';
 import type { ChurchEvent } from '@/lib/events/types';
 import { getDisplayName, getSession } from '@/lib/auth/session';
-import { getChurchBranding } from '@/lib/church/service';
+import { getChurch, getChurchBranding } from '@/lib/church/service';
 
 const QUICK_LINKS = [
   { label: 'Daily Word', href: '/member/bible-study', image: LIFE_PHOTOS.bible },
   { label: 'Events', href: '/member/events', image: LIFE_PHOTOS.gathering },
-  { label: 'Give', href: '/member/give', image: LIFE_PHOTOS.give },
   { label: 'Prayer', href: '/member/prayer', image: LIFE_PHOTOS.prayer },
 ] as const;
 
@@ -66,6 +65,7 @@ export default function MemberHomePage() {
   const [serviceCheckin, setServiceCheckin] = useState<MyCheckIn | null>(null);
   const [kidsRoom, setKidsRoom] = useState('');
   const [name, setName] = useState('Friend');
+  const [streamUrl, setStreamUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const session = getSession();
@@ -77,6 +77,9 @@ export default function MemberHomePage() {
       setLatestSermon(sermons[0] ?? null);
       const events = await getMemberEventsFeed({ churchId, memberCampus: campus });
       setNextEvent(events[0] ?? null);
+      const church = await getChurch(churchId).catch(() => null);
+      const url = church?.streamUrl?.trim();
+      setStreamUrl(url || null);
 
       const ids = await resolveMemberIdsFromSession();
       const today = await getMyCheckinForToday(campus, ids?.profileId, churchId).catch(() => null);
@@ -137,6 +140,7 @@ export default function MemberHomePage() {
               seat={serviceCheckin?.seat}
               kidsRoom={kidsRoom}
               securityCode={serviceCheckin?.securityCode}
+              streamUrl={streamUrl}
             />
           )}
         </div>

@@ -14,6 +14,7 @@ export default function CheckInHero({
   seat,
   kidsRoom,
   securityCode,
+  streamUrl,
 }: {
   eventTitle: string;
   campusLabel: string;
@@ -23,9 +24,12 @@ export default function CheckInHero({
   seat?: string;
   kidsRoom?: string;
   securityCode?: string;
+  streamUrl?: string | null;
 }) {
+  const showStream = Boolean(streamUrl) && (state === 'ready' || state === 'checked-in');
+
   return (
-    <Link href={href} className="relative block overflow-hidden rounded-[28px] bg-ckc-black">
+    <div className="relative overflow-hidden rounded-[28px] bg-ckc-black">
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-ckc-gold/20" />
       <div className="relative flex min-h-[280px] flex-col justify-end p-5">
         {state === 'checked-in' ? (
@@ -36,12 +40,6 @@ export default function CheckInHero({
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ckc-gold">{campusLabel}</p>
         <h2 className="mt-2 font-serif text-[26px] font-semibold leading-tight text-cloud">{eventTitle}</h2>
         <p className="mt-1 text-sm text-cloud/80">{timeLabel}</p>
-
-        {state === 'ready' ? (
-          <span className="mt-4 inline-flex w-fit rounded-full bg-white px-4 py-2 text-sm font-semibold text-ckc-black">
-            Check in now
-          </span>
-        ) : null}
 
         {state === 'checked-in' ? (
           <div className="mt-4 space-y-1 text-sm text-cloud">
@@ -54,9 +52,34 @@ export default function CheckInHero({
         ) : null}
 
         {state === 'ended' ? (
-          <p className="mt-4 text-sm font-medium text-cloud">Service ended — watch the replay</p>
+          <Link href={href} className="mt-4 text-sm font-medium text-cloud">
+            Service ended — watch the replay
+          </Link>
+        ) : null}
+
+        {state === 'ready' || showStream ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {state === 'ready' ? (
+              <Link
+                href={href}
+                className="inline-flex w-fit rounded-full bg-white px-4 py-2 text-sm font-semibold text-ckc-black"
+              >
+                Check in now
+              </Link>
+            ) : null}
+            {showStream ? (
+              <a
+                href={streamUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-fit rounded-full border border-white/40 px-4 py-2 text-sm font-semibold text-cloud"
+              >
+                Watch live
+              </a>
+            ) : null}
+          </div>
         ) : null}
       </div>
-    </Link>
+    </div>
   );
 }

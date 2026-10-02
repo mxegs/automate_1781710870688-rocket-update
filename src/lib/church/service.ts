@@ -9,6 +9,8 @@ export interface ChurchRecord {
   secondaryColor: string | null;
   logoUrl: string | null;
   appName: string | null;
+  /** Present only when the session belongs to this church. */
+  streamUrl?: string | null;
 }
 
 export interface ChurchBranding {

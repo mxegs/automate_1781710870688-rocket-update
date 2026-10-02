@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { churchIdForSessionEmail } from '@/lib/auth/session-church';
 import { resolveChurchId } from '@/lib/church/tenant';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const db = getSupabaseAdmin();
@@ -21,7 +22,7 @@ export async function GET(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Church not found' }, { status: 404 });
 
-  return NextResponse.json({
+  const payload: Record<string, unknown> = {
     id: data.id,
     name: data.name,
     slug: data.slug,
@@ -29,5 +30,15 @@ export async function GET(
     secondaryColor: data.secondary_color,
     logoUrl: data.logo_url,
     appName: data.app_name,
-  });
+  };
+
+  const sessionChurchId = await churchIdForSessionEmail(request);
+  if (sessionChurchId === churchId) {
+    const extra = await db.from('churches').select('stream_url').eq('id', churchId).maybeSingle();
+    if (!extra.error) {
+      payload.streamUrl = extra.data?.stream_url ?? null;
+    }
+  }
+
+  return NextResponse.json(payload);
 }
