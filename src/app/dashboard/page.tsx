@@ -5,41 +5,36 @@ import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import Icon from '@/components/ui/AppIcon';
 import PageHeader, { ContentCard, StatCard } from '@/components/portal/PageHeader';
+import { getDashboardStats, type DashboardStats } from '@/lib/dashboard/service';
 import { getAdminEvents } from '@/lib/events/service';
 import { resolveMemberChurch } from '@/lib/member/campus';
 import type { ChurchEvent } from '@/lib/events/types';
 
-const recentVisitors: { name: string; date: string; status: string; source: string }[] = [
-  { name: 'Lerato Dlamini', date: '24 Aug', status: 'New Visitor', source: 'Sunday service' },
-  { name: 'Johan van der Merwe', date: '17 Aug', status: 'Contacted', source: 'Friend' },
-  { name: 'Amahle Naidoo', date: '10 Aug', status: 'Follow-Up Scheduled', source: 'Youth gathering' },
-  { name: 'Sipho Khumalo', date: '3 Aug', status: 'Attending Regularly', source: 'Walk-in' },
-  { name: 'Naledi Mokoena', date: '20 Jul', status: 'Membership Candidate', source: 'Social media' },
-];
-
-const prayerRequests: { name: string; category: string; status: string; date: string }[] = [
-  { name: 'Thabo Molefe', category: 'Health', status: 'In Prayer', date: '1 Sep' },
-  { name: 'Nomsa Khumalo', category: 'Family', status: 'Assigned', date: '30 Aug' },
-  { name: 'Kagiso Mthembu', category: 'Employment', status: 'New', date: '29 Aug' },
-  { name: 'Precious Mahlangu', category: 'Spiritual Growth', status: 'Answered', date: '22 Aug' },
-];
-
-const statusColors: Record<string, string> = {
-  'New Visitor': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
-  Contacted: 'bg-amber/10 text-ckc-gold border-ckc-gold/20',
-  'Follow-Up Scheduled': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
-  'Attending Regularly': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
-  New: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
-  Assigned: 'bg-amber/10 text-ckc-gold border-ckc-gold/20',
-  'In Prayer': 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
-  Answered: 'bg-ckc-gold/10 text-ckc-gold border-ckc-gold/20',
-};
+function upcomingFromNow(events: ChurchEvent[]): ChurchEvent[] {
+  const now = Date.now();
+  return events
+    .filter((e) => new Date(e.startsAt).getTime() >= now)
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+}
 
 export default function DashboardPage() {
   const [upcomingEvents, setUpcomingEvents] = useState<ChurchEvent[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    getAdminEvents({ churchId: resolveMemberChurch(), allCampuses: true }).then((e) => setUpcomingEvents(e.slice(0, 4)));
+    const churchId = resolveMemberChurch();
+    Promise.all([
+      getDashboardStats(churchId),
+      getAdminEvents({ churchId, allCampuses: true }),
+    ])
+      .then(([nextStats, events]) => {
+        setStats(nextStats);
+        setUpcomingEvents(upcomingFromNow(events).slice(0, 4));
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Could not load dashboard');
+      });
   }, []);
 
   return (
@@ -50,75 +45,27 @@ export default function DashboardPage() {
         subtitle="Here's what's happening at your church today."
       />
 
+      {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total Members" value="342" change="+12 this month" icon="UsersIcon" />
-        <StatCard label="New Visitors" value="18" change="+5 this week" icon="UserPlusIcon" />
-        <StatCard label="Active Prayer Requests" value="27" change="4 answered" icon="HeartIcon" />
-        <StatCard label="Upcoming Events" value="6" change="Next: Sunday Service" icon="CalendarDaysIcon" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <ContentCard
-          title="Recent Visitors"
+        <StatCard label="Total Members" value={stats ? String(stats.members) : '—'} icon="UsersIcon" />
+        <StatCard
+          label="New Visitors"
+          value={stats ? String(stats.visitorsThisWeek) : '—'}
+          change="This week"
           icon="UserPlusIcon"
-          className="lg:col-span-2"
-          action={
-            <Link href="/visitors" className="text-xs font-medium text-ckc-gold hover:text-ckc-gold-light">
-              View all →
-            </Link>
-          }
-        >
-          <div className="space-y-3">
-            {recentVisitors.map((v) => (
-              <div key={v.name} className="flex items-center justify-between border-b border-white/5 py-2 last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ckc-gold/10">
-                    <span className="text-xs font-bold text-ckc-gold">{v.name.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-cloud">{v.name}</p>
-                    <p className="text-xs text-cloud/40">
-                      {v.date} · via {v.source}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`rounded-full border px-2 py-0.5 text-xs font-medium ${statusColors[v.status] || 'border-white/10 bg-white/5 text-cloud/50'}`}
-                >
-                  {v.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </ContentCard>
-
-        <ContentCard
-          title="Prayer Requests"
+        />
+        <StatCard
+          label="Open Prayer Requests"
+          value={stats ? String(stats.openPrayers) : '—'}
           icon="HeartIcon"
-          action={
-            <Link href="/prayer-requests" className="text-xs font-medium text-ckc-gold hover:text-ckc-gold-light">
-              View all →
-            </Link>
-          }
-        >
-          <div className="space-y-3">
-            {prayerRequests.map((pr) => (
-              <div key={pr.name + pr.date} className="border-b border-white/5 py-2 last:border-0">
-                <div className="mb-1 flex items-center justify-between">
-                  <p className="text-sm font-medium text-cloud">{pr.name}</p>
-                  <span
-                    className={`rounded-full border px-2 py-0.5 text-xs font-medium ${statusColors[pr.status] || 'border-white/10 bg-white/5 text-cloud/50'}`}
-                  >
-                    {pr.status}
-                  </span>
-                </div>
-                <p className="text-xs text-cloud/40">
-                  {pr.category} · {pr.date}
-                </p>
-              </div>
-            ))}
-          </div>
-        </ContentCard>
+        />
+        <StatCard
+          label="Upcoming Events"
+          value={stats ? String(stats.upcomingEvents) : '—'}
+          change={stats?.nextEventTitle ? `Next: ${stats.nextEventTitle}` : undefined}
+          icon="CalendarDaysIcon"
+        />
       </div>
 
       <ContentCard
@@ -150,7 +97,7 @@ export default function DashboardPage() {
             </div>
           ))}
           {upcomingEvents.length === 0 && (
-            <p className="text-xs text-cloud/40 col-span-full">No events yet — create one in Events.</p>
+            <p className="text-xs text-cloud/40 col-span-full">No upcoming events — create one in Events.</p>
           )}
         </div>
       </ContentCard>
