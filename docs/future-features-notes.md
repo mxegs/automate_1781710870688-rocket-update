@@ -276,3 +276,13 @@ pastor, platform admin). Members, visitors, and group leaders get
 `404 { error: 'Not found' }`. PATCH `/api/invite-requests/[id]` uses
 the same gate. POST stays public so a visitor can request an invite
 via `churchSlug`.
+
+---
+
+## Follow-up message route needs dryRun
+
+**Status:** testability gap.
+
+POST `/api/follow-ups/message` has no `dryRun` flag. Testing it would send real SMS to the target phones. Add a `dryRun` flag that returns the rendered message and recipient count without sending.
+
+**When:** next touch of this route, or pre-deploy hardening.

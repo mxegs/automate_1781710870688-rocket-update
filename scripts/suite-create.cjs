@@ -30,6 +30,25 @@ const BATCH = 100;
 const IDS_PATH = resolve(__dirname, 'suite-ids.json');
 const YEAR = 2026;
 
+/** Relative event windows so in-window / ended / future tests stay valid. */
+function suiteEventWindows(now = Date.now()) {
+  const day = 24 * 60 * 60 * 1000;
+  return {
+    'in-window': {
+      starts_at: new Date(now - 30 * 60 * 1000).toISOString(),
+      ends_at: new Date(now + 90 * 60 * 1000).toISOString(),
+    },
+    ended: {
+      starts_at: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+      ends_at: new Date(now - 1 * 60 * 60 * 1000).toISOString(),
+    },
+    future: {
+      starts_at: new Date(now + 2 * day).toISOString(),
+      ends_at: new Date(now + 2 * day + 2 * 60 * 60 * 1000).toISOString(),
+    },
+  };
+}
+
 const CHURCHES = [
   {
     id: 'ckc',
@@ -816,27 +835,24 @@ async function main() {
         collected.visitorIds.push(visitor.id);
       }
 
-      const now = Date.now();
+      const windows = suiteEventWindows();
       const inWindow = {
         id: uuidFromRng(rng),
         key: 'in-window',
         title: `${church.label} Suite In-Window`,
-        starts_at: new Date(now).toISOString(),
-        ends_at: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
+        ...windows['in-window'],
       };
       const ended = {
         id: uuidFromRng(rng),
         key: 'ended',
         title: `${church.label} Suite Ended`,
-        starts_at: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
-        ends_at: new Date(now - 1 * 60 * 60 * 1000).toISOString(),
+        ...windows.ended,
       };
       const future = {
         id: uuidFromRng(rng),
         key: 'future',
         title: `${church.label} Suite Future`,
-        starts_at: new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        ends_at: new Date(now + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+        ...windows.future,
       };
       for (const ev of [inWindow, ended, future]) {
         if (ev.id === SEED_EVENT_ID) throw new Error('Generated seed event id — abort');
@@ -1084,7 +1100,11 @@ async function main() {
   console.log(`Password for all logins: ${PASSWORD}`);
 }
 
-main().catch((error) => {
-  console.error(error.message || error);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error.message || error);
+    process.exit(1);
+  });
+}
+
+module.exports = { suiteEventWindows, STAGING_REF, LIVE_REF, SEED_EVENT_ID };
