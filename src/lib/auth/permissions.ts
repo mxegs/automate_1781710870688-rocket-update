@@ -80,6 +80,9 @@ export function canAccessRoute(
 
   if (
     pathname.startsWith('/login') ||
+    pathname.startsWith('/intro') ||
+    pathname.startsWith('/welcome') ||
+    pathname.startsWith('/entry') ||
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password') ||
     pathname.startsWith('/account/set-password') ||

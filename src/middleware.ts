@@ -7,9 +7,9 @@ export function middleware(request: NextRequest) {
   const slug = extractChurchSlug(pathname);
   if (!slug) return NextResponse.next();
 
-  const rest = pathname.slice(slug.length + 1) || '/login';
+  const rest = pathname.slice(slug.length + 1).replace(/^\/+/, '');
   const url = request.nextUrl.clone();
-  url.pathname = rest.startsWith('/') ? rest : `/${rest}`;
+  url.pathname = rest ? `/${rest}` : '/entry';
   const response = NextResponse.rewrite(url);
   response.headers.set('x-church-slug', slug);
   return response;

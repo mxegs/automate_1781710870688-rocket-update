@@ -8,6 +8,9 @@ export interface ResolvedChurch {
   secondaryColor: string | null;
   logoUrl: string | null;
   appName: string | null;
+  tagline: string | null;
+  welcomeMessage: string | null;
+  heroUrl: string | null;
 }
 
 const RESERVED = new Set([
@@ -42,6 +45,9 @@ const RESERVED = new Set([
   'home',
   'assets',
   '_next',
+  'intro',
+  'welcome',
+  'entry',
 ]);
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i;

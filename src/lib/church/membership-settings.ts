@@ -6,6 +6,9 @@ export interface MembershipSettings {
   autoApproveRenewals: boolean;
   gracePeriodDays: number;
   streamUrl: string | null;
+  tagline: string | null;
+  welcomeMessage: string | null;
+  heroUrl: string | null;
 }
 
 export function isNoExpiry(durationDays: number): boolean {

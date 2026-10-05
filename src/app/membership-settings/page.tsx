@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import PageHeader, { ContentCard } from '@/components/portal/PageHeader';
-import { CkcButton, CkcField, CkcInput } from '@/components/ui/CkcForm';
+import { CkcButton, CkcField, CkcInput, CkcTextarea } from '@/components/ui/CkcForm';
 import { apiFetch } from '@/lib/api/client';
 import { isNoExpiry, type MembershipSettings } from '@/lib/church/membership-settings';
 
@@ -16,6 +16,9 @@ export default function MembershipSettingsPage() {
     gracePeriodDays: 14,
     noExpiry: false,
     streamUrl: '',
+    tagline: '',
+    welcomeMessage: '',
+    heroUrl: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,8 +39,11 @@ export default function MembershipSettingsPage() {
           autoApproveRenewals: settings.autoApproveRenewals,
           gracePeriodDays: settings.gracePeriodDays,
           noExpiry: isNoExpiry(settings.membershipDurationDays),
-          streamUrl: settings.streamUrl ?? '',
-        });
+            streamUrl: settings.streamUrl ?? '',
+            tagline: settings.tagline ?? '',
+            welcomeMessage: settings.welcomeMessage ?? '',
+            heroUrl: settings.heroUrl ?? '',
+          });
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load settings');
@@ -65,6 +71,9 @@ export default function MembershipSettingsPage() {
           autoApproveRenewals: form.autoApproveRenewals,
           gracePeriodDays: form.gracePeriodDays,
           streamUrl: form.streamUrl,
+          tagline: form.tagline,
+          welcomeMessage: form.welcomeMessage,
+          heroUrl: form.heroUrl,
         }),
       });
       setForm((current) => ({
@@ -76,6 +85,9 @@ export default function MembershipSettingsPage() {
         gracePeriodDays: next.gracePeriodDays,
         noExpiry: isNoExpiry(next.membershipDurationDays),
         streamUrl: next.streamUrl ?? '',
+        tagline: next.tagline ?? '',
+        welcomeMessage: next.welcomeMessage ?? '',
+        heroUrl: next.heroUrl ?? '',
       }));
       setSaved(true);
     } catch (err) {
@@ -173,6 +185,34 @@ export default function MembershipSettingsPage() {
                 Optional. Shown as Watch live on the member check-in hero during a service. Leave blank for no
                 button.
               </p>
+            </CkcField>
+
+            <CkcField label="Tagline">
+              <CkcInput
+                type="text"
+                value={form.tagline}
+                onChange={(e) => setForm((f) => ({ ...f, tagline: e.target.value }))}
+              />
+              <p className="mt-1 text-xs text-cloud/50">Short line under the church name on the welcome screen.</p>
+            </CkcField>
+
+            <CkcField label="Welcome message">
+              <CkcTextarea
+                rows={3}
+                value={form.welcomeMessage}
+                onChange={(e) => setForm((f) => ({ ...f, welcomeMessage: e.target.value }))}
+              />
+            </CkcField>
+
+            <CkcField label="Welcome hero image URL">
+              <CkcInput
+                type="url"
+                inputMode="url"
+                placeholder="https://..."
+                value={form.heroUrl}
+                onChange={(e) => setForm((f) => ({ ...f, heroUrl: e.target.value }))}
+              />
+              <p className="mt-1 text-xs text-cloud/50">Optional. Image at the top of the pre-login welcome screen.</p>
             </CkcField>
 
             <CkcButton type="submit" disabled={saving}>

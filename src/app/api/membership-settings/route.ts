@@ -7,6 +7,9 @@ import { churchIdForSessionEmail } from '@/lib/auth/session-church';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 const SETTINGS_COLUMNS =
+  'id, membership_duration_days, renewal_reminder_days, renewal_final_days, auto_approve_renewals, grace_period_days, stream_url, tagline, welcome_message, hero_url';
+
+const SETTINGS_COLUMNS_LEGACY =
   'id, membership_duration_days, renewal_reminder_days, renewal_final_days, auto_approve_renewals, grace_period_days, stream_url';
 
 function mapRow(row: {
@@ -17,6 +20,9 @@ function mapRow(row: {
   auto_approve_renewals: boolean;
   grace_period_days: number;
   stream_url: string | null;
+  tagline?: string | null;
+  welcome_message?: string | null;
+  hero_url?: string | null;
 }) {
   return {
     churchId: row.id,
@@ -26,6 +32,9 @@ function mapRow(row: {
     autoApproveRenewals: row.auto_approve_renewals,
     gracePeriodDays: row.grace_period_days,
     streamUrl: row.stream_url,
+    tagline: row.tagline ?? null,
+    welcomeMessage: row.welcome_message ?? null,
+    heroUrl: row.hero_url ?? null,
   };
 }
 
@@ -44,6 +53,12 @@ function parseStreamUrl(value: unknown): string | null | false {
   return trimmed;
 }
 
+function parseOptionalText(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed || null;
+}
+
 export async function GET(request: Request) {
   const db = getSupabaseAdmin();
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
@@ -57,6 +72,13 @@ export async function GET(request: Request) {
   if (!churchId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   let { data, error } = await db.from('churches').select(SETTINGS_COLUMNS).eq('id', churchId).maybeSingle();
+  if (error && /tagline|welcome_message|hero_url/.test(error.message)) {
+    const fallback = await db.from('churches').select(SETTINGS_COLUMNS_LEGACY).eq('id', churchId).maybeSingle();
+    data = fallback.data
+      ? { ...fallback.data, tagline: null, welcome_message: null, hero_url: null }
+      : fallback.data;
+    error = fallback.error;
+  }
   if (error && /stream_url/.test(error.message)) {
     const fallback = await db
       .from('churches')
@@ -93,9 +115,15 @@ export async function PATCH(request: Request) {
   const gracePeriodDays = parseNonNegInt(body.gracePeriodDays);
   const autoApproveRenewals = body.autoApproveRenewals;
   const streamUrl = parseStreamUrl(body.streamUrl);
+  const heroUrl = parseStreamUrl(body.heroUrl);
+  const tagline = parseOptionalText(body.tagline);
+  const welcomeMessage = parseOptionalText(body.welcomeMessage);
 
   if (streamUrl === false) {
     return NextResponse.json({ error: 'Live stream URL must start with http:// or https://' }, { status: 400 });
+  }
+  if (heroUrl === false) {
+    return NextResponse.json({ error: 'Hero image URL must start with http:// or https://' }, { status: 400 });
   }
 
   if (
@@ -117,6 +145,9 @@ export async function PATCH(request: Request) {
       auto_approve_renewals: autoApproveRenewals,
       grace_period_days: gracePeriodDays,
       stream_url: streamUrl,
+      tagline,
+      welcome_message: welcomeMessage,
+      hero_url: heroUrl,
       updated_at: new Date().toISOString(),
     })
     .eq('id', churchId)
