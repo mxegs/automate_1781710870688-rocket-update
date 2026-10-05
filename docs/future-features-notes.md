@@ -286,3 +286,21 @@ via `churchSlug`.
 POST `/api/follow-ups/message` has no `dryRun` flag. Testing it would send real SMS to the target phones. Add a `dryRun` flag that returns the rendered message and recipient count without sending.
 
 **When:** next touch of this route, or pre-deploy hardening.
+
+---
+
+## Hidden until built
+
+**Status:** hidden from UI.
+
+The following screens exist in code but are not linked from
+any nav. They will be rebuilt when the underlying feature
+exists:
+- `/member/give` (payment integration pending)
+- `/ministries` (ministry model pending)
+- `/pastoral-care` (care notes model pending)
+- `/reports` (real attendance + giving data pending)
+
+Their routes still load. Their APIs may return sample data.
+Not visible to any role through the UI.
+
