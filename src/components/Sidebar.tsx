@@ -35,12 +35,9 @@ const adminNavItems: NavItem[] = [
   { label: 'Events', href: '/events', icon: 'CalendarDaysIcon' },
   { label: 'Sermons', href: '/sermons', icon: 'PlayCircleIcon' },
   { label: 'Prayer Requests', href: '/prayer-requests', icon: 'HeartIcon' },
-  { label: 'Ministries', href: '/ministries', icon: 'BuildingLibraryIcon' },
   { label: 'Groups', href: '/groups', icon: 'UserGroupIcon' },
   { label: 'Broadcast', href: '/broadcast', icon: 'MegaphoneIcon' },
-  { label: 'Pastoral Care', href: '/pastoral-care', icon: 'HandRaisedIcon' },
   { label: 'Announcements', href: '/announcements', icon: 'MegaphoneIcon' },
-  { label: 'Reports', href: '/reports', icon: 'ChartBarIcon' },
 ];
 
 const memberNavItems: NavItem[] = [

@@ -186,10 +186,8 @@ export function getGroupManagerNavItems(): { href: string; label: string; icon: 
     { label: 'Dashboard', href: '/dashboard', icon: 'HomeIcon' },
     { label: 'Members', href: '/members', icon: 'UsersIcon' },
     { label: 'Groups', href: '/groups', icon: 'UserGroupIcon' },
-    { label: 'Ministries', href: '/ministries', icon: 'BuildingLibraryIcon' },
     { label: 'Events', href: '/events', icon: 'CalendarDaysIcon' },
     { label: 'Announcements', href: '/announcements', icon: 'MegaphoneIcon' },
-    { label: 'Reports', href: '/reports', icon: 'ChartBarIcon' },
   ];
 }
 
