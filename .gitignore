@@ -52,3 +52,6 @@ backups/
 # Staging fixture id manifests (local-only; scripts stay in git)
 scripts/fixture-ids.json
 scripts/suite-ids.json
+
+# Local design captures (do not commit)
+design-screenshots/
