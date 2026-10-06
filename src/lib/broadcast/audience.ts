@@ -23,6 +23,7 @@ export class BroadcastAudienceNotFoundError extends Error {
 
 export interface BroadcastRecipient {
   id: string;
+  profileId: string | null;
   name: string;
   phone: string;
   email: string | null;
@@ -46,6 +47,7 @@ function isExcludedBroadcastRecipient(phone: string, email: string | null): bool
 
 function filterBroadcastRecipients(rows: {
   id: string;
+  profile_id?: string | null;
   full_name: string;
   phone: string;
   email: string | null;
@@ -55,6 +57,7 @@ function filterBroadcastRecipients(rows: {
     .filter((m) => !isExcludedBroadcastRecipient(m.phone, m.email))
     .map((m) => ({
       id: m.id,
+      profileId: m.profile_id ?? null,
       name: m.full_name,
       phone: m.phone,
       email: m.email,
@@ -90,7 +93,7 @@ export async function resolveBroadcastAudience(
 
     const { data: members, error } = await db
       .from('members')
-      .select('id, full_name, phone, email, campus_id, gender, age, status')
+      .select('id, profile_id, full_name, phone, email, campus_id, gender, age, status')
       .eq('church_id', churchId)
       .eq('status', 'active')
       .in('phone', phones);
@@ -101,7 +104,7 @@ export async function resolveBroadcastAudience(
     if (group.leader_phone && !rows.some((m) => m.phone === group.leader_phone)) {
       const { data: leaderMember } = await db
         .from('members')
-        .select('id, full_name, phone, email, campus_id, gender, age, status')
+        .select('id, profile_id, full_name, phone, email, campus_id, gender, age, status')
         .eq('church_id', churchId)
         .eq('phone', group.leader_phone)
         .eq('status', 'active')
@@ -114,7 +117,7 @@ export async function resolveBroadcastAudience(
 
   let query = db
     .from('members')
-    .select('id, full_name, phone, email, campus_id, gender, age, status')
+    .select('id, profile_id, full_name, phone, email, campus_id, gender, age, status')
     .eq('church_id', churchId)
     .eq('status', 'active');
 

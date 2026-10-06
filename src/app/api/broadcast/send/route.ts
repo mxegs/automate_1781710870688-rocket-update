@@ -10,6 +10,7 @@ import { resolveStaffActor } from '@/lib/auth/staff-access-server';
 import { sendMailchimpBroadcast, buildBroadcastEmailHtml } from '@/lib/email/mailchimp';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { churchDisplayName } from '@/lib/church/name-server';
+import { insertNotifications } from '@/lib/notifications/server';
 import { sendBulkSms } from '@/lib/sms/service';
 
 function notFound() {
@@ -65,12 +66,27 @@ export async function POST(request: Request) {
   try {
     const recipients = await resolveBroadcastAudience(db, filters);
 
+    const inAppRows = recipients
+      .filter((r) => r.profileId)
+      .map((r) => ({
+        profileId: r.profileId as string,
+        churchId: sessionChurchId,
+        type: 'broadcast' as const,
+        title: subject,
+        body: message,
+      }));
+    let inApp = 0;
+    if (inAppRows.length) {
+      inApp = await insertNotifications(db, inAppRows);
+    }
+
     if (channel === 'sms') {
       const phones = recipients.map((r) => r.phone).filter(Boolean);
       const result = await sendBulkSms(phones, message);
       return NextResponse.json({
         channel: 'sms',
         total: phones.length,
+        inApp,
         ...result,
       });
     }
@@ -95,6 +111,7 @@ export async function POST(request: Request) {
         channel: 'email',
         total: emailRecipients.length,
         sent: result.sent ?? emailRecipients.length,
+        inApp,
         campaignId: result.campaignId,
         demo: result.demo,
         warnings: result.warnings,

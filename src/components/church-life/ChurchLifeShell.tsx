@@ -37,7 +37,11 @@ export default function ChurchLifeShell({
             data-portal="church-life"
             className="relative mx-auto flex min-h-dvh w-full max-w-life flex-col bg-life-page"
           >
-            <ChurchLifeHeader onMenuOpen={() => setMenuOpen(true)} homeHref={homeHref} />
+            <ChurchLifeHeader
+              onMenuOpen={() => setMenuOpen(true)}
+              homeHref={homeHref}
+              showNotifications={!isGuestShell}
+            />
             <ChurchLifeNavDrawer
               open={menuOpen}
               onClose={() => setMenuOpen(false)}

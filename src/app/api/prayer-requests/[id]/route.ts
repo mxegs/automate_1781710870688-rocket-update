@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { notFoundResponse, requireSessionChurchId } from '@/lib/auth/session-church';
 import { canReviewPrayerInbox, resolveStaffActor } from '@/lib/auth/staff-access-server';
+import { insertNotifications } from '@/lib/notifications/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import type { PrayerRequest, PrayerStatus } from '@/lib/prayer/types';
 
@@ -38,7 +39,11 @@ export async function PATCH(
   if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
 
   const { id } = await params;
-  const { data: row } = await db.from('prayer_requests').select('id, church_id').eq('id', id).maybeSingle();
+  const { data: row } = await db
+    .from('prayer_requests')
+    .select('id, church_id, profile_id, status')
+    .eq('id', id)
+    .maybeSingle();
   if (!row || row.church_id !== churchId) return notFoundResponse();
 
   const body = await request.json();
@@ -52,5 +57,23 @@ export async function PATCH(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (
+    body.status === 'answered' &&
+    row.status !== 'answered' &&
+    typeof row.profile_id === 'string' &&
+    row.profile_id
+  ) {
+    await insertNotifications(db, [
+      {
+        profileId: row.profile_id,
+        churchId,
+        type: 'prayer',
+        title: 'Your prayer request was answered',
+        actionUrl: '/member/prayer',
+      },
+    ]).catch(() => null);
+  }
+
   return NextResponse.json(mapRow(data));
 }
