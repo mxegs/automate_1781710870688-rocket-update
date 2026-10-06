@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
-import { apiFetch } from '@/lib/api/client';
+import MemberAvatar from '@/components/members/MemberAvatar';
+import { apiFetch, sessionHeaders } from '@/lib/api/client';
 import { clearSession } from '@/lib/auth/session';
 
 interface MemberProfile {
@@ -14,6 +15,7 @@ interface MemberProfile {
   fullName: string;
   initials: string;
   photoUrl: string | null;
+  photoVisible: boolean;
   memberSince: string | null;
   phone: string;
   email: string | null;
@@ -51,6 +53,8 @@ export default function MemberProfilePage() {
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +78,61 @@ export default function MemberProfilePage() {
     router.push('/login');
   };
 
+  const pickPhoto = () => fileRef.current?.click();
+
+  const handlePhotoSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !profile) return;
+    setPhotoBusy(true);
+    setError('');
+    try {
+      const body = new FormData();
+      body.append('photo', file);
+      const res = await fetch('/api/me/photo', {
+        method: 'POST',
+        headers: sessionHeaders(),
+        body,
+      });
+      const json = (await res.json().catch(() => ({}))) as { photoUrl?: string; error?: string };
+      if (!res.ok) throw new Error(json.error || `Upload failed (${res.status})`);
+      setProfile({ ...profile, photoUrl: json.photoUrl ?? null });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not upload photo');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!profile) return;
+    setPhotoBusy(true);
+    setError('');
+    try {
+      await apiFetch<{ photoUrl: null }>('/api/me/photo', { method: 'DELETE' });
+      setProfile({ ...profile, photoUrl: null });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not remove photo');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const handlePhotoVisible = async (photoVisible: boolean) => {
+    if (!profile) return;
+    const previous = profile.photoVisible;
+    setProfile({ ...profile, photoVisible });
+    try {
+      await apiFetch<{ photoVisible: boolean }>('/api/me/photo', {
+        method: 'PATCH',
+        body: JSON.stringify({ photoVisible }),
+      });
+    } catch (err) {
+      setProfile({ ...profile, photoVisible: previous });
+      setError(err instanceof Error ? err.message : 'Could not update photo visibility');
+    }
+  };
+
   return (
     <AppShell access="member">
       <div className="px-5 pb-10 pt-5">
@@ -83,18 +142,12 @@ export default function MemberProfilePage() {
         {profile ? (
           <div className="space-y-6">
             <section className="flex items-center gap-4">
-              {profile.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.photoUrl}
-                  alt=""
-                  className="h-16 w-16 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-ckc-black text-sm font-semibold text-cloud">
-                  {profile.initials}
-                </div>
-              )}
+              <MemberAvatar
+                memberId={profile.memberId}
+                name={profile.fullName}
+                photoUrl={profile.photoUrl}
+                sizePx={64}
+              />
               <div>
                 <h1 className="font-serif text-2xl font-semibold text-ckc-black">{profile.fullName}</h1>
                 <p className="text-sm text-ckc-muted">
@@ -103,6 +156,44 @@ export default function MemberProfilePage() {
                 </p>
                 <p className="text-sm text-ckc-muted">Member since {formatDate(profile.memberSince)}</p>
               </div>
+            </section>
+
+            <section>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handlePhotoSelected}
+              />
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={pickPhoto}
+                  disabled={photoBusy}
+                  className="text-sm text-ckc-gold-dim"
+                >
+                  {profile.photoUrl ? 'Change photo' : 'Add photo'}
+                </button>
+                {profile.photoUrl ? (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    disabled={photoBusy}
+                    className="text-sm text-ckc-gold-dim"
+                  >
+                    Remove photo
+                  </button>
+                ) : null}
+              </div>
+              <label className="mt-3 flex items-center gap-2 text-sm text-ckc-black">
+                <input
+                  type="checkbox"
+                  checked={profile.photoVisible}
+                  onChange={(e) => handlePhotoVisible(e.target.checked)}
+                />
+                Show my photo in the member directory
+              </label>
             </section>
 
             <section>

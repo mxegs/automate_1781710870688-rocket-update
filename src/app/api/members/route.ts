@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   let query = db
     .from('members')
-    .select('id, full_name, surname, phone, email, campus_id, gender, age, status, member_since, application_id, date_of_birth')
+    .select('id, full_name, surname, phone, email, campus_id, gender, age, status, member_since, application_id, date_of_birth, photo_url, photo_visible')
     .eq('church_id', churchIdFromUrl(request.url))
     .order('full_name');
 

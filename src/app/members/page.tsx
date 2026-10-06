@@ -8,6 +8,8 @@ import SendInvitePanel, { type SendInvitePrefill } from '@/components/admin/Send
 import InviteRequestsPanel from '@/components/admin/InviteRequestsPanel';
 import PendingApplicationsPanel from '@/components/admin/PendingApplicationsPanel';
 import MemberManageMenu, { type MemberRow } from '@/components/admin/MemberManageMenu';
+import MemberAvatar from '@/components/members/MemberAvatar';
+import { directoryPhotoUrl } from '@/lib/members/photo';
 import { AGE_CATEGORIES, CAMPUSES, type CampusId } from '@/lib/church/constants';
 import { staffDisambiguators } from '@/lib/members/disambiguate';
 import type { InviteRequest } from '@/lib/invites/request-service';
@@ -23,6 +25,7 @@ interface Member extends MemberRow {
   ageCategory: 'child' | 'youth' | 'adult';
   baptised: boolean;
   displayStatus: 'Active' | 'Suspended' | 'New';
+  photoUrl: string | null;
 }
 
 function ageToCategory(age: number | null | undefined): 'child' | 'youth' | 'adult' {
@@ -42,6 +45,8 @@ function mapDbMember(row: {
   age: number | null;
   status: string;
   member_since: string;
+  photo_url?: string | null;
+  photo_visible?: boolean | null;
 }): Member {
   const dbStatus = row.status as Member['dbStatus'];
   let displayStatus: Member['displayStatus'] = 'Active';
@@ -62,6 +67,7 @@ function mapDbMember(row: {
     ageCategory: ageToCategory(row.age),
     campus: row.campus_id as CampusId,
     baptised: false,
+    photoUrl: directoryPhotoUrl(row.photo_url, row.photo_visible !== false),
   };
 }
 
@@ -102,6 +108,8 @@ export default function MembersPage() {
         age: number | null;
         status: string;
         member_since: string;
+        photo_url: string | null;
+        photo_visible: boolean | null;
       }[]
     >(`/api/members?${withChurchId(new URLSearchParams(), resolveMemberChurch())}`)
       .then((rows) => setMembers(rows.map(mapDbMember)))
@@ -227,9 +235,12 @@ export default function MembersPage() {
                   className="flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ckc-gold/10">
-                      <span className="text-xs font-bold text-ckc-gold">{member.name.charAt(0)}</span>
-                    </div>
+                    <MemberAvatar
+                      memberId={member.id}
+                      name={member.name}
+                      photoUrl={member.photoUrl}
+                      sizePx={40}
+                    />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-cloud">{member.name}</p>
                       <p className="truncate text-xs text-cloud/40">

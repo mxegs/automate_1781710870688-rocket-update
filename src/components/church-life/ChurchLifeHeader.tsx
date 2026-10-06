@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
+import MemberAvatar from '@/components/members/MemberAvatar';
 import { apiFetch } from '@/lib/api/client';
 import { getDisplayName, getSession } from '@/lib/auth/session';
 import { useChurchBranding } from '@/components/church-life/ChurchBrandingProvider';
@@ -22,8 +23,11 @@ export default function ChurchLifeHeader({
   const session = getSession();
   const church = useChurchBranding();
   const pathname = usePathname();
-  const initial = (session ? getDisplayName(session) : 'C').trim().charAt(0).toUpperCase() || 'C';
+  const displayName = session ? getDisplayName(session) : 'C';
   const [unread, setUnread] = useState(0);
+  const [headerPhoto, setHeaderPhoto] = useState<{ memberId: string; name: string; photoUrl: string | null } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!showNotifications || !session?.email) return;
@@ -39,6 +43,27 @@ export default function ChurchLifeHeader({
       cancelled = true;
     };
   }, [showNotifications, session?.email, pathname]);
+
+  useEffect(() => {
+    if (!session?.email) return;
+    let cancelled = false;
+    apiFetch<{ memberId: string; fullName: string; photoUrl: string | null }>('/api/me/profile')
+      .then((data) => {
+        if (!cancelled) {
+          setHeaderPhoto({
+            memberId: data.memberId,
+            name: data.fullName || displayName,
+            photoUrl: data.photoUrl,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setHeaderPhoto(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.email, pathname, displayName]);
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-life-page/95 px-4 py-3.5 backdrop-blur-md">
@@ -70,12 +95,12 @@ export default function ChurchLifeHeader({
             ) : null}
           </Link>
         ) : null}
-        <div
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-ckc-gold text-xs font-semibold text-ckc-gold-text"
-          aria-hidden
-        >
-          {initial}
-        </div>
+        <MemberAvatar
+          memberId={headerPhoto?.memberId || 'session'}
+          name={headerPhoto?.name || displayName}
+          photoUrl={headerPhoto?.photoUrl}
+          sizePx={32}
+        />
       </div>
     </header>
   );

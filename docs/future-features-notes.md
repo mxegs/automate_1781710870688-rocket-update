@@ -289,6 +289,18 @@ POST `/api/follow-ups/message` has no `dryRun` flag. Testing it would send real 
 
 ---
 
+## Storage policy tightening
+
+**Status:** known gap. Not blocking.
+
+The member-photos storage policies allow any authenticated user to upload to any path within the bucket, not just their own church's path. The API enforces the correct path, so uploads through the app are safe. A hand-crafted Storage API call could write elsewhere.
+
+**Fix:** add a policy that restricts upload paths based on `auth.uid()` → `profile_id` → `church_id`/`member_id`. Requires a lookup function on storage policies.
+
+**When:** pre-deploy hardening, or if a church requests stronger guarantees.
+
+---
+
 ## Hidden until built
 
 **Status:** hidden from UI.

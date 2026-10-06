@@ -3,17 +3,11 @@ import { churchIdFromUrl } from '@/lib/church/tenant';
 import { getCampusLabel } from '@/lib/church/constants';
 import { churchIdForSessionEmail, notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
 import { readSessionEmailHeader } from '@/lib/auth/staff-access-server';
+import { initialsFromFullName } from '@/lib/members/photo';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function digits(value: string | null | undefined): string {
   return (value ?? '').replace(/\D/g, '');
-}
-
-function initialsFromName(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
 export async function GET(request: Request) {
@@ -71,11 +65,8 @@ export async function GET(request: Request) {
   const { data: church } = await db.from('churches').select('id, name').eq('id', churchId).maybeSingle();
 
   const campusId = String(row.campus_id ?? profile.campus_id ?? '');
-  const photoUrl =
-    (typeof row.photo_url === 'string' && row.photo_url) ||
-    (typeof row.id_photo_url === 'string' && row.id_photo_url) ||
-    profile.photo_url ||
-    null;
+  const photoUrl = typeof row.photo_url === 'string' && row.photo_url ? row.photo_url : null;
+  const photoVisible = row.photo_visible !== false;
   const marriageDate =
     (typeof row.marriage_date === 'string' && row.marriage_date) ||
     (typeof row.anniversary_date === 'string' && row.anniversary_date) ||
@@ -171,8 +162,9 @@ export async function GET(request: Request) {
     campusId,
     campusName: campusId ? getCampusLabel(campusId) : '',
     fullName,
-    initials: initialsFromName(fullName),
+    initials: initialsFromFullName(fullName),
     photoUrl,
+    photoVisible,
     memberSince: (row.member_since as string | null) ?? null,
     phone,
     email: (row.email as string | null) ?? profile.email,
