@@ -26,6 +26,7 @@ export interface MembershipApplication {
     citizenship: 'RSA' | 'Other' | '';
     countryOfOrigin: string;
     maritalStatus: '' | 'Never Married' | 'Married' | 'Divorced' | 'Engaged' | 'Widow or Widower';
+    marriageDate: string;
     occupation: string[];
     occupationOther: string;
     employer: string;
@@ -156,6 +157,7 @@ export function createEmptyApplication(cellNo = ''): MembershipApplication {
       citizenship: '',
       countryOfOrigin: '',
       maritalStatus: '',
+      marriageDate: '',
       occupation: [],
       occupationOther: '',
       employer: '',

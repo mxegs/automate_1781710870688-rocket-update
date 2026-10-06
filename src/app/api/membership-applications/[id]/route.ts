@@ -87,6 +87,7 @@ export async function PATCH(
     date_of_birth: personal.dateOfBirth || null,
     age: typeof personal.age === 'number' ? personal.age : null,
     marital_status: personal.maritalStatus ?? null,
+    marriage_date: personal.marriageDate?.trim() || null,
     covenant_signed_at: covenant?.dateSigned ?? new Date().toISOString(),
     status: 'active',
   });

@@ -32,6 +32,20 @@ function formatDate(value: string | null): string {
   return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function formatAnniversaryDate(value: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  const d = m
+    ? new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
+    : new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 export default function MemberProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<MemberProfile | null>(null);
@@ -157,8 +171,8 @@ export default function MemberProfilePage() {
               <p className="text-sm text-ckc-black">Birthday: {formatDate(profile.dateOfBirth)}</p>
               <p className="text-sm text-ckc-black">
                 {profile.marriageDate
-                  ? `Anniversary: ${formatDate(profile.marriageDate)}`
-                  : 'Anniversary: not set'}
+                  ? `Marriage anniversary: ${formatAnniversaryDate(profile.marriageDate)}`
+                  : 'Marriage anniversary: not set'}
               </p>
             </section>
 

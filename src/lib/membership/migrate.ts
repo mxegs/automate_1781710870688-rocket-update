@@ -22,6 +22,7 @@ export function migrateApplication(data: MembershipApplication): MembershipAppli
       personal.identityNumber && /^\d{13}$/.test(personal.identityNumber) ? 'sa_id' : '';
   }
   if (!personal.countryOfOrigin) personal.countryOfOrigin = '';
+  if (!personal.marriageDate) personal.marriageDate = '';
 
   const guardian = data.guardian as MembershipApplication['guardian'] & { initial?: string };
   if (!guardian.fullName && guardian.initial) {

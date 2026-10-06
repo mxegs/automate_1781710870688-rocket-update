@@ -31,6 +31,7 @@ export const personalStepSchema = z
       ['Never Married', 'Married', 'Divorced', 'Engaged', 'Widow or Widower'],
       { message: 'Marital status is required' },
     ),
+    marriageDate: z.string().optional(),
     occupation: z.array(z.string()).min(1, 'Select at least one occupation'),
     occupationOther: z.string().optional(),
     employer: z.string().optional(),

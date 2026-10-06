@@ -531,7 +531,14 @@ export default function SignupWizard() {
                 <CkcField label="Marital status" required error={errors.maritalStatus}>
                   <select
                     value={form.personal.maritalStatus}
-                    onChange={(e) => updatePersonal({ maritalStatus: e.target.value as MembershipApplication['personal']['maritalStatus'] })}
+                    onChange={(e) => {
+                      const maritalStatus = e.target
+                        .value as MembershipApplication['personal']['maritalStatus'];
+                      updatePersonal({
+                        maritalStatus,
+                        marriageDate: showSpouseSection(maritalStatus) ? form.personal.marriageDate : '',
+                      });
+                    }}
                     className="w-full rounded-lg border border-white/10 bg-ckc-elevated px-3 py-2.5 text-sm text-ckc-white focus:border-ckc-gold/50 focus:outline-none"
                   >
                     <option value="">Select</option>
@@ -541,6 +548,16 @@ export default function SignupWizard() {
                   </select>
                 </CkcField>
               </div>
+
+              {showSpouseSection(form.personal.maritalStatus) ? (
+                <CkcField label="Marriage date" optional>
+                  <CkcInput
+                    type="date"
+                    value={form.personal.marriageDate}
+                    onChange={(e) => updatePersonal({ marriageDate: e.target.value })}
+                  />
+                </CkcField>
+              ) : null}
 
               <CkcField label="Present occupation" required error={errors.occupation}>
                 <CkcCheckboxGroup options={OCCUPATION_OPTIONS} values={form.personal.occupation} onChange={(v) => updatePersonal({ occupation: v })} />
@@ -781,6 +798,9 @@ export default function SignupWizard() {
                       />
                       <ReviewRow label="Gender" value={form.personal.gender} />
                       <ReviewRow label="Marital status" value={form.personal.maritalStatus} />
+                      {showSpouseSection(form.personal.maritalStatus) ? (
+                        <ReviewRow label="Marriage date" value={form.personal.marriageDate || 'Not set'} />
+                      ) : null}
                       <ReviewRow label="Occupation" value={form.personal.occupation.join(', ')} />
                     </ReviewBlock>
                     <ReviewBlock title="Family">

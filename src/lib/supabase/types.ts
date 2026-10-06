@@ -242,6 +242,7 @@ export interface Database {
           date_of_birth: string | null;
           age: number | null;
           marital_status: string | null;
+          marriage_date: string | null;
           member_since: string;
           covenant_signed_at: string | null;
           id_photo_url: string | null;
@@ -263,6 +264,7 @@ export interface Database {
           date_of_birth?: string | null;
           age?: number | null;
           marital_status?: string | null;
+          marriage_date?: string | null;
           member_since?: string;
           covenant_signed_at?: string | null;
           id_photo_url?: string | null;
@@ -284,6 +286,7 @@ export interface Database {
           date_of_birth?: string | null;
           age?: number | null;
           marital_status?: string | null;
+          marriage_date?: string | null;
           member_since?: string;
           covenant_signed_at?: string | null;
           id_photo_url?: string | null;

@@ -3,6 +3,7 @@
 import React from 'react';
 import { getCampusLabel } from '@/lib/church/constants';
 import { formatPhoneDisplay } from '@/lib/auth/session';
+import { showSpouseSection } from '@/lib/membership/schema';
 import type { MembershipApplication } from '@/lib/membership/types';
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
@@ -91,6 +92,9 @@ export default function ApplicationReviewContent({
         />
         <ReviewRow label="Gender" value={personal.gender} />
         <ReviewRow label="Marital status" value={personal.maritalStatus} />
+        {showSpouseSection(personal.maritalStatus) ? (
+          <ReviewRow label="Marriage date" value={personal.marriageDate || 'Not set'} />
+        ) : null}
         <ReviewRow
           label="Occupation"
           value={
