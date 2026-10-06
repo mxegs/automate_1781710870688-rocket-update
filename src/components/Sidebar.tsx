@@ -48,6 +48,7 @@ const memberNavItems: NavItem[] = [
   { label: 'Submit Prayer', href: '/member/prayer', icon: 'HeartIcon' },
   { label: 'Bible Study', href: '/member/bible-study', icon: 'BookOpenIcon' },
   { label: 'Church Info', href: '/member/church-info', icon: 'BuildingLibraryIcon' },
+  { label: 'Profile', href: '/member/profile', icon: 'UserCircleIcon' },
 ];
 
 const visitorNavItems: NavItem[] = [

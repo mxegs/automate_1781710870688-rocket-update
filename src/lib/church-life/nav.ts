@@ -12,6 +12,7 @@ export const memberLifeNav: ChurchLifeNavItem[] = [
   { label: 'Prayer', href: '/member/prayer', icon: 'HandRaisedIcon' },
   { label: 'Announcements', href: '/member/announcements', icon: 'MegaphoneIcon' },
   { label: 'Church Info', href: '/member/church-info', icon: 'BuildingLibraryIcon' },
+  { label: 'Profile', href: '/member/profile', icon: 'UserCircleIcon' },
 ];
 
 export const visitorLifeNav: ChurchLifeNavItem[] = [
