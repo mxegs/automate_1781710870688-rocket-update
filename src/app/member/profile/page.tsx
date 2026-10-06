@@ -249,7 +249,7 @@ export default function MemberProfilePage() {
                 <Link href="/member/prayer" className="text-ckc-gold-dim">
                   Submit a new one
                 </Link>
-                <Link href="/member/prayer" className="text-ckc-gold-dim">
+                <Link href="/member/prayers" className="text-ckc-gold-dim">
                   See all
                 </Link>
               </div>
