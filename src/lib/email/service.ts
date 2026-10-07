@@ -240,3 +240,41 @@ export async function sendPasswordResetEmail(
   console.info('[CKC Email fallback password reset]', to, resetUrl, result.error);
   return { success: true, demo: true };
 }
+
+export function buildEmailChangeConfirmHtml(confirmUrl: string, churchName: string): string {
+  return `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="color: #c9a227;">${churchName}</h2>
+      <p>Confirm this email for your ${churchName} member profile.</p>
+      <p style="margin: 24px 0;">
+        <a href="${confirmUrl}" style="background:#c9a227;color:#000;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">
+          Confirm email
+        </a>
+      </p>
+      <p style="font-size:14px;color:#666;">Or copy this link: ${confirmUrl}</p>
+      <p style="font-size:12px;color:#888;">This link expires in 24 hours.</p>
+    </div>
+  `;
+}
+
+export async function sendEmailChangeConfirmEmail(
+  to: string,
+  confirmUrl: string,
+  churchId: string | null,
+): Promise<SendEmailResult> {
+  const churchName = await churchDisplayName(churchId);
+  const subject = `Confirm your ${churchName} email`;
+  const html = buildEmailChangeConfirmHtml(confirmUrl, churchName);
+  const provider = process.env.EMAIL_PROVIDER ?? 'resend';
+
+  if (provider === 'demo') {
+    console.info('[CKC Email demo email change]', to, confirmUrl);
+    return { success: true, demo: true };
+  }
+
+  const result = await sendViaResend(to, subject, html);
+  if (result.success) return result;
+
+  console.info('[CKC Email fallback email change]', to, confirmUrl, result.error);
+  return { success: true, demo: true };
+}

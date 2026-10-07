@@ -243,6 +243,9 @@ export interface Database {
           age: number | null;
           marital_status: string | null;
           marriage_date: string | null;
+          pending_email: string | null;
+          pending_email_token: string | null;
+          pending_email_expires_at: string | null;
           photo_url: string | null;
           photo_visible: boolean;
           member_since: string;
@@ -267,6 +270,9 @@ export interface Database {
           age?: number | null;
           marital_status?: string | null;
           marriage_date?: string | null;
+          pending_email?: string | null;
+          pending_email_token?: string | null;
+          pending_email_expires_at?: string | null;
           photo_url?: string | null;
           photo_visible?: boolean;
           member_since?: string;
@@ -291,6 +297,9 @@ export interface Database {
           age?: number | null;
           marital_status?: string | null;
           marriage_date?: string | null;
+          pending_email?: string | null;
+          pending_email_token?: string | null;
+          pending_email_expires_at?: string | null;
           photo_url?: string | null;
           photo_visible?: boolean;
           member_since?: string;

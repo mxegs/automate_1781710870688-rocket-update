@@ -19,8 +19,17 @@ interface MemberProfile {
   memberSince: string | null;
   phone: string;
   email: string | null;
+  pendingEmail: string | null;
   dateOfBirth: string | null;
+  identityNumber: string | null;
   status: string | null;
+  role: string | null;
+  maritalStatus: string | null;
+  address: string;
+  occupation: string;
+  emergencyContactName: string;
+  emergencyContactRelationship: string;
+  emergencyContactPhone: string;
   marriageDate: string | null;
   groups: { id: string; name: string }[];
   upcomingEvents: { id: string; title: string; startsAt: string }[];
@@ -54,7 +63,15 @@ export default function MemberProfilePage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [emailNote, setEmailNote] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get('emailConfirmed') === '1') {
+      setEmailNote('Your email has been confirmed.');
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,8 +172,35 @@ export default function MemberProfilePage() {
                   {profile.campusName ? ` · ${profile.campusName}` : ''}
                 </p>
                 <p className="text-sm text-ckc-muted">Member since {formatDate(profile.memberSince)}</p>
+                <Link href="/member/profile/edit" className="mt-2 inline-block text-sm text-ckc-gold-dim">
+                  Edit
+                </Link>
               </div>
             </section>
+
+            {emailNote ? <p className="text-sm text-ckc-black">{emailNote}</p> : null}
+            {profile.pendingEmail ? (
+              <p className="text-sm text-ckc-black">
+                Waiting for you to confirm {profile.pendingEmail}.{' '}
+                <button
+                  type="button"
+                  className="text-ckc-gold-dim"
+                  onClick={async () => {
+                    try {
+                      await apiFetch('/api/me/profile', {
+                        method: 'PATCH',
+                        body: JSON.stringify({ resendPendingEmail: true }),
+                      });
+                      setEmailNote('Confirmation link sent.');
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Could not resend');
+                    }
+                  }}
+                >
+                  Resend link
+                </button>
+              </p>
+            ) : null}
 
             <section>
               <input
@@ -200,13 +244,23 @@ export default function MemberProfilePage() {
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ckc-muted">Contact</h2>
               <p className="text-sm text-ckc-black">Phone: {profile.phone || '—'}</p>
               <p className="text-sm text-ckc-black">Email: {profile.email || '—'}</p>
+              <p className="text-sm text-ckc-black">Address: {profile.address || '—'}</p>
+              <p className="text-sm text-ckc-black">Occupation: {profile.occupation || '—'}</p>
+              <p className="text-sm text-ckc-black">Marital status: {profile.maritalStatus || '—'}</p>
+              <p className="text-sm text-ckc-black">
+                Emergency contact: {profile.emergencyContactName || '—'}
+                {profile.emergencyContactRelationship ? ` (${profile.emergencyContactRelationship})` : ''}
+                {profile.emergencyContactPhone ? ` · ${profile.emergencyContactPhone}` : ''}
+              </p>
               <p className="text-sm text-ckc-black">Date of birth: {formatDate(profile.dateOfBirth)}</p>
+              <p className="text-xs text-ckc-muted">Contact your church to update this.</p>
             </section>
 
             <section>
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ckc-muted">My Church Life</h2>
               <p className="text-sm text-ckc-black">Campus: {profile.campusName || '—'}</p>
               <p className="text-sm text-ckc-black">Status: {profile.status || '—'}</p>
+              <p className="text-xs text-ckc-muted">Contact your church to update this.</p>
               <p className="text-sm text-ckc-black">
                 Groups:{' '}
                 {profile.groups.length ? profile.groups.map((g) => g.name).join(', ') : 'None'}

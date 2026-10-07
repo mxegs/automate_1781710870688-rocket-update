@@ -1,51 +1,48 @@
+import { randomBytes } from 'crypto';
 import { NextResponse } from 'next/server';
+import { getAppUrl } from '@/lib/app-url';
 import { churchIdFromUrl } from '@/lib/church/tenant';
-import { getCampusLabel } from '@/lib/church/constants';
 import { churchIdForSessionEmail, notFoundResponse, requireSessionChurch } from '@/lib/auth/session-church';
 import { readSessionEmailHeader } from '@/lib/auth/staff-access-server';
-import { initialsFromFullName } from '@/lib/members/photo';
+import { normalizeEmail } from '@/lib/auth/super-admin';
+import { sendEmailChangeConfirmEmail } from '@/lib/email/service';
+import {
+  digits,
+  isValidEmail,
+  loadOwnProfilePayload,
+  MARITAL_STATUSES,
+  showMarriageDate,
+} from '@/lib/members/own-profile';
+import type { MembershipApplication } from '@/lib/membership/types';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
-function digits(value: string | null | undefined): string {
-  return (value ?? '').replace(/\D/g, '');
-}
-
-export async function GET(request: Request) {
+async function sessionMemberContext(request: Request) {
   const db = getSupabaseAdmin();
-  if (!db) return NextResponse.json({ error: 'Backend not configured' }, { status: 503 });
+  if (!db) return { error: NextResponse.json({ error: 'Backend not configured' }, { status: 503 }) };
 
   const email = readSessionEmailHeader(request);
-  if (!email.includes('@')) return notFoundResponse();
+  if (!email.includes('@')) return { error: notFoundResponse() };
 
   const requested = churchIdFromUrl(request.url);
   if (requested) {
     const denied = await requireSessionChurch(request, requested);
-    if (denied) return denied;
+    if (denied) return { error: denied };
   }
 
   const churchId = requested ?? (await churchIdForSessionEmail(request));
-  if (!churchId) return notFoundResponse();
+  if (!churchId) return { error: notFoundResponse() };
 
   const { data: profiles, error: profileError } = await db
     .from('profiles')
-    .select('id, email, phone, photo_url, church_id, campus_id, official_name, display_name')
+    .select('id, email, phone, photo_url, church_id, campus_id, official_name, display_name, role')
     .ilike('email', email)
     .eq('church_id', churchId)
     .limit(2);
 
-  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
-  if (!profiles?.length || profiles.length > 1) return notFoundResponse();
+  if (profileError) return { error: NextResponse.json({ error: profileError.message }, { status: 500 }) };
+  if (!profiles?.length || profiles.length > 1) return { error: notFoundResponse() };
 
-  const profile = profiles[0] as {
-    id: string;
-    email: string | null;
-    phone: string | null;
-    photo_url: string | null;
-    church_id: string | null;
-    campus_id: string | null;
-    official_name: string | null;
-    display_name: string | null;
-  };
+  const profile = profiles[0] as Record<string, unknown>;
 
   const { data: member, error: memberError } = await db
     .from('members')
@@ -54,125 +51,153 @@ export async function GET(request: Request) {
     .eq('church_id', churchId)
     .maybeSingle();
 
-  if (memberError) return NextResponse.json({ error: memberError.message }, { status: 500 });
-  if (!member) return notFoundResponse();
+  if (memberError) return { error: NextResponse.json({ error: memberError.message }, { status: 500 }) };
+  if (!member) return { error: notFoundResponse() };
 
-  const row = member as Record<string, unknown>;
-  const phone = String(row.phone ?? profile.phone ?? '');
-  const phoneDigits = digits(phone);
-  const suffix = phoneDigits.slice(-9);
+  return { db, email, churchId, profile, member: member as Record<string, unknown> };
+}
 
-  const { data: church } = await db.from('churches').select('id, name').eq('id', churchId).maybeSingle();
+export async function GET(request: Request) {
+  const ctx = await sessionMemberContext(request);
+  if ('error' in ctx && ctx.error) return ctx.error;
+  const { db, email, churchId, profile, member } = ctx as Exclude<Awaited<ReturnType<typeof sessionMemberContext>>, { error: NextResponse }>;
+  const payload = await loadOwnProfilePayload(db, { email, churchId, profile, member });
+  return NextResponse.json(payload);
+}
 
-  const campusId = String(row.campus_id ?? profile.campus_id ?? '');
-  const photoUrl = typeof row.photo_url === 'string' && row.photo_url ? row.photo_url : null;
-  const photoVisible = row.photo_visible !== false;
-  const marriageDate =
-    (typeof row.marriage_date === 'string' && row.marriage_date) ||
-    (typeof row.anniversary_date === 'string' && row.anniversary_date) ||
-    null;
+export async function PATCH(request: Request) {
+  const ctx = await sessionMemberContext(request);
+  if ('error' in ctx && ctx.error) return ctx.error;
+  const { db, email, churchId, profile, member } = ctx as Exclude<Awaited<ReturnType<typeof sessionMemberContext>>, { error: NextResponse }>;
 
-  const fullName = String(row.full_name ?? profile.official_name ?? profile.display_name ?? '');
-
-  let groupQuery = db.from('group_members').select('group_id, member_phone, profile_id');
-  if (suffix.length >= 9) {
-    groupQuery = groupQuery.or(
-      `profile_id.eq.${profile.id},member_phone.eq.${phone},member_phone.like.%${suffix}`,
-    );
-  } else {
-    groupQuery = groupQuery.or(`profile_id.eq.${profile.id},member_phone.eq.${phone}`);
-  }
-  const { data: memberships } = await groupQuery;
-  const groupIds = [...new Set((memberships ?? []).map((m: { group_id: string }) => m.group_id))];
-
-  let groups: { id: string; name: string }[] = [];
-  if (groupIds.length) {
-    const { data: groupRows } = await db
-      .from('groups')
-      .select('id, name, church_id')
-      .in('id', groupIds)
-      .eq('church_id', churchId);
-    groups = (groupRows ?? []).map((g: { id: string; name: string }) => ({ id: g.id, name: g.name }));
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!body || typeof body !== 'object') {
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
   }
 
-  const nowIso = new Date().toISOString();
-  let rsvpQuery = db
-    .from('event_rsvps')
-    .select('id, event_id, status, profile_id, phone, church_id')
-    .eq('church_id', churchId)
-    .neq('status', 'declined');
-  if (suffix.length >= 9) {
-    rsvpQuery = rsvpQuery.or(`profile_id.eq.${profile.id},phone.eq.${phone},phone.like.%${suffix}`);
-  } else {
-    rsvpQuery = rsvpQuery.or(`profile_id.eq.${profile.id},phone.eq.${phone}`);
-  }
-  const { data: rsvps } = await rsvpQuery;
-  const eventIds = [...new Set((rsvps ?? []).map((r: { event_id: string }) => r.event_id))];
+  const memberId = String(member.id);
+  const profileId = String(profile.id);
+  const patch: Record<string, unknown> = {};
+  let pendingEmail: string | null = null;
+  let confirmUrl: string | undefined;
 
-  let upcomingEvents: { id: string; title: string; startsAt: string }[] = [];
-  if (eventIds.length) {
-    const { data: eventRows } = await db
-      .from('events')
-      .select('id, title, starts_at, church_id')
-      .in('id', eventIds)
+  if (typeof body.phone === 'string') {
+    const phoneDigits = digits(body.phone);
+    if (phoneDigits.length < 9) {
+      return NextResponse.json({ error: 'Phone must have at least 9 digits' }, { status: 400 });
+    }
+    patch.phone = body.phone.trim();
+  }
+
+  if (typeof body.maritalStatus === 'string') {
+    if (!MARITAL_STATUSES.includes(body.maritalStatus as (typeof MARITAL_STATUSES)[number])) {
+      return NextResponse.json({ error: 'Invalid marital status' }, { status: 400 });
+    }
+    patch.marital_status = body.maritalStatus;
+  }
+
+  const nextMarital = String(patch.marital_status ?? member.marital_status ?? '');
+  if ('marriageDate' in body) {
+    const raw = typeof body.marriageDate === 'string' ? body.marriageDate.trim() : '';
+    if (raw && !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return NextResponse.json({ error: 'Invalid marriage date' }, { status: 400 });
+    }
+    patch.marriage_date = showMarriageDate(nextMarital) && raw ? raw : null;
+  } else if (typeof patch.marital_status === 'string' && !showMarriageDate(nextMarital)) {
+    patch.marriage_date = null;
+  }
+
+  const resend = body.resendPendingEmail === true;
+  if (typeof body.email === 'string' || resend) {
+    const nextEmail = normalizeEmail(resend ? String(member.pending_email ?? '') : String(body.email ?? ''));
+    if (!isValidEmail(nextEmail)) {
+      return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
+    }
+    const current = normalizeEmail(String(member.email ?? profile.email ?? email));
+    if (nextEmail !== current) {
+      const token = randomBytes(24).toString('hex');
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      patch.pending_email = nextEmail;
+      patch.pending_email_token = token;
+      patch.pending_email_expires_at = expires;
+      pendingEmail = nextEmail;
+      confirmUrl = `${getAppUrl(request)}/member/profile/confirm-email?token=${encodeURIComponent(token)}`;
+      await sendEmailChangeConfirmEmail(nextEmail, confirmUrl, churchId);
+    }
+  }
+
+  if (Object.keys(patch).length) {
+    const { error: updateError } = await db
+      .from('members')
+      .update(patch)
+      .eq('id', memberId)
       .eq('church_id', churchId)
-      .gte('starts_at', nowIso)
-      .order('starts_at', { ascending: true });
-    upcomingEvents = (eventRows ?? []).map((ev: { id: string; title: string; starts_at: string }) => ({
-      id: ev.id,
-      title: ev.title,
-      startsAt: ev.starts_at,
-    }));
+      .eq('profile_id', profileId);
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  const { data: byProfile } = await db
-    .from('prayer_requests')
-    .select('id, title, status, created_at')
-    .eq('church_id', churchId)
-    .eq('profile_id', profile.id)
-    .order('created_at', { ascending: false })
-    .limit(5);
-
-  const { data: byEmail } = await db
-    .from('prayer_requests')
-    .select('id, title, status, created_at')
-    .eq('church_id', churchId)
-    .ilike('contact_email', email)
-    .order('created_at', { ascending: false })
-    .limit(5);
-
-  const prayerMap = new Map<string, { id: string; title: string; status: string; createdAt: string }>();
-  for (const p of [...(byProfile ?? []), ...(byEmail ?? [])] as {
-    id: string;
-    title: string;
-    status: string;
-    created_at: string;
-  }[]) {
-    prayerMap.set(p.id, { id: p.id, title: p.title, status: p.status, createdAt: p.created_at });
+  if (typeof patch.phone === 'string') {
+    await db.from('profiles').update({ phone: patch.phone }).eq('id', profileId).eq('church_id', churchId);
   }
-  const prayerRequests = [...prayerMap.values()]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
+
+  const applicationId = typeof member.application_id === 'string' ? member.application_id : '';
+  if (applicationId) {
+    const { data: app } = await db
+      .from('membership_applications')
+      .select('application_data')
+      .eq('id', applicationId)
+      .eq('church_id', churchId)
+      .maybeSingle();
+    const data = (app?.application_data ?? null) as MembershipApplication | null;
+    if (data?.personal) {
+      if (typeof body.address === 'string') data.personal.permanentAddress = body.address.trim();
+      if (typeof body.occupation === 'string') {
+        const occ = body.occupation.trim();
+        data.personal.occupation = occ ? [occ] : [];
+        data.personal.occupationOther = '';
+      }
+      if (typeof body.phone === 'string') data.personal.cellNo = body.phone.trim();
+      if (typeof body.maritalStatus === 'string') {
+        data.personal.maritalStatus = body.maritalStatus as MembershipApplication['personal']['maritalStatus'];
+      }
+      if ('marriageDate' in body || typeof patch.marriage_date !== 'undefined') {
+        data.personal.marriageDate = typeof patch.marriage_date === 'string' ? patch.marriage_date : '';
+      }
+      if (!data.emergencyContact) {
+        data.emergencyContact = { name: '', relationship: '', phoneNumber: '' };
+      }
+      if (typeof body.emergencyContactName === 'string') data.emergencyContact.name = body.emergencyContactName.trim();
+      if (typeof body.emergencyContactRelationship === 'string') {
+        data.emergencyContact.relationship = body.emergencyContactRelationship.trim();
+      }
+      if (typeof body.emergencyContactPhone === 'string') {
+        data.emergencyContact.phoneNumber = body.emergencyContactPhone.trim();
+      }
+      await db
+        .from('membership_applications')
+        .update({ application_data: data })
+        .eq('id', applicationId)
+        .eq('church_id', churchId);
+    }
+  }
+
+  const { data: refreshed } = await db
+    .from('members')
+    .select('*')
+    .eq('id', memberId)
+    .eq('church_id', churchId)
+    .maybeSingle();
+
+  const payload = await loadOwnProfilePayload(db, {
+    email,
+    churchId,
+    profile,
+    member: (refreshed ?? member) as Record<string, unknown>,
+  });
 
   return NextResponse.json({
-    memberId: row.id,
-    profileId: profile.id,
-    churchId,
-    churchName: (church as { name?: string } | null)?.name ?? '',
-    campusId,
-    campusName: campusId ? getCampusLabel(campusId) : '',
-    fullName,
-    initials: initialsFromFullName(fullName),
-    photoUrl,
-    photoVisible,
-    memberSince: (row.member_since as string | null) ?? null,
-    phone,
-    email: (row.email as string | null) ?? profile.email,
-    dateOfBirth: (row.date_of_birth as string | null) ?? null,
-    status: (row.status as string | null) ?? null,
-    marriageDate,
-    groups,
-    upcomingEvents,
-    prayerRequests,
+    ...payload,
+    pendingEmail: pendingEmail ?? payload.pendingEmail,
+    confirmUrl,
   });
 }
